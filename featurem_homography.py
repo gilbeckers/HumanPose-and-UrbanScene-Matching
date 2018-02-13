@@ -7,6 +7,7 @@ import affine_transformation
 import matplotlib.patches as mpatches
 
 MIN_MATCH_COUNT = 10
+# goeie voorbeelden zijn pisa9 en pisa10
 img1 = cv2.imread('img/pisa9.jpg',0)          # queryImage
 img2 = cv2.imread('img/pisa10.jpg',0) # trainImage
 
@@ -91,7 +92,6 @@ print("Total matches for bouding box source: ", len(my_scr_pts))
 # define criteria and apply kmeans()
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
 ret,label,center=cv2.kmeans(dst_pts_2D,2,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
-
 ret2,label2,center2=cv2.kmeans(src_pts_2D,2,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
 
 print("center : ", center)
@@ -114,9 +114,11 @@ B2 = src_pts_2D[label2.ravel()==1]
 
 
 # Calc nearest point to pols-punten in matching features
+
+index_closest_points = 33  # bij pisa9 & pisa10 is da 33
 distance_pols_links = ( (A[:, 0] - p10_l_pols[0][0])** 2 + (A[:, 1] - p10_l_pols[0][1]) ** 2) ** 0.5
 min_distance_pols_links = np.argmin(distance_pols_links)
-distance_pols_input_links = ( (A2[33, 0] - p9_l_pols[0][0])** 2 + (A2[33, 1] - p9_l_pols[0][1]) ** 2) ** 0.5
+distance_pols_input_links = ( (A2[index_closest_points, 0] - p9_l_pols[0][0])** 2 + (A2[index_closest_points, 1] - p9_l_pols[0][1]) ** 2) ** 0.5
 
 distance_pols_rechts = ( (A[:, 0] - p10_r_pols[0][0])** 2 + (A[:, 1] - p10_r_pols[0][1]) ** 2) ** 0.5
 min_distance_pols_rechts = np.argmin(distance_pols_rechts)
