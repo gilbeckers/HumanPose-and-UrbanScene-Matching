@@ -9,8 +9,8 @@ import matplotlib.patches as mpatches
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'taj3'   # goeie : "pisa9"  taj3
-input_name = 'taj4'  # goeie : "pisa10"  taj4
+model_name = 'trap1'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'trap2'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # 1: rechterpols  2: linkerpols
@@ -20,6 +20,29 @@ p10_pose = np.array([[256, 362], [247, 400]])
 # goeie voorbeelden zijn pisa9 en pisa10
 model_image = cv2.imread('img/' + model_name + '.' + img_tag ,0)
 input_image = cv2.imread('img/' + input_name + '.' + img_tag ,0)
+
+
+## ---------------- RESIZE ------------------
+# we need to keep in mind aspect ratio so the image does
+# not look skewed or distorted -- therefore, we calculate
+# the ratio of the new image to the old image
+r = 500.0 / model_image.shape[1]
+dim = (500, int(input_image.shape[0] * r))
+
+# perform the actual resizing of the image and show it
+model_image = cv2.resize(model_image, dim, interpolation = cv2.INTER_AREA)
+input_image = cv2.resize(input_image, dim, interpolation = cv2.INTER_AREA)
+## ---------------- END RESIZE ------------------
+
+
+## -- -----  BACKGROUND DETECTION  --------------------
+
+kernel = np.ones((5,5),np.uint8)
+erosion = cv2.erode(model_image,kernel,iterations = 1, anchor=(100, 300))
+
+cv2.imshow('frame',erosion)
+
+## -- -----  BACKGROUND DETECTION  --------------------
 
 model_pose = p9_pose
 input_pose = p10_pose
@@ -90,6 +113,8 @@ clustered_features, one_building = clustering.kmean(model_pts_2D, input_pts_2D)
 clustered_model_features = clustered_features[0]
 clustered_input_features = clustered_features[1]
 
+
+
 if one_building: # Take the first found homography, no more computations needed
     #Reduce dimensions
     clustered_model_features = np.squeeze(clustered_features[0])
@@ -133,8 +158,18 @@ if one_building: # Take the first found homography, no more computations needed
     input_features = np.array([[152, 334], [153, 425]])  #pisa9
     output_features = np.array([[256, 362], [247, 400]]) #pisa10
 
+
+
     input_features =  np.array([[391,92]])  #taj3  enkel recher pols
+    input_features = np.array([[463, 89]]) # foute locatie
+    input_features = np.array([[391, 92], [517, 148]])  # taj3  enkel recher pols + nek
+    input_features = np.array([[391, 92], [429, 126]])  # taj3  enkel recher pols + r elbow
+
     output_features = np.array([[303,37]]) #taj4 enkel rechter pols
+    output_features = np.array([[303, 37],[412, 90]])  # taj4 enkel rechter pols + nek
+    output_features = np.array([[303, 37], [347, 70]])  # taj4 enkel rechter pols + r elbow
+
+
 
     input_features = np.append(input_features, [clustered_input_features[0]], 0)
     input_features = np.append(input_features, [clustered_input_features[2]], 0)
@@ -173,8 +208,9 @@ if one_building: # Take the first found homography, no more computations needed
     ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
                         mpatches.Patch(color='magenta', label='model')])
-
+    #plt.tight_layout()
     plt.show(block=False)
+
     plt.figure()
 
 
@@ -189,6 +225,7 @@ else: # More than one building
     plt.show(block=False)
     plt.figure()
 
+
     for feat in clustered_input_features:
         plt.scatter(feat[:, 0], feat[:, 1])
     plt.xlabel('Height'),plt.ylabel('Weight')
@@ -196,8 +233,69 @@ else: # More than one building
     plt.show(block=False)
     plt.figure()
 
+    # -------------  CALC AFFINE TRANSFORMATION  ------------------##
+
+    # p9_r_pols = np.array([[152, 334]])  #pisa9
+    # p9_l_pols = np.array([[153,425]])
+    # p10_r_pols = np.array([[256, 362]])   #pisa10
+    # p10_l_pols = np.array([[247, 400]])
+
+    input_features = np.array([[256, 362], [247, 400]])   # pisa9
+    output_features = np.array([[152, 334], [153, 425]]) # pisa10
+
+    input_features = np.array([[127, 237], [206, 234]])  # trap1
+    #input_features = np.array([[218, 299], [280, 300]])  # trap3
+
+    output_features = np.array([[116, 289], [188, 284]])  # trap2
+
+    object_index = 0
+
+    input_features = np.append(input_features, [clustered_input_features[object_index][0]], 0)
+    input_features = np.append(input_features, [clustered_input_features[object_index][2]], 0)
+    input_features = np.append(input_features, [clustered_input_features[object_index][6]], 0)
+    input_features = np.append(input_features, [clustered_input_features[object_index][14]], 0)
+
+    output_features = np.append(output_features, [clustered_model_features[object_index][0]], 0)
+    output_features = np.append(output_features, [clustered_model_features[object_index][2]], 0)
+    output_features = np.append(output_features, [clustered_model_features[object_index][6]], 0)
+    output_features = np.append(output_features, [clustered_model_features[object_index][14]], 0)
+
+    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(output_features,
+                                                                                           input_features)
+
+    markersize = 3
+
+    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+    implot = ax1.imshow(model_image)
+    # ax1.set_title(model_image_name + ' (model)')
+    ax1.set_title("model")
+    ax1.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    red_patch = mpatches.Patch(color='magenta', label='model')
+    ax1.legend(handles=[red_patch])
+
+    # ax2.set_title(input_image_name + ' (input)')
+    ax2.set_title("input")
+    ax2.imshow(input_image)
+    ax2.plot(*zip(*input_features), marker='o', color='r', ls='', ms=markersize)
+    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+    ax3.set_title("transformation")
+    ax3.imshow(model_image)
+    ax3.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
+    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
+                        mpatches.Patch(color='magenta', label='model')])
+    # plt.tight_layout()
+    plt.show(block=False)
+
+    plt.figure()
+
+
 
 plt.show()
+cv2.waitKey(0)
 
 
 
