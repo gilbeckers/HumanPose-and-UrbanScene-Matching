@@ -9,8 +9,8 @@ import matplotlib.patches as mpatches
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'trap1'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'trap2'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'trap2'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'trap1'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # 1: rechterpols  2: linkerpols
@@ -27,7 +27,7 @@ input_image = cv2.imread('img/' + input_name + '.' + img_tag ,0)
 # not look skewed or distorted -- therefore, we calculate
 # the ratio of the new image to the old image
 r = 500.0 / model_image.shape[1]
-dim = (500, int(input_image.shape[0] * r))
+dim = (500, int(model_image.shape[0] * r))
 
 # perform the actual resizing of the image and show it
 model_image = cv2.resize(model_image, dim, interpolation = cv2.INTER_AREA)
@@ -37,10 +37,10 @@ input_image = cv2.resize(input_image, dim, interpolation = cv2.INTER_AREA)
 
 ## -- -----  BACKGROUND DETECTION  --------------------
 
-kernel = np.ones((5,5),np.uint8)
-erosion = cv2.erode(model_image,kernel,iterations = 1, anchor=(100, 300))
+#kernel = np.ones((5,5),np.uint8)
+#erosion = cv2.erode(model_image,kernel,iterations = 1, anchor=(100, 300))
 
-cv2.imshow('frame',erosion)
+#cv2.imshow('frame',erosion)
 
 ## -- -----  BACKGROUND DETECTION  --------------------
 
@@ -88,6 +88,7 @@ draw_params = dict(matchColor = (0,255,0), # draw matches in green color
 img3 = cv2.drawMatches(model_image,kp_model,input_image_homo,kp_input,good,None,**draw_params)
 plt.imshow(img3) # Draw greyvalue images
 plt.show(block=False)
+#plt.show()
 plt.figure()
 
 # ------- APPLY MASK AND ONLY KEEP THE FEATURES OF THE FIRST FOUND HOMOGRAPHY -----
@@ -123,14 +124,14 @@ if one_building: # Take the first found homography, no more computations needed
     print("one building only")
     plt.scatter(clustered_model_features[:,0],clustered_model_features[:,1])
     #plt.scatter(model_center[:,0],model_center[:,1],s = 80,c = 'y', marker = 's')
-    plt.xlabel('Height'),plt.ylabel('Weight')
+    plt.xlabel('Width'),plt.ylabel('Height')
     plt.imshow(model_image)
     plt.show(block=False)
     plt.figure()
 
     plt.scatter(clustered_input_features[:,0],clustered_input_features[:,1])
     #plt.scatter(input_center[:,0],input_center[:,1],s = 80,c = 'y', marker = 's')
-    plt.xlabel('Height'),plt.ylabel('Weight')
+    plt.xlabel('Width'),plt.ylabel('Height')
     plt.imshow(cv2.imread('img/' + input_name + '.' + img_tag))
     plt.show(block=False)
     plt.figure()
@@ -169,7 +170,7 @@ if one_building: # Take the first found homography, no more computations needed
     output_features = np.array([[303, 37],[412, 90]])  # taj4 enkel rechter pols + nek
     output_features = np.array([[303, 37], [347, 70]])  # taj4 enkel rechter pols + r elbow
 
-
+    #### CALC AFFINE TRANSFORMATION OF WHOLE  (building feature points + person keypoints) #############"
 
     input_features = np.append(input_features, [clustered_input_features[0]], 0)
     input_features = np.append(input_features, [clustered_input_features[2]], 0)
@@ -181,8 +182,35 @@ if one_building: # Take the first found homography, no more computations needed
     output_features = np.append(output_features, [clustered_model_features[6]], 0)
     output_features = np.append(output_features, [clustered_model_features[14]], 0)
 
+
+    # Calc transformation of whole (building feature points + person keypoints)
     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(output_features,
                                                                                            input_features)
+
+    #####################################################################################
+
+
+    ### CALC FIRST AFFINE TrANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
+
+    # Some random selected features (of the buidling)
+    input_building_features = np.array([clustered_input_features[0], clustered_input_features[2], clustered_input_features[6], clustered_input_features[14]])
+    model_building_features = np.array([clustered_model_features[0], clustered_model_features[2], clustered_model_features[6], clustered_model_features[14]])
+
+
+
+    # Calc the transformation matrix
+    (input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(model_building_features,
+                                                                                           input_building_features)
+
+    # Calc the transformed features again with same transformation matrix
+    # But now with the people keypoints appended
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
+    input_transformed = transform(input_features)
+
+
+
 
     markersize = 3
 
@@ -240,28 +268,103 @@ else: # More than one building
     # p10_r_pols = np.array([[256, 362]])   #pisa10
     # p10_l_pols = np.array([[247, 400]])
 
-    input_features = np.array([[256, 362], [247, 400]])   # pisa9
-    output_features = np.array([[152, 334], [153, 425]]) # pisa10
+    input_features = np.array([[256, 362], [247, 400]], np.float32)   # pisa9
+    output_features = np.array([[152, 334], [153, 425]], np.float32) # pisa10
 
-    input_features = np.array([[127, 237], [206, 234]])  # trap1
+
+    input_features = np.array([[127, 237], [206, 234], [317, 205] ], np.float32)  # trap1
     #input_features = np.array([[218, 299], [280, 300]])  # trap3
+    #input_features = np.array([[136, 230], [297, 536], [343, 542]])  #trap9  rpols, renkel, lenkel
+    input_features = np.array([[113, 290], [179, 290]], np.float32)  # trap1
 
-    output_features = np.array([[116, 289], [188, 284]])  # trap2
+    output_features = np.array([[116, 289], [188, 284], [307, 257]], np.float32)  # trap2
+    #output_features = np.array([[150, 230],[319, 570], [376, 587]], np.float32) #trap8   rpols, renkel, lenkel
+    #output_features = np.array([[254, 248], [293, 253]], np.float32)  # trap4
+    output_features = np.array([[127, 237], [206, 234]], np.float32)  # trap1
 
-    object_index = 0
+    object_index = 1
 
-    input_features = np.append(input_features, [clustered_input_features[object_index][0]], 0)
-    input_features = np.append(input_features, [clustered_input_features[object_index][2]], 0)
-    input_features = np.append(input_features, [clustered_input_features[object_index][6]], 0)
-    input_features = np.append(input_features, [clustered_input_features[object_index][14]], 0)
+    whole_input_features = np.append(input_features, [clustered_input_features[object_index][0]], 0)
+    whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][2]], 0)
+    whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][6]], 0)
+    whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][8]], 0)
 
-    output_features = np.append(output_features, [clustered_model_features[object_index][0]], 0)
-    output_features = np.append(output_features, [clustered_model_features[object_index][2]], 0)
-    output_features = np.append(output_features, [clustered_model_features[object_index][6]], 0)
-    output_features = np.append(output_features, [clustered_model_features[object_index][14]], 0)
+    whole_output_features = np.append(output_features, [clustered_model_features[object_index][0]], 0)
+    whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][2]], 0)
+    whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][6]], 0)
+    whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][8]], 0)
 
-    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(output_features,
-                                                                                           input_features)
+    ### EERSTE MANIER: calc affine trans of whole (building features + person key-points)
+    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(whole_output_features,
+                                                                                           whole_input_features)
+
+    #####################################################################################
+
+
+    ### TWEEDE MANIER: CALC FIRST AFFINE TANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
+
+    # Some random selected features (of the buidling)
+    # input_building_features = np.array(
+    #     [clustered_input_features[object_index][0], clustered_input_features[object_index][2], clustered_input_features[object_index][6],
+    #      clustered_input_features[object_index][14]])
+    # model_building_features = np.array(
+    #     [clustered_model_features[object_index][0], clustered_model_features[object_index][2], clustered_model_features[object_index][6],
+    #      clustered_model_features[object_index][14]])
+    #
+    # # Calc the transformation matrix of building features
+    # (input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(
+    #     model_building_features,
+    #     input_building_features)
+
+
+
+    #3e MANIER:  Calc transformation of person-features
+    input_features = np.append(input_features, clustered_input_features[object_index], 0)
+    output_features = np.append(output_features, clustered_model_features[object_index], 0)
+
+    #print("ejejeje: " , input_features)
+
+
+
+    (input_person_transformed, transformation_matrix) = affine_transformation.find_transformation(
+        output_features,
+        input_features)
+
+    # Calc the transformed features again with same transformation matrix
+    # But now with the people keypoints appended
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
+    input_transformed = transform(input_features)
+
+    img = cv2.imread('img/' + model_name + '.' + img_tag)
+    rows, cols, ch = img.shape
+
+    input_features = input_features.astype(np.float32)
+    output_features = output_features.astype(np.float32)
+    pts1 = np.float32([[56, 65], [368, 52], [28, 387], [389, 390]])
+    pts2 = output_features #np.float32([[0, 0], [300, 0], [0, 300], [300, 300]])
+
+    print("pts: ", pts1)
+
+
+    print("whoooole" , input_features)
+    '''
+    print("whoooole", output_features)
+    print("shape: " , input_features.shape)
+    print("shape2; " , output_features.shape)
+    '''
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+
+    dst = cv2.warpPerspective(model_image, M, (300, 300))
+
+    plt.subplot(121), plt.imshow(input_image), plt.title('Input')
+    plt.subplot(122), plt.imshow(dst), plt.title('Output')
+    plt.show(block=False)
+    plt.figure()
+
+
+
 
     markersize = 3
 
@@ -269,7 +372,7 @@ else: # More than one building
     implot = ax1.imshow(model_image)
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
-    ax1.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
+    ax1.plot(*zip(*whole_output_features), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     red_patch = mpatches.Patch(color='magenta', label='model')
     ax1.legend(handles=[red_patch])
@@ -277,12 +380,12 @@ else: # More than one building
     # ax2.set_title(input_image_name + ' (input)')
     ax2.set_title("input")
     ax2.imshow(input_image)
-    ax2.plot(*zip(*input_features), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*whole_input_features), marker='o', color='r', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
     ax3.set_title("transformation")
     ax3.imshow(model_image)
-    ax3.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
+    ax3.plot(*zip(*whole_output_features), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
