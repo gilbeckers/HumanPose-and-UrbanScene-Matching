@@ -11,8 +11,8 @@ import feature_operations
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'trap1'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'trap4'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'trap7'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'trap8'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # goeie voorbeelden zijn pisa9 en pisa10
@@ -28,7 +28,8 @@ list_poses = {
     "trap2": np.array([[127, 237], [206, 234]]),  # np.array([[127, 237], [206, 234]], np.float32)  # trap1
     "trap3": np.array([[218, 299], [280, 300]]),
     "trap4": np.array([[254, 248], [293, 253]]),
-    "trap8": np.array([[150, 230],[319, 570], [376, 587]]),  #trap8   rpols, renkel, lenkel
+    "trap7": np.array([[254, 248], [293, 253]]),
+    "trap8": np.array([[150, 230],[319, 570]]),  #trap8   rpols, renkel, lenkel
     "trap9": np.array([[136, 230], [297, 536], [343, 542]]),  #trap9  rpols, renkel, lenkel
     "taj3": np.array([[391, 92], [429, 126]]),  # taj3  enkel recher pols + r elbow     #np.array([[391, 92], [517, 148]])  # taj3  enkel recher pols + nek
     "taj4": np.array([[303, 37], [347, 70]]),   # taj4 enkel rechter pols + r elbow     #np.array([[303, 37], [412, 90]])  # taj4 enkel rechter pols + nek
@@ -39,11 +40,14 @@ list_poses = {
 model_pose_features = list_poses[model_name]
 input_pose_features = list_poses[input_name]
 
+assert model_pose_features.shape == input_pose_features.shape
+
 # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
 kp_model, des_model = feature_operations.sift_detect_and_compute(model_image)
 kp_input, des_input = feature_operations.sift_detect_and_compute(input_image)
 
 # --------- FEATURE MATCHING : FLANN MATCHER -------------------
+#(matchesMask, model_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
 (matchesMask, input_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
 
 # ---------------- DRAW MATCHES  -------------------------------
@@ -51,6 +55,7 @@ draw_params = dict(matchColor = (0,255,0), # draw matches in green color
                    singlePointColor = None,
                    matchesMask = matchesMask, # draw only inliers
                    flags = 2)
+plt.figure()
 img3 = cv2.drawMatches(model_image,kp_model,input_image_homo,kp_input,good,None,**draw_params)
 plt.imshow(img3) # Draw greyvalue images
 plt.show(block=False)

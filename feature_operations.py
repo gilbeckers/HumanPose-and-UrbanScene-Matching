@@ -34,15 +34,32 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         input_pts = np.float32([ kp_input[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
         # Find only the good, corresponding points (lines of matching points may not cross)
-        M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC,5.0)  #tresh : 5
+        # Returns the perspective transformation matrix M
+        M, mask = cv2.findHomography(input_pts, model_pts, cv2.RANSAC,5.0)  #tresh : 5
+        #M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC, 5.0)  # tresh : 5
+
         matchesMask = mask.ravel().tolist()
         # TODO wat als model_image en input_image niet zelfde resolutie hebben?
         h,w = model_image.shape
+
+        # the square that's drawn on the model. Just the prerspective transformation of the model image contours
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
         dst = cv2.perspectiveTransform(pts,M)
+
+        perspective_transform_input = cv2.warpPerspective(input_image, M, (w, h ))
+        plt.figure()
+        plt.subplot(131), plt.imshow(model_image), plt.title('Model')
+        plt.subplot(132), plt.imshow(perspective_transform_input), plt.title('Perspective transformed Input')
+        plt.subplot(133), plt.imshow(input_image), plt.title('Input')
+        plt.show(block=False)
+
         input_image_homo = cv2.polylines(input_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)  # draw homography square
+        #model_image_homo = cv2.polylines(model_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)  # draw homography square
+
 
         return (matchesMask, input_image_homo, good, model_pts, input_pts)
+        #return (matchesMask, model_image_homo, good, model_pts, input_pts)
+
     else:
         print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
         matchesMask = None
@@ -73,14 +90,14 @@ def plot_features(clustered_model_features, clustered_input_features, one_buildi
         plt.figure()
         for feat in clustered_model_features:
             plt.scatter(feat[:, 0], feat[:, 1], c=np.random.rand(3,), s=5)
-        plt.xlabel('Height'), plt.ylabel('Weight')
+        plt.xlabel('Width'), plt.ylabel('Height')
         plt.imshow(model_image)
         plt.show(block=False)
 
         plt.figure()
         for feat in clustered_input_features:
             plt.scatter(feat[:, 0], feat[:, 1], c=np.random.rand(3,), s=5)
-        plt.xlabel('Height'), plt.ylabel('Weight')
+        plt.xlabel('Width'), plt.ylabel('Height')
         plt.imshow(input_image)
         plt.show(block=False)
 
@@ -101,7 +118,7 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     # relation between the person and the building
     # TODO: other options??
 
-    object_index = 1  # TODO make algo that decides which object to take (the one without the person)
+    object_index = 0  # TODO make algo that decides which object to take (the one without the person)
     # TODO: moet niet perse door een algoritme worden bepaalt, kan ook eigenschap zijn van urban scene en dus gemarkt door mens
 
     if not one_building:
@@ -111,16 +128,18 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     #### CALC AFFINE TRANSFORMATION OF WHOLE  (building feature points + person keypoints) #############"
     input_pose_features = np.append(input_pose_features, [clustered_input_features[0]], 0)
     input_pose_features = np.append(input_pose_features, [clustered_input_features[2]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[6]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[14]], 0)
+    input_pose_features = np.append(input_pose_features, [clustered_input_features[3]], 0)
+    input_pose_features = np.append(input_pose_features, [clustered_input_features[4]], 0)
 
     model_pose_features = np.append(model_pose_features, [clustered_model_features[0]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[2]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[6]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[14]], 0)
+    model_pose_features = np.append(model_pose_features, [clustered_model_features[3]], 0)
+    model_pose_features = np.append(model_pose_features, [clustered_model_features[4]], 0)
 
     # Calc transformation of whole (building feature points + person keypoints)
     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
+
+    print("affine matrix: ", transformation_matrix)
 
     #####################################################################################
 
