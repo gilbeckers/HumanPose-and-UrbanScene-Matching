@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 
 
-MIN_MATCH_COUNT = 10
+MIN_MATCH_COUNT = 15
 FLANN_INDEX_KDTREE = 1
 
 def sift_detect_and_compute(image):
@@ -29,6 +29,8 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         if m.distance < 0.80*n.distance:
             good.append(m)
 
+    print("aantal matches= ", len(good))
+
     if len(good)>MIN_MATCH_COUNT:
         model_pts = np.float32([ kp_model[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         input_pts = np.float32([ kp_input[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
@@ -37,12 +39,14 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
 
         # Find only the good, corresponding points (lines of matching points may not cross)
         # Returns the perspective transformation matrix M
-        M, mask = cv2.findHomography(input_pts, model_pts, cv2.RANSAC,5.0)  #tresh : 5
+        M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC,5.0)  #tresh : 5
         #M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC, 5.0)  # tresh : 5
 
         matchesMask = mask.ravel().tolist()
         # TODO wat als model_image en input_image niet zelfde resolutie hebben?
         h,w = model_image.shape
+
+        print("aantal good matches: " , matchesMask.count(1))
 
         # the square that's drawn on the model. Just the prerspective transformation of the model image contours
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
@@ -120,7 +124,7 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     # relation between the person and the building
     # TODO: other options??
 
-    object_index = 0  # TODO make algo that decides which object to take (the one without the person)
+    object_index = 1  # TODO make algo that decides which object to take (the one without the person)
     # TODO: moet niet perse door een algoritme worden bepaalt, kan ook eigenschap zijn van urban scene en dus gemarkt door mens
 
     if not one_building:
