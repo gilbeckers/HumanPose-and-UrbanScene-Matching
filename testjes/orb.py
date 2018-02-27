@@ -2,7 +2,9 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-img = cv2.imread('emma2.jpg',0)
+
+
+
 
 # Initiate ORB detector
 orb = cv2.ORB_create()

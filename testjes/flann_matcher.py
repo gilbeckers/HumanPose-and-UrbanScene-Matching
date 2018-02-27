@@ -13,8 +13,8 @@ index_params= dict(algorithm = FLANN_INDEX_LSH,
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-img1 = cv2.imread('eifel2.jpg',0)          # queryImage
-img2 = cv2.imread('eifel1.jpg',0) # trainImage
+img1 = cv2.imread('pisa9.jpg',0)          # queryImage
+img2 = cv2.imread('pisa9.jpg',0) # trainImage
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create()
 # find the keypoints and descriptors with SIFT

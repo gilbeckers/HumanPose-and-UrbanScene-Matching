@@ -3,7 +3,7 @@ import matplotlib as plt
 
 import numpy as np
 
-img = cv2.imread('emma2.jpg')
+img = cv2.imread('pisa9.jpg')
 
 # Create SURF object. You can specify params here or later.
 # Here I set Hessian Threshold to 400
@@ -26,8 +26,8 @@ print( len(kp) )
 img2 = cv2.drawKeypoints(img,kp,None,(255,0,0),4)
 cv2.imwrite('key.jpg',img2)
 
-#cv2.imshow(img2)
-#cv2.show()
+cv2.imshow(img2)
+cv2.show()
 
 
 

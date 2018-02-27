@@ -33,6 +33,8 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         model_pts = np.float32([ kp_model[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         input_pts = np.float32([ kp_input[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
+        # Checken in andere kant
+
         # Find only the good, corresponding points (lines of matching points may not cross)
         # Returns the perspective transformation matrix M
         M, mask = cv2.findHomography(input_pts, model_pts, cv2.RANSAC,5.0)  #tresh : 5
@@ -57,7 +59,7 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         #model_image_homo = cv2.polylines(model_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)  # draw homography square
 
 
-        return (matchesMask, input_image_homo, good, model_pts, input_pts)
+        return (matchesMask, input_image_homo, good, model_pts, input_pts, M)
         #return (matchesMask, model_image_homo, good, model_pts, input_pts)
 
     else:
@@ -106,7 +108,7 @@ def plot_features(clustered_model_features, clustered_input_features, one_buildi
 
 
 def affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features, clustered_input_features, clustered_model_features,
-                                          model_image, input_image):
+                                          model_image, input_image, perspective_trans_matrix):
     # -------------  CALC AFFINE TRANSFORMATION  ------------------##
     # Calc affine trans between the wrest points and some random feature points of the building
     # The question is: WHICH feature points should we take??
@@ -130,11 +132,18 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     input_pose_features = np.append(input_pose_features, [clustered_input_features[2]], 0)
     input_pose_features = np.append(input_pose_features, [clustered_input_features[3]], 0)
     input_pose_features = np.append(input_pose_features, [clustered_input_features[4]], 0)
+    input_pose_features = np.append(input_pose_features, [clustered_input_features[8]], 0)
+    input_pose_features = np.append(input_pose_features, [clustered_input_features[9]], 0)
+    input_pose_features = np.append(input_pose_features, [clustered_input_features[11]], 0)
+
 
     model_pose_features = np.append(model_pose_features, [clustered_model_features[0]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[2]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[3]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[4]], 0)
+    model_pose_features = np.append(model_pose_features, [clustered_model_features[8]], 0)
+    model_pose_features = np.append(model_pose_features, [clustered_model_features[9]], 0)
+    model_pose_features = np.append(model_pose_features, [clustered_model_features[11]], 0)
 
     # Calc transformation of whole (building feature points + person keypoints)
     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
@@ -142,6 +151,8 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     print("affine matrix: ", transformation_matrix)
 
     #####################################################################################
+
+
 
 
     ### CALC FIRST AFFINE TrANS MATRIX OF ONLY THE BUILDING FEATURES ###################"

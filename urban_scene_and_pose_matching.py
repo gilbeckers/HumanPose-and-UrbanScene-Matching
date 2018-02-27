@@ -11,8 +11,8 @@ import feature_operations
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'trap7'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'trap8'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'pisa9'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'pisa101'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # goeie voorbeelden zijn pisa9 en pisa10
@@ -20,7 +20,7 @@ model_image = cv2.imread('img/' + model_name + '.' + img_tag ,0)
 input_image = cv2.imread('img/' + input_name + '.' + img_tag ,0)
 # Resize
 # TODO: optimize + altijd noodzakelijk om te resizen?
-model_image, input_image = util.resize_img(model_image, input_image)
+#model_image, input_image = util.resize_img(model_image, input_image)
 
 list_poses = {
     # 1: linkerpols   2:rechterpols
@@ -29,12 +29,13 @@ list_poses = {
     "trap3": np.array([[218, 299], [280, 300]]),
     "trap4": np.array([[254, 248], [293, 253]]),
     "trap7": np.array([[254, 248], [293, 253]]),
-    "trap8": np.array([[150, 230],[319, 570]]),  #trap8   rpols, renkel, lenkel
-    "trap9": np.array([[136, 230], [297, 536], [343, 542]]),  #trap9  rpols, renkel, lenkel
+    "trap8": np.array([[150, 230],[225, 225]]),  #trap8   rpols, renkel, lenkel
+    "trap9": np.array([[136, 230], [217, 221]]),  #trap9  rpols, renkel, lenkel  , [343, 542]
     "taj3": np.array([[391, 92], [429, 126]]),  # taj3  enkel recher pols + r elbow     #np.array([[391, 92], [517, 148]])  # taj3  enkel recher pols + nek
     "taj4": np.array([[303, 37], [347, 70]]),   # taj4 enkel rechter pols + r elbow     #np.array([[303, 37], [412, 90]])  # taj4 enkel rechter pols + nek
     "pisa9": np.array([[152, 334], [153, 425]]),  #  np.array([[256, 362], [247, 400]], np.float32)
-    "pisa10" : np.array([[256, 362], [247, 400]])
+    "pisa10" : np.array([[256, 362], [247, 400]]),
+    "pisa101" : np.array([[256, 362], [247, 400]])
     }
 
 model_pose_features = list_poses[model_name]
@@ -48,7 +49,7 @@ kp_input, des_input = feature_operations.sift_detect_and_compute(input_image)
 
 # --------- FEATURE MATCHING : FLANN MATCHER -------------------
 #(matchesMask, model_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
-(matchesMask, input_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
+(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
 
 # ---------------- DRAW MATCHES  -------------------------------
 draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -56,7 +57,8 @@ draw_params = dict(matchColor = (0,255,0), # draw matches in green color
                    matchesMask = matchesMask, # draw only inliers
                    flags = 2)
 plt.figure()
-img3 = cv2.drawMatches(model_image,kp_model,input_image_homo,kp_input,good,None,**draw_params)
+#img3 = cv2.drawMatches(model_image,kp_model,input_image_homo,kp_input,good,None,**draw_params)
+img3 = cv2.drawMatches(model_image,kp_model,cv2.imread('img/' + input_name + '.' + img_tag ,0),kp_input,good,None,**draw_params)
 plt.imshow(img3) # Draw greyvalue images
 plt.show(block=False)
 
@@ -88,7 +90,7 @@ clustered_input_features = np.squeeze(clustered_features[1])  # second elements 
 feature_operations.plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image)
 
 feature_operations.affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features,
-                                                         clustered_input_features, clustered_model_features,model_image, input_image)
+                                                         clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
 
 
 plt.show()

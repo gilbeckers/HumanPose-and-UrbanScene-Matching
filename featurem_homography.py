@@ -73,7 +73,6 @@ draw_params = dict(matchColor = (0,255,0), # draw matches in green color
 img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
 
 
-
 # Convert mask array to an array of boolean type [ False True True False ... ]
 my_mask = np.asarray(matchesMask).astype(bool)
 # Apply mask to feature points of destination img, so only the features of homography remain
