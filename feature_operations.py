@@ -40,7 +40,7 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         # Find only the good, corresponding points (lines of matching points may not cross)
         # Returns the perspective transformation matrix M
         M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC,5.0)  #tresh : 5
-        #M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC, 5.0)  # tresh : 5
+        #M, mask = cv2.findHomography(input_pts, model_pts, cv2.RANSAC, 5.0)  # tresh : 5
 
         matchesMask = mask.ravel().tolist()
         # TODO wat als model_image en input_image niet zelfde resolutie hebben?
@@ -50,6 +50,7 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
 
         # the square that's drawn on the model. Just the prerspective transformation of the model image contours
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+        #print("###points: ", pts)
         dst = cv2.perspectiveTransform(pts,M)
 
         perspective_transform_input = cv2.warpPerspective(input_image, M, (w, h ))

@@ -20,10 +20,13 @@ model_image = cv2.imread('img/' + model_name + '.' + img_tag ,0)
 input_image = cv2.imread('img/' + input_name + '.' + img_tag ,0)
 # Resize
 # TODO: optimize + altijd noodzakelijk om te resizen?
-#model_image, input_image = util.resize_img(model_image, input_image)
+model_image, input_image = util.resize_img(model_image, input_image)
 
 list_poses = {
     # 1: linkerpols   2:rechterpols
+    "blad1": np.array([[113, 290], [179, 290]]),
+    "pisa_chapel": np.array([[113, 290], [179, 290]]),
+    "blad2": np.array([[113, 290], [179, 290]]),
     "trap1": np.array([[113, 290], [179, 290]]),  #np.array([[113, 290], [179, 290]], np.float32)  # trap1
     "trap2": np.array([[127, 237], [206, 234]]),  # np.array([[127, 237], [206, 234]], np.float32)  # trap1
     "trap3": np.array([[218, 299], [280, 300]]),
@@ -74,9 +77,59 @@ my_input_pts = input_pts[np.array(my_mask)]
 model_pts_2D = np.squeeze(my_model_pts[:])
 input_pts_2D = np.squeeze(my_input_pts[:])
 
+print("matrx: " , perspective_trans_matrix)
+
 print("Total good matches: ", len(good))
 print("Total matches for bouding box des: ", len(my_model_pts))
 print("Total matches for bouding box source: ", len(my_input_pts))
+
+# ------------------   Validate Homography / Perspective matrix  -------------------------------------
+
+#pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+my_model_pts2 = np.float32(model_pts_2D).reshape(-1,1,2)  # bit reshapeing so the cv2.perspectiveTransform() works
+model_transform_pts_2D = cv2.perspectiveTransform(my_model_pts2,perspective_trans_matrix) #transform(input_pts_2D)
+model_transform_pts_2D = np.squeeze(model_transform_pts_2D[:]) # strip 1 dimension
+
+## 1. Check the Reprojection error:  https://stackoverflow.com/questions/11053099/how-can-you-tell-if-a-homography-matrix-is-acceptable-or-not
+
+# Calc the euclidean distance for the first 3 features
+reprojection_error = ( ((model_transform_pts_2D[0, 0] - input_pts_2D[0,0]) ** 2 + (model_transform_pts_2D[0, 1] - input_pts_2D[0,1]) ** 2)
+      + ((model_transform_pts_2D[1, 0] - input_pts_2D[1,0]) ** 2 + (model_transform_pts_2D[1, 1] - input_pts_2D[1,1]) ** 2)
+      + ((model_transform_pts_2D[2, 0] - input_pts_2D[2,0]) ** 2 + (model_transform_pts_2D[2, 1] - input_pts_2D[2,1]) ** 2)) ** 0.5
+
+print("distance: " , reprojection_error)
+
+
+markersize = 3
+
+f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+implot = ax1.imshow(model_image)
+# ax1.set_title(model_image_name + ' (model)')
+ax1.set_title("model")
+ax1.plot(*zip(*model_pts_2D), marker='o', color='magenta', ls='', label='model',
+         ms=markersize)  # ms = markersize
+red_patch = mpatches.Patch(color='magenta', label='model')
+ax1.legend(handles=[red_patch])
+
+# ax2.set_title(input_image_name + ' (input)')
+ax2.set_title("input")
+ax2.imshow(input_image)
+ax2.plot(*zip(*input_pts_2D), marker='o', color='r', ls='', ms=markersize)
+ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+ax3.set_title("transformation of model onto input err: " + str(round(reprojection_error,3)))
+ax3.imshow(input_image)
+ax3.plot(*zip(*input_pts_2D), marker='o', color='magenta', ls='', label='model',
+         ms=markersize)  # ms = markersize
+ax3.plot(*zip(*model_transform_pts_2D), marker='o', color='b', ls='', ms=markersize)
+ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
+                    mpatches.Patch(color='magenta', label='model')])
+# plt.tight_layout()
+plt.show(block=False)
+
+
+
+
 
 # ------------- Kmeans - CLUSTERING THE FEATURES -------------
 # --> If more than one building is detected ie pisa9.jpg & pisa10.jpg => cluster & seperate in individual buildings
@@ -89,9 +142,10 @@ clustered_input_features = np.squeeze(clustered_features[1])  # second elements 
 
 feature_operations.plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image)
 
+'''
 feature_operations.affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features,
                                                          clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
-
+'''
 
 plt.show()
 
