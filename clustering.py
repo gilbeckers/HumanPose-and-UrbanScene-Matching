@@ -12,10 +12,10 @@ def kmean(model_pts_2D, input_pts_2D):
     model_ret, model_label, model_center = cv2.kmeans(model_pts_2D, 2, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
     input_ret, input_label, input_center = cv2.kmeans(input_pts_2D, 2, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
-    print("center : ", model_center)
+    #print("center : ", model_center)
     distance_centers_model = np.sqrt(
         (model_center[0][0] - model_center[1][0]) ** 2 + (model_center[0][1] - model_center[1][1]) ** 2)
-    print("distance ceners: ", distance_centers_model)
+    #print("distance ceners: ", distance_centers_model)
     distance_centers_input = np.sqrt(
         (input_center[0][0] - input_center[1][0]) ** 2 + (input_center[0][1] - input_center[1][1]) ** 2)
 

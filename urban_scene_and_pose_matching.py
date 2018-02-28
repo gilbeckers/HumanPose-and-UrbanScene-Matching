@@ -11,8 +11,8 @@ import feature_operations
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'pisa9'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'pisa101'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'trap7'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'trap1'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # goeie voorbeelden zijn pisa9 en pisa10
@@ -77,8 +77,6 @@ my_input_pts = input_pts[np.array(my_mask)]
 model_pts_2D = np.squeeze(my_model_pts[:])
 input_pts_2D = np.squeeze(my_input_pts[:])
 
-print("matrx: " , perspective_trans_matrix)
-
 print("Total good matches: ", len(good))
 print("Total matches for bouding box des: ", len(my_model_pts))
 print("Total matches for bouding box source: ", len(my_input_pts))
@@ -91,14 +89,63 @@ model_transform_pts_2D = cv2.perspectiveTransform(my_model_pts2,perspective_tran
 model_transform_pts_2D = np.squeeze(model_transform_pts_2D[:]) # strip 1 dimension
 
 ## 1. Check the Reprojection error:  https://stackoverflow.com/questions/11053099/how-can-you-tell-if-a-homography-matrix-is-acceptable-or-not
-
+# https://en.wikipedia.org/wiki/Reprojection_error
 # Calc the euclidean distance for the first 3 features
 reprojection_error = ( ((model_transform_pts_2D[0, 0] - input_pts_2D[0,0]) ** 2 + (model_transform_pts_2D[0, 1] - input_pts_2D[0,1]) ** 2)
       + ((model_transform_pts_2D[1, 0] - input_pts_2D[1,0]) ** 2 + (model_transform_pts_2D[1, 1] - input_pts_2D[1,1]) ** 2)
       + ((model_transform_pts_2D[2, 0] - input_pts_2D[2,0]) ** 2 + (model_transform_pts_2D[2, 1] - input_pts_2D[2,1]) ** 2)) ** 0.5
 
-print("distance: " , reprojection_error)
+print("--- reprojection distance: " , reprojection_error)
 
+## 2. Determinant of 2x2 matrix  (source: https://dsp.stackexchange.com/questions/17846/template-matching-or-object-recognition)
+# Property of an affine (and projective?) transformation:  (source: http://answers.opencv.org/question/2588/check-if-homography-is-good/)
+#   -If the determinant of the top-left 2x2 matrix is > 0 the transformation is orientation-preserving.
+#   -Else if the determinant is < 0, it is orientation-reversing.
+det = perspective_trans_matrix[0,0] * perspective_trans_matrix[1,1] - perspective_trans_matrix[0,1] * perspective_trans_matrix[1,0]
+print("----- determinant of topleft 2x2 matrix: " , det)
+if det<0:
+    print("determinant<0, homography unvalid")
+    exit()
+
+
+'''
+# understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
+
+
+# How to check if obtained homography matrix is good?  https://stackoverflow.com/questions/14954220/how-to-check-if-obtained-homography-matrix-is-good
+1. Homography should preserve the direction of polygonal points. 
+Design a simple test. points (0,0), (imwidth,0), (width,height), (0,height) represent a 
+quadrilateral with clockwise arranged points. Apply homography on those points and see if 
+they are still clockwise arranged if they become counter clockwise your homography is flipping (mirroring) 
+the image which is sometimes still ok. But if your points are out of order than you have a "bad homography"
+
+2. The homography doesn't change the scale of the object too much. For example if you expect it to shrink or 
+enlarge the image by a factor of up to X, just check this rule. 
+Transform the 4 points (0,0), (imwidth,0), (width-1,height), (0,height) with homography and 
+calculate the area of the quadrilateral (opencv method of calculating area of polygon) if 
+the ratio of areas is too big (or too small), you probably have an error.
+
+3. Good homography is usually uses low values of perspectivity. Typically if the size of 
+the image is ~1000x1000 pixels those values should be ~0.005-0.001. High perspectivity 
+will cause enormous distortions which are probably an error. If you don't know where those values 
+are located read my post: trying to understand the Affine Transform . 
+It explains the affine transform math and the other 2 values are perspective parameters.
+'''
+
+## 3. copied from https://dsp.stackexchange.com/questions/17846/template-matching-or-object-recognition
+#other explanation: https://dsp.stackexchange.com/questions/1990/filtering-ransac-estimated-homographies
+N1 = (perspective_trans_matrix[0,0] * perspective_trans_matrix[0,0] + perspective_trans_matrix[0,1] * perspective_trans_matrix[0,1]) ** 0.5
+if N1 > 4 or N1 < 0.1:
+    print("not ok 1")
+    #exit()
+N2 = (perspective_trans_matrix[1,0] * perspective_trans_matrix[1,0] + perspective_trans_matrix[1,1] * perspective_trans_matrix[1,1]) ** 0.5
+if N2 > 4 or N2 < 0.1:
+    print("not ok 2")
+    #exit()
+N3 = (perspective_trans_matrix[2,0] * perspective_trans_matrix[2,0] + perspective_trans_matrix[2,1] * perspective_trans_matrix[2,1]) ** 0.5
+if N3 > 0.002:
+    print("not ok 3")
+    #exit()
 
 markersize = 3
 
