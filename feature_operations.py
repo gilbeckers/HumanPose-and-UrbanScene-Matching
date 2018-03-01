@@ -53,18 +53,21 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         #print("###points: ", pts)
         dst = cv2.perspectiveTransform(pts,M)
 
-        perspective_transform_input = cv2.warpPerspective(input_image, M, (w, h ))
+        M2, mask2 = cv2.findHomography(input_pts, model_pts, cv2.RANSAC, 5.0)  # we want to transform the input-plane to the model-plane
+        h2,w2 = input_image.shape
+        '''
+        perspective_transform_input = cv2.warpPerspective(input_image, M2, (w2, h2 ))
         plt.figure()
         plt.subplot(131), plt.imshow(model_image), plt.title('Model')
         plt.subplot(132), plt.imshow(perspective_transform_input), plt.title('Perspective transformed Input')
         plt.subplot(133), plt.imshow(input_image), plt.title('Input')
         plt.show(block=False)
-
+        '''
         input_image_homo = cv2.polylines(input_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)  # draw homography square
         #model_image_homo = cv2.polylines(model_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)  # draw homography square
 
 
-        return (matchesMask, input_image_homo, good, model_pts, input_pts, M)
+        return (matchesMask, input_image_homo, good, model_pts, input_pts, M, M2)
         #return (matchesMask, model_image_homo, good, model_pts, input_pts)
 
     else:
@@ -125,7 +128,7 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     # relation between the person and the building
     # TODO: other options??
 
-    object_index = 1  # TODO make algo that decides which object to take (the one without the person)
+    object_index = 0  # TODO make algo that decides which object to take (the one without the person)
     # TODO: moet niet perse door een algoritme worden bepaalt, kan ook eigenschap zijn van urban scene en dus gemarkt door mens
 
     if not one_building:
@@ -133,6 +136,7 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
         clustered_model_features = clustered_model_features[object_index]
 
     #### CALC AFFINE TRANSFORMATION OF WHOLE  (building feature points + person keypoints) #############"
+    '''
     input_pose_features = np.append(input_pose_features, [clustered_input_features[0]], 0)
     input_pose_features = np.append(input_pose_features, [clustered_input_features[2]], 0)
     input_pose_features = np.append(input_pose_features, [clustered_input_features[3]], 0)
@@ -149,10 +153,17 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     model_pose_features = np.append(model_pose_features, [clustered_model_features[8]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[9]], 0)
     model_pose_features = np.append(model_pose_features, [clustered_model_features[11]], 0)
+    '''
+    #clustered_model_features = np.append(clustered_model_features, [model_pose_features[0]], 0)
+    #clustered_model_features = np.append(clustered_model_features, [model_pose_features[1]], 0)
+
+    #clustered_input_features = np.append(clustered_input_features, [input_pose_features[0]], 0)
+    #clustered_input_features = np.append(clustered_input_features, [input_pose_features[1]], 0)
 
     # Calc transformation of whole (building feature points + person keypoints)
-    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
-
+    #(input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
+    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(clustered_model_features,
+                                                                                           clustered_input_features)
     print("affine matrix: ", transformation_matrix)
 
     #####################################################################################
@@ -247,7 +258,7 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     implot = ax1.imshow(model_image)
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
-    ax1.plot(*zip(*model_pose_features), marker='o', color='magenta', ls='', label='model',
+    ax1.plot(*zip(*clustered_model_features), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     red_patch = mpatches.Patch(color='magenta', label='model')
     ax1.legend(handles=[red_patch])
@@ -255,12 +266,12 @@ def affine_transform_urban_scene_and_pose(one_building, model_pose_features, inp
     # ax2.set_title(input_image_name + ' (input)')
     ax2.set_title("input")
     ax2.imshow(input_image)
-    ax2.plot(*zip(*input_pose_features), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*clustered_input_features), marker='o', color='r', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-    ax3.set_title("transformation")
+    ax3.set_title("affine transformation (features+pose)")
     ax3.imshow(model_image)
-    ax3.plot(*zip(*model_pose_features), marker='o', color='magenta', ls='', label='model',
+    ax3.plot(*zip(*clustered_model_features), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),

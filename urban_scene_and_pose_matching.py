@@ -11,8 +11,8 @@ import feature_operations
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'trap7'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'trap1'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'notredam3'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'notredam1'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # goeie voorbeelden zijn pisa9 en pisa10
@@ -20,25 +20,37 @@ model_image = cv2.imread('img/' + model_name + '.' + img_tag ,0)
 input_image = cv2.imread('img/' + input_name + '.' + img_tag ,0)
 # Resize
 # TODO: optimize + altijd noodzakelijk om te resizen?
-model_image, input_image = util.resize_img(model_image, input_image)
+#model_image, input_image = util.resize_img(model_image, input_image)
 
 list_poses = {
     # 1: linkerpols   2:rechterpols
     "blad1": np.array([[113, 290], [179, 290]]),
+    "notredam1": np.array([[113, 290], [179, 290]]),
+    "notredam3": np.array([[113, 290], [179, 290]]),
     "pisa_chapel": np.array([[113, 290], [179, 290]]),
     "blad2": np.array([[113, 290], [179, 290]]),
-    "trap1": np.array([[113, 290], [179, 290]]),  #np.array([[113, 290], [179, 290]], np.float32)  # trap1
-    "trap2": np.array([[127, 237], [206, 234]]),  # np.array([[127, 237], [206, 234]], np.float32)  # trap1
-    "trap3": np.array([[218, 299], [280, 300]]),
+    "trap1": np.array([[173,444],[278, 440]]),  #np.array([[113, 290], [179, 290]], np.float32)  # trap1
+    "trap2": np.array([[197,361],[302, 355]]),  # np.array([[127, 237], [206, 234]], np.float32)  # trap1
+    "trap3": np.array([[333,448], [423,452]]),
     "trap4": np.array([[254, 248], [293, 253]]),
     "trap7": np.array([[254, 248], [293, 253]]),
     "trap8": np.array([[150, 230],[225, 225]]),  #trap8   rpols, renkel, lenkel
-    "trap9": np.array([[136, 230], [217, 221]]),  #trap9  rpols, renkel, lenkel  , [343, 542]
-    "taj3": np.array([[391, 92], [429, 126]]),  # taj3  enkel recher pols + r elbow     #np.array([[391, 92], [517, 148]])  # taj3  enkel recher pols + nek
-    "taj4": np.array([[303, 37], [347, 70]]),   # taj4 enkel rechter pols + r elbow     #np.array([[303, 37], [412, 90]])  # taj4 enkel rechter pols + nek
-    "pisa9": np.array([[152, 334], [153, 425]]),  #  np.array([[256, 362], [247, 400]], np.float32)
+    "trap9": np.array([[136, 230], [217, 221]]),
+    "taj1": np.array([[391, 92], [429, 126]]),
+    "taj2": np.array([[391, 92], [429, 126]]),#trap9  rpols, renkel, lenkel  , [343, 542]
+    "taj3": np.array([[302,36], [351, 72]]),  # taj3  enkel recher pols + r elbow   [391, 92], [429, 126]
+    "taj4": np.array([[389,89], [425, 123]]),   # taj4 enkel rechter pols + r elbow     #np.array([[303, 37], [412, 90]])  # taj4 enkel rechter pols + nek
+    "pisa2": np.array([[152, 334], [146, 419]]),
+    "pisa3": np.array([[152, 334], [146, 419]]),
+    "pisa4": np.array([[152, 334], [146, 419]]),
+    "pisa5": np.array([[152, 334], [146, 419]]),
+    "pisa6": np.array([[152, 334], [146, 419]]),
+    "pisa7": np.array([[152, 334], [146, 419]]),
+    "pisa8": np.array([[152, 334], [146, 419]]),
+    "pisa9": np.array([[152, 334], [146, 419]]),  #  np.array([[256, 362], [247, 400]], np.float32)
     "pisa10" : np.array([[256, 362], [247, 400]]),
-    "pisa101" : np.array([[256, 362], [247, 400]])
+    "pisa12": np.array([[152, 334], [146, 419]]),
+    "pisa101" : np.array([[217, 353], [209, 404]])
     }
 
 model_pose_features = list_poses[model_name]
@@ -52,7 +64,7 @@ kp_input, des_input = feature_operations.sift_detect_and_compute(input_image)
 
 # --------- FEATURE MATCHING : FLANN MATCHER -------------------
 #(matchesMask, model_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
-(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
+(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix, persp_matrix2) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
 
 # ---------------- DRAW MATCHES  -------------------------------
 draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -81,7 +93,53 @@ print("Total good matches: ", len(good))
 print("Total matches for bouding box des: ", len(my_model_pts))
 print("Total matches for bouding box source: ", len(my_input_pts))
 
+#append pose features
+model_pts_2D = np.append(model_pts_2D, [model_pose_features[0]], 0)
+model_pts_2D = np.append(model_pts_2D, [model_pose_features[1]], 0)
+
+input_pts_2D = np.append(input_pts_2D, [input_pose_features[0]], 0)
+input_pts_2D = np.append(input_pts_2D, [input_pose_features[1]], 0)
+
+# ---------- Perspective Correction -----
+h2,w2 = input_image.shape
+h2 = round(h2*6/5)
+w2= round(w2*6/5)
+
+perspective_transform_input = cv2.warpPerspective(input_image, persp_matrix2, (w2, h2 ))  #persp_matrix2 transforms input onto model_plane
+
+my_input_pts2 = np.float32(input_pts_2D).reshape(-1,1,2)  # bit reshapeing so the cv2.perspectiveTransform() works
+input_transform_pts_2D = cv2.perspectiveTransform(my_input_pts2,persp_matrix2) #transform(input_pts_2D)
+input_transform_pts_2D = np.squeeze(input_transform_pts_2D[:]) # strip 1 dimension
+
+
+markersize = 3
+
+f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+implot = ax1.imshow(model_image)
+# ax1.set_title(model_image_name + ' (model)')
+ax1.set_title("model")
+ax1.plot(*zip(*model_pts_2D), marker='o', color='magenta', ls='', label='model',
+         ms=markersize)  # ms = markersize
+red_patch = mpatches.Patch(color='magenta', label='model')
+ax1.legend(handles=[red_patch])
+
+# ax2.set_title(input_image_name + ' (input)')
+ax2.set_title("input")
+ax2.imshow(input_image)
+ax2.plot(*zip(*input_pts_2D), marker='o', color='r', ls='', ms=markersize)
+ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+ax3.set_title("perspective correction of input")
+ax3.imshow(perspective_transform_input)
+
+ax3.plot(*zip(*input_transform_pts_2D), marker='o', color='b', ls='', ms=markersize)
+ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+# plt.tight_layout()
+plt.show(block=False)
+
+
 # ------------------   Validate Homography / Perspective matrix  -------------------------------------
+
 
 #pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 my_model_pts2 = np.float32(model_pts_2D).reshape(-1,1,2)  # bit reshapeing so the cv2.perspectiveTransform() works
@@ -91,6 +149,8 @@ model_transform_pts_2D = np.squeeze(model_transform_pts_2D[:]) # strip 1 dimensi
 ## 1. Check the Reprojection error:  https://stackoverflow.com/questions/11053099/how-can-you-tell-if-a-homography-matrix-is-acceptable-or-not
 # https://en.wikipedia.org/wiki/Reprojection_error
 # Calc the euclidean distance for the first 3 features
+# TODO: eerst normaliseren
+# TODO: gaan we dit echt doen? volgende validate stappen lijken veel robuster en geen normalisering nodig
 reprojection_error = ( ((model_transform_pts_2D[0, 0] - input_pts_2D[0,0]) ** 2 + (model_transform_pts_2D[0, 1] - input_pts_2D[0,1]) ** 2)
       + ((model_transform_pts_2D[1, 0] - input_pts_2D[1,0]) ** 2 + (model_transform_pts_2D[1, 1] - input_pts_2D[1,1]) ** 2)
       + ((model_transform_pts_2D[2, 0] - input_pts_2D[2,0]) ** 2 + (model_transform_pts_2D[2, 1] - input_pts_2D[2,1]) ** 2)) ** 0.5
@@ -105,7 +165,7 @@ det = perspective_trans_matrix[0,0] * perspective_trans_matrix[1,1] - perspectiv
 print("----- determinant of topleft 2x2 matrix: " , det)
 if det<0:
     print("determinant<0, homography unvalid")
-    exit()
+    #exit()
 
 
 '''
@@ -181,18 +241,23 @@ plt.show(block=False)
 # ------------- Kmeans - CLUSTERING THE FEATURES -------------
 # --> If more than one building is detected ie pisa9.jpg & pisa10.jpg => cluster & seperate in individual buildings
 # define criteria and apply kmeans()
-clustered_features, one_building = clustering.kmean(model_pts_2D, input_pts_2D)
+# $$$$$$$$$$$$$$$$$ CLUSTERING EFFE AFGEZT NU $$$$$$$$$$$$$$$
+#clustered_features, one_building = clustering.kmean(model_pts_2D, input_pts_2D)
 
 # Reduce dimensions
-clustered_model_features = np.squeeze(clustered_features[0])  # first elements in array are model features
-clustered_input_features = np.squeeze(clustered_features[1])  # second elements in array are model features
-
+clustered_model_features = model_pts_2D #np.squeeze(clustered_features[0])  # first elements in array are model features
+clustered_input_features = input_pts_2D #np.squeeze(clustered_features[1])  # second elements in array are model features
+one_building = True
 feature_operations.plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image)
 
-'''
-feature_operations.affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features,
-                                                         clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
-'''
+# version with perspective distortion
+#feature_operations.affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features,
+#                                                         clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
+
+# zonder perspective distrortion
+feature_operations.affine_transform_urban_scene_and_pose(one_building, None, None,
+                                                         input_transform_pts_2D, clustered_model_features,
+                                                         model_image, perspective_transform_input, perspective_trans_matrix)
 
 plt.show()
 
