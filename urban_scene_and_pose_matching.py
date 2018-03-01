@@ -59,8 +59,11 @@ input_pose_features = list_poses[input_name]
 assert model_pose_features.shape == input_pose_features.shape
 
 # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
-kp_model, des_model = feature_operations.sift_detect_and_compute(model_image)
-kp_input, des_input = feature_operations.sift_detect_and_compute(input_image)
+kp_model, des_model = feature_operations.orb_detect_and_compute(model_image) #feature_operations.sift_detect_and_compute(model_image)
+kp_input, des_input = feature_operations.orb_detect_and_compute(input_image) #feature_operations.sift_detect_and_compute(input_image)
+
+img2 = cv2.drawKeypoints(model_image, kp_model, None, color=(0,255,0), flags=0)
+plt.imshow(img2), plt.show(block=False)
 
 # --------- FEATURE MATCHING : FLANN MATCHER -------------------
 #(matchesMask, model_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)

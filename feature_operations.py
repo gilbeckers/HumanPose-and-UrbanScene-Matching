@@ -16,6 +16,18 @@ def sift_detect_and_compute(image):
     kp_model, des_model = sift.detectAndCompute(image,None)  # returns keypoints and descriptors
     return (kp_model, des_model)
 
+def orb_detect_and_compute(image):
+
+    '''detector = cv2.ORB_create()
+    kp_scene = detector.detect(image)
+    k_scene, d_scene = detector.compute(image, kp_scene)'''
+    orb = cv2.ORB_create()
+
+    kp, des = orb.detectAndCompute(image, None)
+    des = np.float32(des)
+
+    return (kp, des)
+
 def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image):
     # --------- FEATURE MATCHING : FLANN MATCHER -------------------
     index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
