@@ -30,7 +30,14 @@ def orb_detect_and_compute(image):
 
 def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image):
     # --------- FEATURE MATCHING : FLANN MATCHER -------------------
-    index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+    index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)   # voor met SIFT
+
+    FLANN_INDEX_LSH = 6
+    index_params = dict(algorithm=FLANN_INDEX_LSH,    # voor met ORB
+                        table_number=6,  # 12
+                        key_size=12,  # 20
+                        multi_probe_level=1)  # 2
+
     search_params = dict(checks = 50)
     flann = cv2.FlannBasedMatcher(index_params, search_params)
     matches = flann.knnMatch(des_model,des_input,k=2)

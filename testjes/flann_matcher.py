@@ -4,17 +4,17 @@ FLANN_INDEX_KDTREE = 1
 index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 
 FLANN_INDEX_LSH = 6
-index_params= dict(algorithm = FLANN_INDEX_LSH,
-                   table_number = 6, # 12
-                   key_size = 12,     # 20
-                   multi_probe_level = 1) #2
+# index_params= dict(algorithm = FLANN_INDEX_LSH,
+#                    table_number = 6, # 12
+#                    key_size = 12,     # 20
+#                    multi_probe_level = 1) #2
 
 
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-img1 = cv2.imread('pisa9.jpg',0)          # queryImage
-img2 = cv2.imread('pisa9.jpg',0) # trainImage
+img1 = cv2.imread('../img/pisa9.jpg',0)          # queryImage
+img2 = cv2.imread('../img/pisa10.jpg',0) # trainImage
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create()
 # find the keypoints and descriptors with SIFT

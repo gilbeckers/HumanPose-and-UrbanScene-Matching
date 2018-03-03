@@ -3,8 +3,8 @@ from matplotlib import pyplot as plt
 
 import numpy as np
 
-img = cv2.imread('pisa9.jpg', 0)
-img2 = cv2.imread('pisa101.jpg', 0)
+img = cv2.imread('../img/pisa9.jpg', 0)
+img2 = cv2.imread('../img/pisa101.jpg', 0)
 
 # Create SURF object. You can specify params here or later.
 # Here I set Hessian Threshold to 400
