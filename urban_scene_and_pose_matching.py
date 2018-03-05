@@ -11,8 +11,8 @@ import feature_operations
 
 MIN_MATCH_COUNT = 10
 
-model_name = 'notredam3'   # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'notredam1'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'taj3'   # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'taj4'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_tag = 'jpg'
 
 # goeie voorbeelden zijn pisa9 en pisa10
@@ -59,8 +59,8 @@ input_pose_features = list_poses[input_name]
 assert model_pose_features.shape == input_pose_features.shape
 
 # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
-kp_model, des_model = feature_operations.orb_detect_and_compute(model_image) #feature_operations.sift_detect_and_compute(model_image)
-kp_input, des_input = feature_operations.orb_detect_and_compute(input_image) #feature_operations.sift_detect_and_compute(input_image)
+kp_model, des_model = feature_operations.sift_detect_and_compute(model_image) #feature_operations.orb_detect_and_compute(model_image) #
+kp_input, des_input = feature_operations.sift_detect_and_compute(input_image) #feature_operations.orb_detect_and_compute(input_image)
 
 img2 = cv2.drawKeypoints(model_image, kp_model, None, color=(0,255,0), flags=0)
 plt.imshow(img2), plt.show(block=False)
@@ -85,6 +85,8 @@ plt.show(block=False)
 # Convert mask array to an array of boolean type [ False True True False ... ]
 my_mask = np.asarray(matchesMask).astype(bool)
 # Apply mask to feature points of destination img, so only the features of homography remain
+
+print("mmmask: " , my_mask)
 my_model_pts = model_pts[np.array(my_mask)]
 my_input_pts = input_pts[np.array(my_mask)]
 
@@ -258,7 +260,7 @@ feature_operations.plot_features(clustered_model_features, clustered_input_featu
 #                                                         clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
 
 # zonder perspective distrortion
-feature_operations.affine_transform_urban_scene_and_pose(one_building, None, None,
+feature_operations.affine_transform_urban_scene_and_pose_OLD(one_building, None, None,
                                                          input_transform_pts_2D, clustered_model_features,
                                                          model_image, perspective_transform_input, perspective_trans_matrix)
 
