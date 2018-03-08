@@ -113,7 +113,7 @@ if __name__ == '__main__':
     feature_name = 'sift-flann'
     path_img = 'img/'#'posesGeoteam/fotos/'
     path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'dart11.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    model_name = 'dart13.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
     input_name = 'dart1.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, 0)
     input_image = cv2.imread(path_img + input_name, 0)
