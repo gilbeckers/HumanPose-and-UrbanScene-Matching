@@ -7,7 +7,7 @@ import clustering
 import affine_transformation
 import matplotlib.patches as mpatches
 import util
-import feature_operations
+import feat_ops
 
 MIN_MATCH_COUNT = 10
 
@@ -59,15 +59,15 @@ input_pose_features = list_poses[input_name]
 assert model_pose_features.shape == input_pose_features.shape
 
 # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
-kp_model, des_model = feature_operations.sift_detect_and_compute(model_image) #feature_operations.orb_detect_and_compute(model_image) #
-kp_input, des_input = feature_operations.sift_detect_and_compute(input_image) #feature_operations.orb_detect_and_compute(input_image)
+kp_model, des_model = feat_ops.sift_detect_and_compute(model_image) #feature_operations.orb_detect_and_compute(model_image) #
+kp_input, des_input = feat_ops.sift_detect_and_compute(input_image) #feature_operations.orb_detect_and_compute(input_image)
 
 img2 = cv2.drawKeypoints(model_image, kp_model, None, color=(0,255,0), flags=0)
 plt.imshow(img2), plt.show(block=False)
 
 # --------- FEATURE MATCHING : FLANN MATCHER -------------------
 #(matchesMask, model_image_homo, good, model_pts, input_pts) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
-(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix, persp_matrix2) = feature_operations.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
+(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix, persp_matrix2) = feat_ops.flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image)
 
 # ---------------- DRAW MATCHES  -------------------------------
 draw_params = dict(matchColor = (0,255,0), # draw matches in green color
@@ -253,16 +253,16 @@ plt.show(block=False)
 clustered_model_features = model_pts_2D #np.squeeze(clustered_features[0])  # first elements in array are model features
 clustered_input_features = input_pts_2D #np.squeeze(clustered_features[1])  # second elements in array are model features
 one_building = True
-feature_operations.plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image)
+feat_ops.plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image)
 
 # version with perspective distortion
 #feature_operations.affine_transform_urban_scene_and_pose(one_building, model_pose_features, input_pose_features,
 #                                                         clustered_input_features, clustered_model_features,model_image, input_image, perspective_trans_matrix)
 
 # zonder perspective distrortion
-feature_operations.affine_transform_urban_scene_and_pose_OLD(one_building, None, None,
-                                                         input_transform_pts_2D, clustered_model_features,
-                                                         model_image, perspective_transform_input, perspective_trans_matrix)
+feat_ops.affine_transform_urban_scene_and_pose_OLD(one_building, None, None,
+                                                   input_transform_pts_2D, clustered_model_features,
+                                                   model_image, perspective_transform_input, perspective_trans_matrix)
 
 plt.show()
 

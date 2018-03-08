@@ -4,6 +4,8 @@ import affine_transformation
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 from common import anorm, getsize
+import normalising
+import prepocessing
 
 MIN_MATCH_COUNT = 15
 FLANN_INDEX_KDTREE = 1
@@ -55,7 +57,7 @@ def filter_matches(kp1, kp2, matches, ratio = FILTER_RATIO):
     kp_pairs = zip(mkp1, mkp2)
     return p1, p2, list(kp_pairs)
 
-def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, model_img, input_img):
+def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, model_img, input_img, show_win):
     print('matching...')
     raw_matches = matcher.knnMatch(desc_model, trainDescriptors = desc_input, k = 2) #2
 
@@ -99,12 +101,12 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
         print('%d matches found, not enough for homography estimation' % len(p_model))
 
     # Render nice window with nice view of matches
-    _vis = explore_match(win, model_img, input_img, kp_pairs, mask, H)
+    _vis = explore_match(win, model_img, input_img, kp_pairs, mask, H, show_win)
 
     # matchesMask, input_image_homo, good, model_pts, input_pts, M, M2
     return(mask, good_model_pts, good_input_pts, H, H2)
 
-def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
+def explore_match(win, img1, img2, kp_pairs, status = None, H = None, show_win= True):
     h1, w1 = img1.shape[:2]
     h2, w2 = img2.shape[:2]
     vis = np.zeros((max(h1, h2), w1+w2), np.uint8)
@@ -144,8 +146,10 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
     for (x1, y1), (x2, y2), inlier in zip(p1, p2, status):
         if inlier:
             cv2.line(vis, (x1, y1), (x2, y2), green)
-
-    cv2.imshow(win, vis)
+    if show_win:
+        cv2.imshow(win, vis)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
 
     def onmouse(event, x, y, flags, param):
         cur_vis = vis
@@ -206,7 +210,8 @@ def validate_homography(perspective_trans_matrix):
 
     return True
 
-def perspective_correction(H2, p_model, p_input, model_img, input_img):
+def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img):
+    # we assume input_pose and model_pose contain same amount of features, as we would also expected in this stage of pipeline
 
     h, w = input_img.shape
     h = round(h * 6 / 5)
@@ -220,17 +225,35 @@ def perspective_correction(H2, p_model, p_input, model_img, input_img):
     plt.show(block=False)
 
     my_input_pts2 = np.float32(p_input).reshape(-1, 1, 2)  # bit reshapeing so the cv2.perspectiveTransform() works
-    input_transform_pts_2D = cv2.perspectiveTransform(my_input_pts2, H2)  # transform(input_pts_2D)
-    input_transform_pts_2D = np.squeeze(input_transform_pts_2D[:])  # strip 1 dimension
+    p_input_persp_trans = cv2.perspectiveTransform(my_input_pts2, H2)  # transform(input_pts_2D)
+    p_input_persp_trans = np.squeeze(p_input_persp_trans[:])  # strip 1 dimension
+
+    #TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
+    # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
+    model_features_norm = normalising.feature_scaling(p_model)
+    input_features_trans_norm = normalising.feature_scaling(p_input_persp_trans)
+
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print('@@@@ PERSSPECTIVE  1: max error: ', max_euclidean_error)
+
+    # -- 2E MANIERRR: normaliseren enkel de pose
+    input_pose_trans = p_input_persp_trans[len(p_input_persp_trans) - len(input_pose_features): len(
+        p_input_persp_trans)]  # niet perse perspective corrected, hangt af van input
+    model_pose_norm = normalising.feature_scaling(model_pose_features)
+    input_pose_trans_norm = normalising.feature_scaling(input_pose_trans)
+
+    max_euclidean_error = max_euclidean_distance(model_pose_norm, input_pose_trans_norm)
+
+    print('@@@@ PERSSPECTIVE 2: max error: ', max_euclidean_error)
 
     markersize = 3
 
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+    f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(14, 6))
     implot = ax1.imshow(model_img)
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
-    ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model',
-             ms=markersize)  # ms = markersize
+    ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
+    ax1.plot(*zip(*model_pose_features), marker='o', color='red', ls='', label='pose', ms=markersize )  # ms = markersize
     red_patch = mpatches.Patch(color='magenta', label='model')
     ax1.legend(handles=[red_patch])
 
@@ -238,20 +261,47 @@ def perspective_correction(H2, p_model, p_input, model_img, input_img):
     ax2.set_title("input")
     ax2.imshow(input_img)
     ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*input_pose_features), marker='*', color='r', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
     ax3.set_title("persp corr input (features+pose)")
     ax3.imshow(perspective_transform_input)
-
-    ax3.plot(*zip(*input_transform_pts_2D), marker='o', color='b', ls='', ms=markersize)
+    ax3.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+
+    ax4.set_title("trans-input onto model")
+    ax4.imshow(model_img)
+    ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
+    ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
+    ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
     # plt.tight_layout()
     plt.show(block=False)
 
-    return (input_transform_pts_2D, perspective_transform_input)
+    return (p_input_persp_trans, perspective_transform_input)
 
-def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, label):
-    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(p_model_good, p_input_good)
+def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, label, size_pose):
+    #(model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
+    #(input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
+
+    #(input_transformed, transformation_matrix) = affine_transformation.find_transformation(p_model_good, p_input_good)
+
+    #(input_transformed_torso, M2_tor) = affine_transformation.find_transformation(np.vstack((p_model_good, model_torso)),np.vstack((p_input_good, input_torso)))
+    #(input_transformed_legs, M_legs) = affine_transformation.find_transformation(np.vstack((p_model_good, model_legs)),np.vstack((p_input_good, input_legs)))
+    #max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
+    #max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
+
+    input_pose = p_input_good[len(p_input_good)-size_pose: len(p_input_good)] # niet perse perspective corrected, hangt af van input
+    model_pose = p_model_good[len(p_model_good)-size_pose: len(p_input_good)]
+    print("model pose; ", model_pose)
+    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose, input_pose) # returned trans_input is only with pose features
+
+    # cals trans_input of whole (building- + pose features)
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
+
+    input_transformed = transform(p_input_good)
 
     markersize = 3
 
@@ -270,17 +320,26 @@ def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, l
     ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-    ax3.set_title("aff trans input(features+pose)" + label)
+    ax3.set_title("aff trans input(features)" + label)
     ax3.imshow(model_img)
     ax3.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
-    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
+    ax3.plot(*zip(*input_transformed), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input torso'),
                         mpatches.Patch(color='magenta', label='model')])
+
     # plt.tight_layout()
     plt.show(block=False)
     return None
 
+def max_euclidean_distance(model, transformed_input):
+
+    manhattan_distance = np.abs(model - transformed_input)
+
+    euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
+
+    return max(euclidean_distance)
 
 
 
