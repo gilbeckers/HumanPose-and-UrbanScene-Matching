@@ -228,13 +228,16 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     p_input_persp_trans = cv2.perspectiveTransform(my_input_pts2, H2)  # transform(input_pts_2D)
     p_input_persp_trans = np.squeeze(p_input_persp_trans[:])  # strip 1 dimension
 
+    max_euclidean_error = max_euclidean_distance(p_model, p_input_persp_trans)
+    print('@@@@ PERSSPECTIVE 1: max error: ', max_euclidean_error)
+
     #TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
     # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
     model_features_norm = normalising.feature_scaling(p_model)
     input_features_trans_norm = normalising.feature_scaling(p_input_persp_trans)
 
     max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print('@@@@ PERSSPECTIVE  1: max error: ', max_euclidean_error)
+    print('@@@@ PERSSPECTIVE NORM 1: max error: ', max_euclidean_error)
 
     # -- 2E MANIERRR: normaliseren enkel de pose
     input_pose_trans = p_input_persp_trans[len(p_input_persp_trans) - len(input_pose_features): len(
@@ -244,7 +247,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     max_euclidean_error = max_euclidean_distance(model_pose_norm, input_pose_trans_norm)
 
-    print('@@@@ PERSSPECTIVE 2: max error: ', max_euclidean_error)
+    print('@@@@ PERSSPECTIVE NORM 2: max error: ', max_euclidean_error)
 
     markersize = 3
 
@@ -266,7 +269,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     ax3.set_title("persp corr input (features+pose)")
     ax3.imshow(perspective_transform_input)
-    ax3.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
+    ax3.plot(*zip(*input_pose_trans), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
 
     ax4.set_title("trans-input onto model")
@@ -277,31 +280,36 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     # plt.tight_layout()
     plt.show(block=False)
 
-    return (p_input_persp_trans, perspective_transform_input)
+    return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
-def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, label, size_pose):
-    #(model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
-    #(input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
+def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
+    #input_pose = p_input_good[len(p_input_good) - size_pose: len(p_input_good)]  # niet perse perspective corrected, hangt af van input
+    #model_pose = p_model_good[len(p_model_good) - size_pose: len(p_input_good)]
 
-    #(input_transformed, transformation_matrix) = affine_transformation.find_transformation(p_model_good, p_input_good)
+    (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
+    (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
 
-    #(input_transformed_torso, M2_tor) = affine_transformation.find_transformation(np.vstack((p_model_good, model_torso)),np.vstack((p_input_good, input_torso)))
-    #(input_transformed_legs, M_legs) = affine_transformation.find_transformation(np.vstack((p_model_good, model_legs)),np.vstack((p_input_good, input_legs)))
-    #max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
-    #max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
+    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(np.vstack((p_model_good, model_torso)),np.vstack((p_input_good, input_torso)))
+    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(np.vstack((p_model_good, model_legs)),np.vstack((p_input_good, input_legs)))
 
-    input_pose = p_input_good[len(p_input_good)-size_pose: len(p_input_good)] # niet perse perspective corrected, hangt af van input
-    model_pose = p_model_good[len(p_model_good)-size_pose: len(p_input_good)]
-    print("model pose; ", model_pose)
-    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose, input_pose) # returned trans_input is only with pose features
+    # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
+    # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
+    model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_torso)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM " + label + "  error_torso: ", max_euclidean_error)
+    model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_legs)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM" + label + "  error_legs: ", max_euclidean_error)
 
-    # cals trans_input of whole (building- + pose features)
 
-    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    unpad = lambda x: x[:, :-1]
-    transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
+    max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
+    max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
 
-    input_transformed = transform(p_input_good)
+    print("#### AFFINE "+ label+ "  error_torso: " , max_euclidean_error_torso)
+    print("#### AFFINE "+ label+ "  error_legs: ", max_euclidean_error_legs)
+
 
     markersize = 3
 
@@ -311,6 +319,8 @@ def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, l
     ax1.set_title("model")
     ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
+    ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
     red_patch = mpatches.Patch(color='magenta', label='model')
     ax1.legend(handles=[red_patch])
 
@@ -318,13 +328,161 @@ def affine_trans_interaction(p_model_good, p_input_good, model_img, input_img, l
     ax2.set_title("input")
     ax2.imshow(input_img)
     ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-    ax3.set_title("aff trans input(features)" + label)
+    ax3.set_title("aff trans input split" + label)
     ax3.imshow(model_img)
-    ax3.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+    ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*input_transformed), marker='o', color='blue', ls='', label='model',
+    ax3.plot(*zip(*np.vstack((input_transformed_torso, input_transformed_legs))), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input torso'),
+                        mpatches.Patch(color='magenta', label='model')])
+
+    # plt.tight_layout()
+    plt.show(block=False)
+    return None
+
+# enkel A berekenen uit pose features lijkt mij het logischte want enkel de pose kan varieeren in ratio
+# de scene niet aangezien die ratio's normaal vast zijn!!
+def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
+    #input_pose = p_input_good[len(p_input_good) - size_pose: len(p_input_good)]  # niet perse perspective corrected, hangt af van input
+    #model_pose = p_model_good[len(p_model_good) - size_pose: len(p_input_good)]
+
+    (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
+    (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
+
+    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(model_torso,input_torso)
+    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(model_legs, input_legs)
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    input_transformed_torso = unpad(np.dot(pad(np.vstack((p_input_good, input_torso))), M_tor))
+    input_transformed_legs = unpad(np.dot(pad(np.vstack((p_input_good, input_legs))), M_legs))
+
+    # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
+    # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
+    model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_torso)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM " + label + "  error_torso: ", max_euclidean_error)
+
+    model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_legs)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM" + label + "  error_legs: ", max_euclidean_error)
+
+
+    max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
+    max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
+
+    print("#### AFFINE "+ label+ "  error_torso: " , max_euclidean_error_torso)
+    print("#### AFFINE "+ label+ "  error_legs: ", max_euclidean_error_legs)
+
+
+    markersize = 3
+
+    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+    implot = ax1.imshow(model_img)
+    # ax1.set_title(model_image_name + ' (model)')
+    ax1.set_title("model")
+    ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    red_patch = mpatches.Patch(color='magenta', label='model')
+    ax1.legend(handles=[red_patch])
+
+    # ax2.set_title(input_image_name + ' (input)')
+    ax2.set_title("input")
+    ax2.imshow(input_img)
+    ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+    ax3.set_title("aff trans input split" + label)
+    ax3.imshow(model_img)
+    ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.plot(*zip(*np.vstack((input_transformed_torso, input_transformed_legs))), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input torso'),
+                        mpatches.Patch(color='magenta', label='model')])
+
+    # plt.tight_layout()
+    plt.show(block=False)
+    return None
+
+def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
+    #input_pose = p_input_good[len(p_input_good) - size_pose: len(p_input_good)]  # niet perse perspective corrected, hangt af van input
+    #model_pose = p_model_good[len(p_model_good) - size_pose: len(p_input_good)]
+
+    rand_input_features = [p_input_good[0]]
+    rand_input_features = np.append(rand_input_features, [p_input_good[2]], 0)
+    rand_input_features = np.append(rand_input_features, [p_input_good[3]], 0)
+    rand_input_features = np.append(rand_input_features, [p_input_good[4]], 0)
+
+    rand_model_features = [p_model_good[0]]
+    rand_model_features = np.append(rand_model_features, [p_model_good[2]], 0)
+    rand_model_features = np.append(rand_model_features, [p_model_good[3]], 0)
+    rand_model_features = np.append(rand_model_features, [p_model_good[4]], 0)
+
+    (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
+    (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
+
+    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(np.vstack((model_torso, rand_model_features)),np.vstack((input_torso, rand_input_features)))
+    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(np.vstack((model_legs, rand_model_features)),np.vstack((input_legs, rand_input_features)))
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    input_transformed_torso = unpad(np.dot(pad(np.vstack((rand_input_features, input_torso))), M_tor))
+    input_transformed_legs = unpad(np.dot(pad(np.vstack((rand_input_features, input_legs))), M_legs))
+
+    # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
+    # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
+    model_features_norm = normalising.feature_scaling(np.vstack((rand_model_features, model_torso)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM " + label + "  error_torso: ", max_euclidean_error)
+    model_features_norm = normalising.feature_scaling(np.vstack((rand_model_features, model_legs)))
+    input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
+    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE NORM" + label + "  error_legs: ", max_euclidean_error)
+
+
+    max_euclidean_error_torso = max_euclidean_distance(np.vstack((rand_model_features, model_torso)), input_transformed_torso)
+    max_euclidean_error_legs = max_euclidean_distance(np.vstack((rand_model_features, model_legs)), input_transformed_legs)
+
+    print("#### AFFINE "+ label+ "  error_torso: " , max_euclidean_error_torso)
+    print("#### AFFINE "+ label+ "  error_legs: ", max_euclidean_error_legs)
+
+
+    markersize = 3
+
+    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+    implot = ax1.imshow(model_img)
+    # ax1.set_title(model_image_name + ' (model)')
+    ax1.set_title("model")
+    ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    red_patch = mpatches.Patch(color='magenta', label='model')
+    ax1.legend(handles=[red_patch])
+
+    # ax2.set_title(input_image_name + ' (input)')
+    ax2.set_title("input")
+    ax2.imshow(input_img)
+    ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+    ax3.set_title("aff trans input split" + label)
+    ax3.imshow(model_img)
+    ax3.plot(*zip(*np.vstack((rand_model_features, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.plot(*zip(*np.vstack((input_transformed_torso, input_transformed_legs))), marker='o', color='blue', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input torso'),
                         mpatches.Patch(color='magenta', label='model')])
