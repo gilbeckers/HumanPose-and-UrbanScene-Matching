@@ -276,6 +276,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     ax4.imshow(model_img)
     ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
     ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
+    ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
     ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
     # plt.tight_layout()
     plt.show(block=False)
@@ -405,7 +406,9 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     ax3.imshow(model_img)
     ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*np.vstack((input_transformed_torso, input_transformed_legs))), marker='o', color='blue', ls='', label='model',
+    ax3.plot(*zip(*input_transformed_legs), marker='o', color='blue', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    ax3.plot(*zip(*input_transformed_torso), marker='o', color='green', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input torso'),
                         mpatches.Patch(color='magenta', label='model')])
