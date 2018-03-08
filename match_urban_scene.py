@@ -71,14 +71,14 @@ if __name__ == '__main__':
     # combination of detector(orfb, surf, sift, brief) and matcher (flann, bruteforce)
     feature_name = 'sift-flann'
 
-    model_name = 'trap7.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'trap9.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_name = 'trap1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'trap5.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread('img/' + model_name, 0)
     input_image = cv2.imread('img/' + input_name, 0)
 
     # Read poses
-    model_pose_features = list_poses[model_name.split('.')[0]]
-    input_pose_features = list_poses[input_name.split('.')[0]]
+    #model_pose_features = list_poses[model_name.split('.')[0]]
+    #input_pose_features = list_poses[input_name.split('.')[0]]
 
     model_pose_features = parse_openpose_json.parse_JSON_single_person('json_data/' + model_name.split('.')[0] + '.json')
     input_pose_features = parse_openpose_json.parse_JSON_single_person('json_data/' + input_name.split('.')[0] + '.json')
@@ -189,16 +189,23 @@ if __name__ == '__main__':
     # relation between the person and the building
     #feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
+    print("\n----------- only_pose without correction -------------")
     feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose_features, input_pose_features,
                                            model_image, input_image, "only_pose")
 
-    print("----RAAAAND: ")
+    #print("----RAAAAND: ")
     #feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose_features, input_pose_features,
     #                                            model_image, input_image, "rand")
 
 
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE WiITH perspective correction------------------ '''
+    print("\n----------- only_pose WITH COrREctiOnN-------------")
+    p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
+
+    feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_persp_only_buildings, model_pose_features, input_pose_trans,
+                                                model_image, persp_trans_input_img, "only_pose incl correct")
+
 
     # p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input)-len(input_pose_features)]
     # feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings,

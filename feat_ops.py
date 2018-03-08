@@ -347,9 +347,6 @@ def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_
 # enkel A berekenen uit pose features lijkt mij het logischte want enkel de pose kan varieeren in ratio
 # de scene niet aangezien die ratio's normaal vast zijn!!
 def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
-    #input_pose = p_input_good[len(p_input_good) - size_pose: len(p_input_good)]  # niet perse perspective corrected, hangt af van input
-    #model_pose = p_model_good[len(p_model_good) - size_pose: len(p_input_good)]
-
     (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
     (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
 
@@ -365,13 +362,16 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_torso)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
+
     max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
     print("#### AFFINE NORM " + label + "  error_torso: ", max_euclidean_error)
 
+
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_legs)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
+
     max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print("#### AFFINE NORM" + label + "  error_legs: ", max_euclidean_error)
+    print("#### AFFINE NORM " + label + "  error_legs: ", max_euclidean_error)
 
 
     max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
