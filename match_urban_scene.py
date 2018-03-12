@@ -110,38 +110,20 @@ if __name__ == '__main__':
         fn2 = '../data/box_in_scene.png'''
 
     # combination of detector(orfb, surf, sift, akaze, brisk) and matcher (flann, bruteforce)
-    feature_name = 'orb-flann'
+    feature_name = 'sift-flann'
     path_img = 'img/'#'posesGeoteam/fotos/'
     path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'taj3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'taj4.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_name = 'dart1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'dart11.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
     #model_image = resizeAndPad(model_image, (500, 500))
     #input_image = resizeAndPad(input_image, (500, 500))
 
-    # cv2.waitKey()
-    # cv2.destroyAllWindows()
-    # cv2.imshow("model unsharp", model_image)
 
-    #blur_model = cv2.GaussianBlur(model_image, (5, 5), 0)
-    #model_image = cv2.addWeighted(model_image, 1.5, blur_model, -0.5, 0)
-    #input_image = cv2.addWeighted(input_image, 1.5, cv2.GaussianBlur(input_image, (5, 5), 0), -0.5, 0)
-
-
-    #model_image = cv2.cvtColor(model_image, cv2.COLOR_BGR2GRAY)
-    #input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
-
-
-
-
-    # Read poses
-    #model_pose_features = list_poses[model_name.split('.')[0]]
-    #input_pose_features = list_poses[input_name.split('.')[0]]
-
-    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] + '.json')  #'_keypoints'
-    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] + '.json')
+    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] + '_keypoints'  + '.json')  # + '_keypoints'
+    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' + '.json')
     assert model_pose_features.shape == input_pose_features.shape
 
     detector, matcher = feat_ops.init_feature(feature_name)
@@ -170,7 +152,7 @@ if __name__ == '__main__':
     # --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  -------------------------
     (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw(feature_name, matcher, desc_model,
                                                                         desc_input, kp_model, kp_input,
-                                                                        model_image, input_image, True)
+                                                                        model_image, input_image, False)
 
 
     cv2.waitKey()
@@ -269,6 +251,12 @@ if __name__ == '__main__':
     feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_persp_only_buildings, model_pose_features, input_pose_trans,
                                                 model_image, persp_trans_input_img, "only_pose incl correct")
 
+    print("\n----------- only_pose WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
+    p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
+
+    feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
+                                                input_pose_trans,
+                                                model_image, persp_trans_input_img, "pose + random scene")
 
     # p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input)-len(input_pose_features)]
     # feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings,
