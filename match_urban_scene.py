@@ -113,10 +113,23 @@ if __name__ == '__main__':
     feature_name = 'sift-flann'
     path_img = 'img/'#'posesGeoteam/fotos/'
     path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'dart13.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'dart1.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
-    model_image = cv2.imread(path_img + model_name, 0)
-    input_image = cv2.imread(path_img + input_name, 0)
+    model_name = 'dart1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'dart13.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
+    input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
+
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
+    # cv2.imshow("model unsharp", model_image)
+
+    blur_model = cv2.GaussianBlur(model_image, (5, 5), 0)
+    #model_image = cv2.addWeighted(model_image, 1.5, blur_model, -0.5, 0)
+    #input_image = cv2.addWeighted(input_image, 1.5, cv2.GaussianBlur(input_image, (5, 5), 0), -0.5, 0)
+
+
+    #model_image = cv2.cvtColor(model_image, cv2.COLOR_BGR2GRAY)
+    #input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
+
 
     #model_image = resizeAndPad(model_image, (500, 500))
     #input_image = resizeAndPad(input_image, (500, 500))
@@ -150,10 +163,13 @@ if __name__ == '__main__':
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
     print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
 
+
+
     # --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  -------------------------
     (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw('find_obj', matcher, desc_model,
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
+
 
     #cv2.waitKey()
     #cv2.destroyAllWindows()

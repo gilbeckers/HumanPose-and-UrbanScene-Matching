@@ -250,9 +250,13 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     print('@@@@ PERSSPECTIVE NORM 2: max error: ', max_euclidean_error)
 
     markersize = 3
+    # model_img_arr = np.asarray(model_img)
+    # input_img_arr = np.asarray(input_img)
+    # input_persp_img_arr = np.asarray()
 
     f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(14, 6))
-    implot = ax1.imshow(model_img)
+    #ax1.imshow(model_img)
+    ax1.imshow(np.asarray(model_img), cmap='gray')
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
     ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
@@ -262,18 +266,18 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     # ax2.set_title(input_image_name + ' (input)')
     ax2.set_title("input")
-    ax2.imshow(input_img)
+    ax2.imshow(np.asarray(input_img), cmap='gray')
     ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
     ax2.plot(*zip(*input_pose_features), marker='*', color='r', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
     ax3.set_title("persp corr input (features+pose)")
-    ax3.imshow(perspective_transform_input)
+    ax3.imshow(np.asarray(perspective_transform_input), cmap='gray')
     ax3.plot(*zip(*input_pose_trans), marker='o', color='b', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
 
     ax4.set_title("trans-input onto model")
-    ax4.imshow(model_img)
+    ax4.imshow(np.asarray(model_img), cmap='gray')
     ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
     ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
     ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
@@ -315,7 +319,7 @@ def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_
     markersize = 3
 
     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    implot = ax1.imshow(model_img)
+    implot = ax1.imshow(np.asarray(model_img), cmap='gray')
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
     ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
@@ -327,13 +331,13 @@ def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_
 
     # ax2.set_title(input_image_name + ' (input)')
     ax2.set_title("input")
-    ax2.imshow(input_img)
+    ax2.imshow(np.asarray(input_img), cmap='gray')
     ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
     ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
     ax3.set_title("aff trans input split" + label)
-    ax3.imshow(model_img)
+    ax3.imshow(np.asarray(model_img), cmap='gray')
     ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.plot(*zip(*np.vstack((input_transformed_torso, input_transformed_legs))), marker='o', color='blue', ls='', label='model',
@@ -382,28 +386,29 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     print("#### AFFINE "+ label+ "  error_legs: ", max_euclidean_error_legs)
 
 
-    markersize = 3
+    markersize = 2
+    ms_pose = 3
 
     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    implot = ax1.imshow(model_img)
+    implot = ax1.imshow(np.asarray(model_img), cmap='gray')
     # ax1.set_title(model_image_name + ' (model)')
     ax1.set_title("model")
     ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
-             ms=markersize)  # ms = markersize
+             ms=ms_pose)  # ms = markersize
     red_patch = mpatches.Patch(color='magenta', label='model')
     ax1.legend(handles=[red_patch])
 
     # ax2.set_title(input_image_name + ' (input)')
     ax2.set_title("input")
-    ax2.imshow(input_img)
+    ax2.imshow(np.asarray(input_img), cmap='gray')
     ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
-    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=ms_pose)
     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
     ax3.set_title("aff trans input split" + label)
-    ax3.imshow(model_img)
+    ax3.imshow(np.asarray(model_img), cmap='gray')
     ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='', label='model',
              ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transformed_legs), marker='o', color='blue', ls='', label='model',
