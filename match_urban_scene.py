@@ -109,20 +109,23 @@ if __name__ == '__main__':
         fn1 = '../data/box.png'
         fn2 = '../data/box_in_scene.png'''
 
-    # combination of detector(orfb, surf, sift, brief) and matcher (flann, bruteforce)
-    feature_name = 'sift-flann'
+    # combination of detector(orfb, surf, sift, akaze, brisk) and matcher (flann, bruteforce)
+    feature_name = 'orb-flann'
     path_img = 'img/'#'posesGeoteam/fotos/'
     path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'dart1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'dart13.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_name = 'taj3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'taj4.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
+
+    #model_image = resizeAndPad(model_image, (500, 500))
+    #input_image = resizeAndPad(input_image, (500, 500))
 
     # cv2.waitKey()
     # cv2.destroyAllWindows()
     # cv2.imshow("model unsharp", model_image)
 
-    blur_model = cv2.GaussianBlur(model_image, (5, 5), 0)
+    #blur_model = cv2.GaussianBlur(model_image, (5, 5), 0)
     #model_image = cv2.addWeighted(model_image, 1.5, blur_model, -0.5, 0)
     #input_image = cv2.addWeighted(input_image, 1.5, cv2.GaussianBlur(input_image, (5, 5), 0), -0.5, 0)
 
@@ -131,8 +134,7 @@ if __name__ == '__main__':
     #input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
 
 
-    #model_image = resizeAndPad(model_image, (500, 500))
-    #input_image = resizeAndPad(input_image, (500, 500))
+
 
     # Read poses
     #model_pose_features = list_poses[model_name.split('.')[0]]
@@ -166,13 +168,13 @@ if __name__ == '__main__':
 
 
     # --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  -------------------------
-    (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw('find_obj', matcher, desc_model,
+    (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw(feature_name, matcher, desc_model,
                                                                         desc_input, kp_model, kp_input,
-                                                                        model_image, input_image, False)
+                                                                        model_image, input_image, True)
 
 
-    #cv2.waitKey()
-    #cv2.destroyAllWindows()
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
     # --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ----------------------
     if(feat_ops.validate_homography(H)):  # H = perspective transformation matrix

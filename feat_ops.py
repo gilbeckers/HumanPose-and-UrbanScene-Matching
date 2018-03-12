@@ -21,7 +21,9 @@ def init_feature(name):
         detector = cv2.xfeatures2d.SURF_create(800)
         norm = cv2.NORM_L2
     elif chunks[0] == 'orb':
-        detector = cv2.ORB_create(400)
+        detector = cv2.ORB_create(nfeatures=10000, scaleFactor=1.2, nlevels=8, edgeThreshold=31,
+                                  firstLevel=0, WTA_K=2, scoreType=cv2.ORB_FAST_SCORE, patchSize=31)
+        #cv2.ORB_create(nfeatures=100000, scoreType=cv2.ORB_FAST_SCORE)#cv2.ORB_create(400)
         norm = cv2.NORM_HAMMING
     elif chunks[0] == 'akaze':
         detector = cv2.AKAZE_create()
@@ -101,7 +103,7 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
         print('%d matches found, not enough for homography estimation' % len(p_model))
 
     # Render nice window with nice view of matches
-    _vis = explore_match(win, model_img, input_img, kp_pairs, mask, H, show_win)
+    _vis = explore_match(win + '| (raw matches: ' + str(len(p_model)) + '  homography matches: ' + str(len(good_model_pts)) + ')', model_img, input_img, kp_pairs, mask, H, show_win)
 
     # matchesMask, input_image_homo, good, model_pts, input_pts, M, M2
     return(mask, good_model_pts, good_input_pts, H, H2)
@@ -147,9 +149,12 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None, show_win= 
         if inlier:
             cv2.line(vis, (x1, y1), (x2, y2), green)
     if show_win:
+        filename = win.split('|')[0] + ".jpg"
+        print("klalalal    ", filename)
         cv2.imshow(win, vis)
-        cv2.waitKey()
-        cv2.destroyAllWindows()
+        #cv2.imwrite(filename, vis)
+        #cv2.waitKey()
+        #cv2.destroyAllWindows()
 
     def onmouse(event, x, y, flags, param):
         cur_vis = vis
