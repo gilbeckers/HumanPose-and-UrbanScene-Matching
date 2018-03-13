@@ -28,6 +28,60 @@ class Bunch(object):
     def __str__(self):
         return str(self.__dict__)
 
+def resizeAndPad(img, size, padColor=0):
+
+    h, w = img.shape[:2]
+    sh, sw = size
+
+    # interpolation method
+    if h > sh or w > sw: # shrinking image
+        interp = cv.INTER_AREA
+    else: # stretching image
+        interp = cv.INTER_CUBIC
+
+    # aspect ratio of image
+    aspect = w/h
+
+    # compute scaling and pad sizing
+    if aspect > 1: # horizontal image
+        new_w = sw
+        new_h = np.round(new_w/aspect).astype(int)
+        pad_vert = (sh-new_h)/2
+        pad_top, pad_bot = np.floor(pad_vert).astype(int), np.ceil(pad_vert).astype(int)
+        pad_left, pad_right = 0, 0
+    elif aspect < 1: # vertical image
+        new_h = sh
+        new_w = np.round(new_h*aspect).astype(int)
+        pad_horz = (sw-new_w)/2
+        pad_left, pad_right = np.floor(pad_horz).astype(int), np.ceil(pad_horz).astype(int)
+        pad_top, pad_bot = 0, 0
+    else: # square image
+        new_h, new_w = sh, sw
+        pad_left, pad_right, pad_top, pad_bot = 0, 0, 0, 0
+
+    # set pad color
+    if len(img.shape) is 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
+        padColor = [padColor]*3
+
+    # scale and pad
+    scaled_img = cv.resize(img, (new_w, new_h), interpolation=interp)
+    scaled_img = cv.copyMakeBorder(scaled_img, pad_top, pad_bot, pad_left, pad_right, borderType=cv.BORDER_CONSTANT, value=padColor)
+
+    return scaled_img
+
+def resize_img(model_image, input_image):
+    # we need to keep in mind aspect ratio so the image does
+    # not look skewed or distorted -- therefore, we calculate
+    # the ratio of the new image to the old image
+    r = 500.0 / model_image.shape[1]
+    dim = (500, int(model_image.shape[0] * r))
+
+    # perform the actual resizing of the image and show it
+    model_image = cv.resize(model_image, dim, interpolation = cv.INTER_AREA)
+    input_image = cv.resize(input_image, dim, interpolation = cv.INTER_AREA)
+
+    return (model_image, input_image)
+
 def splitfn(fn):
     path, fn = os.path.split(fn)
     name, ext = os.path.splitext(fn)

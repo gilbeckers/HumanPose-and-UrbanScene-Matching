@@ -9,92 +9,19 @@ uses find_obj.py
 # Python 2/3 compatibility
 from __future__ import print_function
 
-import numpy as np
 import cv2
 import feat_ops
 import numpy as np
 from matplotlib import pyplot as plt
 import parse_openpose_json
 import affine_transformation
-from common import anorm, getsize
+from common import anorm, getsize, resizeAndPad
 
 FLANN_INDEX_KDTREE = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH    = 6
 MIN_MATCH_COUNT = 4
 
-list_poses = {
-    # 1: linkerpols   2:rechterpols
-    "blad1": np.array([[113, 290], [179, 290]]),
-    "notredam1": np.array([[113, 290], [179, 290]]),
-    "notredam3": np.array([[113, 290], [179, 290]]),
-    "pisa_chapel": np.array([[113, 290], [179, 290]]),
-    "blad2": np.array([[113, 290], [179, 290]]),
-    "trap1": np.array([[173,444],[278, 440]]),  #np.array([[113, 290], [179, 290]], np.float32)  # trap1
-    "trap2": np.array([[197,361],[302, 355]]),  # np.array([[127, 237], [206, 234]], np.float32)  # trap1
-    "trap3": np.array([[333,448], [423,452]]),
-    "trap4": np.array([[254, 248], [293, 253]]),
-    "trap7": np.array([[254, 248], [293, 253]]),
-    "trap8": np.array([[150, 230],[225, 225]]),  #trap8   rpols, renkel, lenkel
-    "trap9": np.array([[136, 230], [217, 221]]),
-    "taj1": np.array([[391, 92], [429, 126]]),
-    "taj2": np.array([[391, 92], [429, 126]]),#trap9  rpols, renkel, lenkel  , [343, 542]
-    "taj3": np.array([[302,36], [351, 72]]),  # taj3  enkel recher pols + r elbow   [391, 92], [429, 126]
-    "taj4": np.array([[389,89], [425, 123]]),   # taj4 enkel rechter pols + r elbow     #np.array([[303, 37], [412, 90]])  # taj4 enkel rechter pols + nek
-    "pisa2": np.array([[152, 334], [146, 419]]),
-    "pisa3": np.array([[152, 334], [146, 419]]),
-    "pisa4": np.array([[152, 334], [146, 419]]),
-    "pisa5": np.array([[152, 334], [146, 419]]),
-    "pisa6": np.array([[152, 334], [146, 419]]),
-    "pisa7": np.array([[152, 334], [146, 419]]),
-    "pisa8": np.array([[152, 334], [146, 419]]),
-    "pisa9": np.array([[152, 334], [146, 419]]),  #  np.array([[256, 362], [247, 400]], np.float32)
-    "pisa10" : np.array([[256, 362], [247, 400]]),
-    "pisa12": np.array([[152, 334], [146, 419]]),
-    "pisa101" : np.array([[217, 353], [209, 404]]),
-    "foto3" : np.array([[217, 353], [209, 404]]),
-    "foto4" : np.array([[217, 353], [209, 404]])
-    }
 
-def resizeAndPad(img, size, padColor=0):
-
-    h, w = img.shape[:2]
-    sh, sw = size
-
-    # interpolation method
-    if h > sh or w > sw: # shrinking image
-        interp = cv2.INTER_AREA
-    else: # stretching image
-        interp = cv2.INTER_CUBIC
-
-    # aspect ratio of image
-    aspect = w/h
-
-    # compute scaling and pad sizing
-    if aspect > 1: # horizontal image
-        new_w = sw
-        new_h = np.round(new_w/aspect).astype(int)
-        pad_vert = (sh-new_h)/2
-        pad_top, pad_bot = np.floor(pad_vert).astype(int), np.ceil(pad_vert).astype(int)
-        pad_left, pad_right = 0, 0
-    elif aspect < 1: # vertical image
-        new_h = sh
-        new_w = np.round(new_h*aspect).astype(int)
-        pad_horz = (sw-new_w)/2
-        pad_left, pad_right = np.floor(pad_horz).astype(int), np.ceil(pad_horz).astype(int)
-        pad_top, pad_bot = 0, 0
-    else: # square image
-        new_h, new_w = sh, sw
-        pad_left, pad_right, pad_top, pad_bot = 0, 0, 0, 0
-
-    # set pad color
-    if len(img.shape) is 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
-        padColor = [padColor]*3
-
-    # scale and pad
-    scaled_img = cv2.resize(img, (new_w, new_h), interpolation=interp)
-    scaled_img = cv2.copyMakeBorder(scaled_img, pad_top, pad_bot, pad_left, pad_right, borderType=cv2.BORDER_CONSTANT, value=padColor)
-
-    return scaled_img
 
 if __name__ == '__main__':
     print(__doc__)
@@ -111,10 +38,10 @@ if __name__ == '__main__':
 
     # combination of detector(orfb, surf, sift, akaze, brisk) and matcher (flann, bruteforce)
     feature_name = 'sift-flann'
-    path_img = 'img/'#'posesGeoteam/fotos/'
-    path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'trap3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'trap2.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    path_img = 'img/'  #'posesGeoteam/fotos/'
+    path_json = 'json_data/'   #'posesGeoteam/json/'
+    model_name = 'duo3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'duo4.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 

@@ -1,12 +1,10 @@
 # https://docs.opencv.org/master/d1/de0/tutorial_py_feature_homography.html
 
 import cv2
+import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-import clustering
-import affine_transformation
-import matplotlib.patches as mpatches
-import util
+
 import feat_ops
 
 MIN_MATCH_COUNT = 10

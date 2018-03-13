@@ -22,16 +22,16 @@ USAGE
 # Python 2/3 compatibility
 from __future__ import print_function
 
-import numpy as np
-import cv2 as cv
-
 # built-in modules
 import itertools as it
 from multiprocessing.pool import ThreadPool
 
+import cv2 as cv
+import numpy as np
+
 # local modules
 from common import Timer
-from find_obj import init_feature, filter_matches, explore_match
+from testjes.find_obj import init_feature, filter_matches, explore_match
 
 
 def affine_skew(tilt, phi, img, mask=None):
