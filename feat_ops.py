@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import affine_transformation
+import affine_transformation as at
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 from common import anorm, getsize
@@ -21,7 +21,7 @@ def init_feature(name):
         detector = cv2.xfeatures2d.SURF_create(800)
         norm = cv2.NORM_L2
     elif chunks[0] == 'orb':
-        detector = cv2.ORB_create(nfeatures=10000, scaleFactor=1.2, nlevels=8, edgeThreshold=31,
+        detector = cv2.ORB_create(nfeatures=100000, scaleFactor=1.2, nlevels=8, edgeThreshold=31,
                                   firstLevel=0, WTA_K=2, scoreType=cv2.ORB_FAST_SCORE, patchSize=31)
         #cv2.ORB_create(nfeatures=100000, scoreType=cv2.ORB_FAST_SCORE)#cv2.ORB_create(400)
         norm = cv2.NORM_HAMMING
@@ -299,8 +299,8 @@ def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_
     (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
     (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
 
-    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(np.vstack((p_model_good, model_torso)),np.vstack((p_input_good, input_torso)))
-    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(np.vstack((p_model_good, model_legs)),np.vstack((p_input_good, input_legs)))
+    (input_transformed_torso, M_tor) = at.find_transformation(np.vstack((p_model_good, model_torso)),np.vstack((p_input_good, input_torso)))
+    (input_transformed_legs, M_legs) = at.find_transformation(np.vstack((p_model_good, model_legs)),np.vstack((p_input_good, input_legs)))
 
     # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
     # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
@@ -368,8 +368,8 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     #input_legs = np.vstack((input_legs, p_input_good[0], p_input_good[1], p_input_good[10]))
 
 
-    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(model_torso,input_torso)
-    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(model_legs, input_legs)
+    (input_transformed_torso, M_tor) = at.find_transformation(model_torso,input_torso)
+    (input_transformed_legs, M_legs) = at.find_transformation(model_legs, input_legs)
 
     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
     unpad = lambda x: x[:, :-1]
@@ -441,7 +441,7 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     return None
 
 def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
-
+    # TODO: Deze geeft (momenteel betere resultaten dan den _normalise => verschillen tussen matches en niet-matches is pak groter
     #TODO: normalising van whole !! en niet normaliseren van legs en torso appart
     (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
     (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
@@ -454,8 +454,8 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
     input_legs = np.vstack((input_legs, p_input_good[0], p_input_good[1], p_input_good[10]))
 
 
-    (input_transformed_torso, M_tor) = affine_transformation.find_transformation(model_torso, input_torso)
-    (input_transformed_legs, M_legs) = affine_transformation.find_transformation(model_legs, input_legs)
+    (input_transformed_torso, M_tor) = at.find_transformation(model_torso, input_torso)
+    (input_transformed_legs, M_legs) = at.find_transformation(model_legs, input_legs)
 
     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
     unpad = lambda x: x[:, :-1]
@@ -525,6 +525,8 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
     plt.show(block=False)
     return None
 
+
+
 def max_euclidean_distance(model, transformed_input):
 
     manhattan_distance = np.abs(model - transformed_input)
@@ -534,8 +536,56 @@ def max_euclidean_distance(model, transformed_input):
     return max(euclidean_distance)
 
 
-
 # ---- vanaf hier voooooral oude rommel
+
+# mag weg
+def affine_trans_interaction_pose_rand_scene_normalise(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
+
+    (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
+    (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
+
+    # include some random features of background:
+    amount_of_random_background_features = 3
+    model_both = np.vstack((model_pose, p_model_good[0], p_model_good[1], p_model_good[10]))
+    input_both = np.vstack((input_pose, p_input_good[0], p_input_good[1], p_input_good[10]))
+
+    # Normalise the whole (all features together = pose- and background features)
+    model_both_norm = normalising.feature_scaling(model_both)
+    input_both_norm = normalising.feature_scaling(input_both)
+
+    # Extract the normalised poses and normalised background features
+    model_pose_norm = model_both_norm[0: len(model_both_norm) - amount_of_random_background_features]
+    input_pose_norm = input_both_norm[0: len(input_both_norm) - amount_of_random_background_features]
+
+    model_bf_norm = model_both_norm[len(model_both_norm) - amount_of_random_background_features: len(model_both_norm)]
+    input_bf_norm = input_both_norm[len(input_both_norm) - amount_of_random_background_features: len(input_both_norm)]
+
+    # Split the normalised pose
+    (model_face_norm, model_torso_norm, model_legs_norm) = prepocessing.split_in_face_legs_torso(model_pose_norm)
+    (input_face_norm, input_torso_norm, input_legs_norm) = prepocessing.split_in_face_legs_torso(input_pose_norm)
+
+
+    # Calc affine transformation from combination of (background features + torso) & (background features + legs)
+    (input_transformed_torso_norm, M_tor) = at.find_transformation(np.vstack((model_torso_norm, model_bf_norm)), np.vstack((input_torso_norm, input_bf_norm)))
+    (input_transformed_legs_norm, M_legs) = at.find_transformation(np.vstack((model_legs_norm, model_bf_norm)), np.vstack((input_legs_norm, input_bf_norm)))
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+
+    # TODO: Calc eucl distance only of 3 random background features? Or from all detected features ???
+    #input_transformed_torso = unpad(np.dot(pad(np.vstack((p_input_good, input_torso))), M_tor))
+    #input_transformed_legs = unpad(np.dot(pad(np.vstack((p_input_good, input_legs))), M_legs))
+
+    max_euclidean_error_torso = max_euclidean_distance(np.vstack((model_torso_norm, model_bf_norm)), input_transformed_torso_norm)
+    print("#### AFFINE RAND NORM " + label + "  error_torso: ", max_euclidean_error_torso)
+
+    max_euclidean_error_legs = max_euclidean_distance(np.vstack((model_legs_norm, model_bf_norm)), input_transformed_legs_norm)
+    print("#### AFFINE RAND NORM " + label + "  error_legs: ", max_euclidean_error_legs)
+
+    if max_euclidean_error_torso < 0.15 and max_euclidean_error_legs < 0.15:
+        print("#### MATCH!!!  ###")
+    else:
+        print("#### NO MATCH!! ###")
 
 def sift_detect_and_compute(image):
     # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
@@ -711,7 +761,7 @@ def affine_transform_urban_scene_and_pose_OLD(one_building, model_pose_features,
 
     # Calc transformation of whole (building feature points + person keypoints)
     #(input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
-    (input_transformed, transformation_matrix) = affine_transformation.find_transformation(clustered_model_features,
+    (input_transformed, transformation_matrix) = at.find_transformation(clustered_model_features,
                                                                                            clustered_input_features)
     print("affine matrix: ", transformation_matrix)
 

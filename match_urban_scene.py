@@ -113,8 +113,8 @@ if __name__ == '__main__':
     feature_name = 'sift-flann'
     path_img = 'img/'#'posesGeoteam/fotos/'
     path_json = 'json_data/'#'posesGeoteam/json/'
-    model_name = 'dart1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'dart11.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_name = 'trap3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'trap2.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -122,8 +122,8 @@ if __name__ == '__main__':
     #input_image = resizeAndPad(input_image, (500, 500))
 
 
-    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] + '_keypoints'  + '.json')  # + '_keypoints'
-    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' + '.json')
+    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
+    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] +  '.json')
     assert model_pose_features.shape == input_pose_features.shape
 
     detector, matcher = feat_ops.init_feature(feature_name)
@@ -161,6 +161,8 @@ if __name__ == '__main__':
     # --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ----------------------
     if(feat_ops.validate_homography(H)):  # H = perspective transformation matrix
         print("!!Valid HOMOGRAPHY!!")
+    #else:
+        #exit()
     '''
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
@@ -235,8 +237,8 @@ if __name__ == '__main__':
     #feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
     print("\n----------- only_pose without correction -------------")
-    feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose_features, input_pose_features,
-                                           model_image, input_image, "only_pose")
+    #feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose_features, input_pose_features,
+    #                                       model_image, input_image, "only_pose")
 
     #print("----RAAAAND: ")
     #feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose_features, input_pose_features,
@@ -248,21 +250,26 @@ if __name__ == '__main__':
     print("\n----------- only_pose WITH COrREctiOnN-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
-    feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_persp_only_buildings, model_pose_features, input_pose_trans,
-                                                model_image, persp_trans_input_img, "only_pose incl correct")
+    #feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_persp_only_buildings, model_pose_features, input_pose_trans,
+    #                                            model_image, persp_trans_input_img, "only_pose incl correct")
 
-    print("\n----------- only_pose WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
+    print("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
     feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                 input_pose_trans,
                                                 model_image, persp_trans_input_img, "pose + random scene")
 
-    # p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input)-len(input_pose_features)]
-    # feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings,
-    #                                   model_pose_features, input_pose_trans,
-    #                                   model_image, persp_trans_input_img, "incl persp corr")
+    print("\n----------- both 2  WITH COrREctiOnN & ALL FeaTuREs-------------")
+    feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings, model_pose_features,
+                                                input_pose_trans,
+                                                model_image, persp_trans_input_img, "both")
 
+    print("\n----------- both 3 (andere norm) -------------")
+    '''feat_ops.affine_trans_interaction_pose_rand_scene_normalise(p_model_good, p_input_persp_only_buildings, model_pose_features,
+                                                      input_pose_trans,
+                                                      model_image, persp_trans_input_img, "NORMMM")
+    '''
 
     plt.show()
 
