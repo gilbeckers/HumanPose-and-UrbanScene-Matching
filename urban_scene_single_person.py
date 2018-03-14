@@ -2,19 +2,20 @@ import cv2
 import feat_ops
 import numpy as np
 import sys
+import logging
 
 
 FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH     = 6
 MIN_MATCH_COUNT     = 4
 
-def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features):
+def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features, thresh):
     assert model_pose_features.shape == input_pose_features.shape
-
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
-    print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
+    #print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
+    logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
 
     ''' --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  ------------------------- '''
     (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw("multipips", matcher, desc_model,
@@ -26,12 +27,13 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
 
     ''' --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ---------------------- '''
     if (feat_ops.validate_homography(H)):  # H = perspective transformation matrix
-        print("!!Valid HOMOGRAPHY!!")
+        logging.debug("!!Valid HOMOGRAPHY!!")
         # else:
         # exit()
 
     else:
-        return (False, 1, 1)
+        logging.debug("UNVALID HOMOGRAPHY")
+        return (1,1,1000,1000)
     '''
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
@@ -81,10 +83,10 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     # feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE WiITH perspective correction------------------ '''
-    print("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
+    logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
-    (match, err_torso, err_legs) = feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
+    (err_torso, err_legs, sum_err_torso, sum_err_legs) = feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                       input_pose_trans,
                                                       model_image, persp_trans_input_img, "pose + random scene", False)
 
@@ -93,4 +95,4 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     #plt.show()
 
 
-    return (match, err_torso, err_legs)
+    return (err_torso, err_legs, sum_err_torso, sum_err_legs)

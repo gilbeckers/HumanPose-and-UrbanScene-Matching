@@ -6,6 +6,9 @@ import matplotlib.patches as mpatches
 from common import anorm, getsize
 import normalising
 import prepocessing
+import logging
+
+import heapq
 
 MIN_MATCH_COUNT = 15
 FLANN_INDEX_KDTREE = 1
@@ -60,7 +63,7 @@ def filter_matches(kp1, kp2, matches, ratio = FILTER_RATIO):
     return p1, p2, list(kp_pairs)
 
 def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, model_img, input_img, show_win):
-    print('matching...')
+    #print('matching...')
     raw_matches = matcher.knnMatch(desc_model, trainDescriptors = desc_input, k = 2) #2
 
     # p_model and p_input are the 'first-good' matches
@@ -72,7 +75,7 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
 
         # NOTE!! THIS is persp trans from inputplane to modelplane!! used for perspective elimination
         H2, mask2 = cv2.findHomography(p_input, p_model, cv2.RANSAC, 5.0)
-        print('%d / %d  inliers/matched' % (np.sum(mask), len(mask)))
+        logging.debug('%d / %d  inliers/matched' % (np.sum(mask), len(mask)))
 
         h, w = model_img.shape
 
@@ -95,12 +98,12 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
         good_model_pts = np.squeeze(good_model_pts[:])
         good_input_pts = np.squeeze(good_input_pts[:])
 
-        print("Raw matches: ", len(p_model))
-        print("Perspective matches: ", len(good_model_pts))
+        logging.debug("Raw matches: %d", len(p_model))
+        logging.debug("Perspective matches: %d", len(good_model_pts))
 
     else:
         H, mask = None, None
-        print('%d matches found, not enough for homography estimation' % len(p_model))
+        logging.debug('%d matches found, not enough for homography estimation' % len(p_model))
 
     # Render nice window with nice view of matches
     _vis = explore_match(win + '| (raw matches: ' + str(len(p_model)) + '  homography matches: ' + str(len(good_model_pts)) + ')', model_img, input_img, kp_pairs, mask, H, show_win)
@@ -150,7 +153,6 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None, show_win= 
             cv2.line(vis, (x1, y1), (x2, y2), green)
     if show_win:
         filename = win.split('|')[0] + ".jpg"
-        print("klalalal    ", filename)
         cv2.imshow(win, vis)
         #cv2.imwrite(filename, vis)
         #cv2.waitKey()
@@ -235,7 +237,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     p_input_persp_trans = np.squeeze(p_input_persp_trans[:])  # strip 1 dimension
 
     max_euclidean_error = max_euclidean_distance(p_model, p_input_persp_trans)
-    print('@@@@ PERSSPECTIVE 1: max error: ', max_euclidean_error)
+    logging.debug('PERSSPECTIVE 1: max error: %d', max_euclidean_error)
 
     #TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
     # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
@@ -243,7 +245,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     input_features_trans_norm = normalising.feature_scaling(p_input_persp_trans)
 
     max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print('@@@@ PERSSPECTIVE NORM 1: max error: ', max_euclidean_error)
+    logging.debug('PERSSPECTIVE NORM 1: max error: %f', max_euclidean_error)
 
     # -- 2E MANIERRR: normaliseren enkel de pose
     input_pose_trans = p_input_persp_trans[len(p_input_persp_trans) - len(input_pose_features): len(
@@ -253,7 +255,7 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     max_euclidean_error = max_euclidean_distance(model_pose_norm, input_pose_trans_norm)
 
-    print('@@@@ PERSSPECTIVE NORM 2: max error: ', max_euclidean_error)
+    logging.debug('PERSSPECTIVE NORM 2: max error: %f', max_euclidean_error)
 
     markersize = 3
     # model_img_arr = np.asarray(model_img)
@@ -469,27 +471,38 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_torso)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
 
-    max_euclidean_error_torso_norm = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_torso: ", max_euclidean_error_torso_norm)
+    euclidean_error_torso_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    #  index 2(rechts) en 5(links) zijn de polsen
+    #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
+    logging.debug("#### AFFINE RAND NORM Sum torso: %f" , sum(euclidean_error_torso_norm))
+    max_euclidean_error_torso_norm = max(euclidean_error_torso_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    logging.debug("#### AFFINE RAND NORM " + label + "  error_torso: %f", max_euclidean_error_torso_norm)
+
+    second_max = heapq.nlargest(2, euclidean_error_torso_norm)
+    logging.debug("#### AFFINE RAND NORM 2e MAX torso: %f", second_max[1])
+
+
+
 
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_legs)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
 
-    max_euclidean_error_legs_norm = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_legs: ", max_euclidean_error_legs_norm)
+    euclidean_error_legs_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    max_euclidean_error_legs_norm = max(euclidean_error_legs_norm)
+    logging.debug("#### AFFINE RAND NORM " + label + "  error_legs: %f", max_euclidean_error_legs_norm)
 
-    if max_euclidean_error_torso_norm < 0.15 and max_euclidean_error_legs_norm < 0.15:
-        print("#### MATCH!!!  ###")
-        match = True
-    else:
-        print("#### NO MATCH!! ###")
-        match = False
+    # if max_euclidean_error_torso_norm < thresh and max_euclidean_error_legs_norm < thresh:
+    #     logging.debug("#### MATCH!!!  ###")
+    #     match = True
+    # else:
+    #     logging.debug("#### NO MATCH!! ###")
+    #     match = False
 
     max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
     max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
 
-    print("#### AFFINE RAND" + label + "  error_torso: ", max_euclidean_error_torso)
-    print("#### AFFINE RAND" + label + "  error_legs: ", max_euclidean_error_legs)
+    logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error_torso)
+    logging.debug("#### AFFINE RAND " + label + "  error_legs: %f", max_euclidean_error_legs)
 
 
     markersize = 3
@@ -527,7 +540,7 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
 
         # plt.tight_layout()
         plt.show(block=False)
-    return (match, max_euclidean_error_torso_norm, max_euclidean_error_legs_norm)
+    return (max_euclidean_error_torso_norm, max_euclidean_error_legs_norm, sum(euclidean_error_torso_norm), sum(euclidean_error_legs_norm))
 
 
 
@@ -539,57 +552,14 @@ def max_euclidean_distance(model, transformed_input):
 
     return max(euclidean_distance)
 
+def euclidean_distance(model, transformed_input):
+    manhattan_distance = np.abs(model - transformed_input)
+
+    euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
+
+    return euclidean_distance
 
 # ---- vanaf hier voooooral oude rommel
-
-# mag weg
-def affine_trans_interaction_pose_rand_scene_normalise(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
-
-    (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
-    (input_face, input_torso, input_legs) = prepocessing.split_in_face_legs_torso(input_pose)
-
-    # include some random features of background:
-    amount_of_random_background_features = 3
-    model_both = np.vstack((model_pose, p_model_good[0], p_model_good[1], p_model_good[10]))
-    input_both = np.vstack((input_pose, p_input_good[0], p_input_good[1], p_input_good[10]))
-
-    # Normalise the whole (all features together = pose- and background features)
-    model_both_norm = normalising.feature_scaling(model_both)
-    input_both_norm = normalising.feature_scaling(input_both)
-
-    # Extract the normalised poses and normalised background features
-    model_pose_norm = model_both_norm[0: len(model_both_norm) - amount_of_random_background_features]
-    input_pose_norm = input_both_norm[0: len(input_both_norm) - amount_of_random_background_features]
-
-    model_bf_norm = model_both_norm[len(model_both_norm) - amount_of_random_background_features: len(model_both_norm)]
-    input_bf_norm = input_both_norm[len(input_both_norm) - amount_of_random_background_features: len(input_both_norm)]
-
-    # Split the normalised pose
-    (model_face_norm, model_torso_norm, model_legs_norm) = prepocessing.split_in_face_legs_torso(model_pose_norm)
-    (input_face_norm, input_torso_norm, input_legs_norm) = prepocessing.split_in_face_legs_torso(input_pose_norm)
-
-
-    # Calc affine transformation from combination of (background features + torso) & (background features + legs)
-    (input_transformed_torso_norm, M_tor) = at.find_transformation(np.vstack((model_torso_norm, model_bf_norm)), np.vstack((input_torso_norm, input_bf_norm)))
-    (input_transformed_legs_norm, M_legs) = at.find_transformation(np.vstack((model_legs_norm, model_bf_norm)), np.vstack((input_legs_norm, input_bf_norm)))
-
-    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    unpad = lambda x: x[:, :-1]
-
-    # TODO: Calc eucl distance only of 3 random background features? Or from all detected features ???
-    #input_transformed_torso = unpad(np.dot(pad(np.vstack((p_input_good, input_torso))), M_tor))
-    #input_transformed_legs = unpad(np.dot(pad(np.vstack((p_input_good, input_legs))), M_legs))
-
-    max_euclidean_error_torso = max_euclidean_distance(np.vstack((model_torso_norm, model_bf_norm)), input_transformed_torso_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_torso: ", max_euclidean_error_torso)
-
-    max_euclidean_error_legs = max_euclidean_distance(np.vstack((model_legs_norm, model_bf_norm)), input_transformed_legs_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_legs: ", max_euclidean_error_legs)
-
-    if max_euclidean_error_torso < 0.15 and max_euclidean_error_legs < 0.15:
-        print("#### MATCH!!!  ###")
-    else:
-        print("#### NO MATCH!! ###")
 
 def sift_detect_and_compute(image):
     # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
@@ -678,7 +648,6 @@ def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_
         matchesMask = None
         return None
 
-
 def plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image):
     if one_building:  # Take the first found homography, no more computations needed
         # Reduce dimensions
@@ -716,449 +685,4 @@ def plot_features(clustered_model_features, clustered_input_features, one_buildi
 
 
     return None
-
-
-def affine_transform_urban_scene_and_pose_OLD(one_building, model_pose_features, input_pose_features, clustered_input_features, clustered_model_features,
-                                          model_image, input_image, perspective_trans_matrix):
-    # -------------  CALC AFFINE TRANSFORMATION  ------------------##
-    # Calc affine trans between the wrest points and some random feature points of the building
-    # The question is: WHICH feature points should we take??
-    # An option is to go for the "best matches" (found during featuring-matching)
-    # An other option is just to take an certain number of random matches
-
-    # Third option would be to take all the building feature points,
-    # but that would probably limit transformation in aspect of the mutual spatial
-    # relation between the person and the building
-    # TODO: other options??
-
-    object_index = 0  # TODO make algo that decides which object to take (the one without the person)
-    # TODO: moet niet perse door een algoritme worden bepaalt, kan ook eigenschap zijn van urban scene en dus gemarkt door mens
-
-    if not one_building:
-        clustered_input_features = clustered_input_features[object_index]
-        clustered_model_features = clustered_model_features[object_index]
-
-    #### CALC AFFINE TRANSFORMATION OF WHOLE  (building feature points + person keypoints) #############"
-    '''
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[0]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[2]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[3]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[4]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[8]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[9]], 0)
-    input_pose_features = np.append(input_pose_features, [clustered_input_features[11]], 0)
-
-
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[0]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[2]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[3]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[4]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[8]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[9]], 0)
-    model_pose_features = np.append(model_pose_features, [clustered_model_features[11]], 0)
-    '''
-    #clustered_model_features = np.append(clustered_model_features, [model_pose_features[0]], 0)
-    #clustered_model_features = np.append(clustered_model_features, [model_pose_features[1]], 0)
-
-    #clustered_input_features = np.append(clustered_input_features, [input_pose_features[0]], 0)
-    #clustered_input_features = np.append(clustered_input_features, [input_pose_features[1]], 0)
-
-    # Calc transformation of whole (building feature points + person keypoints)
-    #(input_transformed, transformation_matrix) = affine_transformation.find_transformation(model_pose_features,input_pose_features)
-    (input_transformed, transformation_matrix) = at.find_transformation(clustered_model_features,
-                                                                                           clustered_input_features)
-    print("affine matrix: ", transformation_matrix)
-
-    #####################################################################################
-
-
-
-
-    ### CALC FIRST AFFINE TrANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
-    # Some random selected features (of the buidling)
-    #input_building_features = np.array([clustered_input_features[0], clustered_input_features[2], clustered_input_features[6], clustered_input_features[14]])
-    #model_building_features = np.array([clustered_model_features[0], clustered_model_features[2], clustered_model_features[6], clustered_model_features[14]])
-
-    # Calc the transformation matrix
-    #(input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(model_building_features,input_building_features)
-
-    # Calc the transformed features again with same transformation matrix
-    # But now with the people keypoints appended
-
-    #pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    #unpad = lambda x: x[:, :-1]
-    #transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
-    #input_transformed = transform(input_pose_features)
-
-
-
-    # ------------------ 2 BUILDINGS --------------------------
-
-    #     ### EERSTE MANIER: calc affine trans of whole (building features + person key-points)
-    #     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(whole_output_features,
-    #                                                                                            whole_input_features)
-    #
-    #     #####################################################################################
-    #
-    #
-    #     ### TWEEDE MANIER: CALC FIRST AFFINE TANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
-    #
-    #     # Some random selected features (of the buidling)
-    #     # input_building_features = np.array(
-    #     #     [clustered_input_features[object_index][0], clustered_input_features[object_index][2], clustered_input_features[object_index][6],
-    #     #      clustered_input_features[object_index][14]])
-    #     # model_building_features = np.array(
-    #     #     [clustered_model_features[object_index][0], clustered_model_features[object_index][2], clustered_model_features[object_index][6],
-    #     #      clustered_model_features[object_index][14]])
-    #     #
-    #     # # Calc the transformation matrix of building features
-    #     # (input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(
-    #     #     model_building_features,
-    #     #     input_building_features)
-    #
-    #
-    #
-    #     #3e MANIER:  Calc transformation of person-features
-    #     input_features = np.append(input_features, clustered_input_features[object_index], 0)
-    #     output_features = np.append(output_features, clustered_model_features[object_index], 0)
-    #
-    #     #print("ejejeje: " , input_features)
-    #
-    #
-    #
-    #     (input_person_transformed, transformation_matrix) = affine_transformation.find_transformation(
-    #         output_features,
-    #         input_features)
-    #
-    #     # Calc the transformed features again with same transformation matrix
-    #     # But now with the people keypoints appended
-    #     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    #     unpad = lambda x: x[:, :-1]
-    #     transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
-    #     input_transformed = transform(input_features)
-    #
-    #     img = cv2.imread('img/' + model_name + '.' + img_tag)
-    #     rows, cols, ch = img.shape
-    #
-    #     input_features = input_features.astype(np.float32)
-    #     output_features = output_features.astype(np.float32)
-    #     pts1 = np.float32([[56, 65], [368, 52], [28, 387], [389, 390]])
-    #     pts2 = output_features #np.float32([[0, 0], [300, 0], [0, 300], [300, 300]])
-    #
-    #     print("pts: ", pts1)
-    #
-    #
-    #     print("whoooole" , input_features)
-    #     '''
-    #     print("whoooole", output_features)
-    #     print("shape: " , input_features.shape)
-    #     print("shape2; " , output_features.shape)
-    #     '''
-
-    markersize = 3
-
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    implot = ax1.imshow(model_image)
-    # ax1.set_title(model_image_name + ' (model)')
-    ax1.set_title("model")
-    ax1.plot(*zip(*clustered_model_features), marker='o', color='magenta', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    red_patch = mpatches.Patch(color='magenta', label='model')
-    ax1.legend(handles=[red_patch])
-
-    # ax2.set_title(input_image_name + ' (input)')
-    ax2.set_title("input")
-    ax2.imshow(input_image)
-    ax2.plot(*zip(*clustered_input_features), marker='o', color='r', ls='', ms=markersize)
-    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
-
-    ax3.set_title("affine transformation (features+pose)")
-    ax3.imshow(model_image)
-    ax3.plot(*zip(*clustered_model_features), marker='o', color='magenta', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
-    ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
-                        mpatches.Patch(color='magenta', label='model')])
-    #plt.tight_layout()
-    plt.show(block=False)
-    return None
-
-    # cv2.waitKey(0)
-
-    # if one_building: # Take the first found homography, no more computations needed
-    #     #Reduce dimensions
-    #     clustered_model_features = np.squeeze(clustered_features[0])
-    #     clustered_input_features = np.squeeze(clustered_features[1])
-    #     print("one building only")
-    #
-    #     plt.scatter(clustered_model_features[:,0],clustered_model_features[:,1])
-    #     #plt.scatter(model_center[:,0],model_center[:,1],s = 80,c = 'y', marker = 's')
-    #     plt.xlabel('Width'),plt.ylabel('Height')
-    #     plt.imshow(model_image)
-    #     plt.show(block=False)
-    #     plt.figure()
-    #
-    #     plt.scatter(clustered_input_features[:,0],clustered_input_features[:,1])
-    #     #plt.scatter(input_center[:,0],input_center[:,1],s = 80,c = 'y', marker = 's')
-    #     plt.xlabel('Width'),plt.ylabel('Height')
-    #     plt.imshow(cv2.imread('img/' + input_name + '.' + img_tag))
-    #     plt.show(block=False)
-    #     plt.figure()
-    #
-    #     #-------------  CALC AFFINE TRANSFORMATION  ------------------##
-    #     # Calc affine trans between the wrest points and some random feature points of the building
-    #     # The question is: WHICH feature points should we take??
-    #     # An option is to go for the "best matches" (found during featuring-matching)
-    #     # An other option is just to take an certain number of random matches
-    #
-    #     # Third option would be to take all the building feature points,
-    #     # but that would probably limit transformation in aspect of the mutual spatial
-    #     # relation between the person and the building
-    #     # TODO: other options??
-    #
-    #     # Create feature array for first person
-    #     # feature points of pisa tower are in A
-    #     # feautes van pols =
-    #
-    #     # p9_r_pols = np.array([[152, 334]])  #pisa9
-    #     # p9_l_pols = np.array([[153,425]])
-    #     # p10_r_pols = np.array([[256, 362]])   #pisa10
-    #     # p10_l_pols = np.array([[247, 400]])
-    #
-    #     input_features = np.array([[152, 334], [153, 425]])  #pisa9
-    #     output_features = np.array([[256, 362], [247, 400]]) #pisa10
-    #
-    #
-    #
-    #     input_features =  np.array([[391,92]])  #taj3  enkel recher pols
-    #     input_features = np.array([[463, 89]]) # foute locatie
-    #     input_features = np.array([[391, 92], [517, 148]])  # taj3  enkel recher pols + nek
-    #     input_features = np.array([[391, 92], [429, 126]])  # taj3  enkel recher pols + r elbow
-    #
-    #     output_features = np.array([[303,37]]) #taj4 enkel rechter pols
-    #     output_features = np.array([[303, 37],[412, 90]])  # taj4 enkel rechter pols + nek
-    #     output_features = np.array([[303, 37], [347, 70]])  # taj4 enkel rechter pols + r elbow
-    #
-    #     #### CALC AFFINE TRANSFORMATION OF WHOLE  (building feature points + person keypoints) #############"
-    #
-    #     input_features = np.append(input_features, [clustered_input_features[0]], 0)
-    #     input_features = np.append(input_features, [clustered_input_features[2]], 0)
-    #     input_features = np.append(input_features, [clustered_input_features[6]], 0)
-    #     input_features = np.append(input_features, [clustered_input_features[14]], 0)
-    #
-    #     output_features = np.append(output_features, [clustered_model_features[0]], 0)
-    #     output_features = np.append(output_features, [clustered_model_features[2]], 0)
-    #     output_features = np.append(output_features, [clustered_model_features[6]], 0)
-    #     output_features = np.append(output_features, [clustered_model_features[14]], 0)
-    #
-    #
-    #     # Calc transformation of whole (building feature points + person keypoints)
-    #     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(output_features,
-    #                                                                                            input_features)
-    #
-    #     #####################################################################################
-    #
-    #
-    #     ### CALC FIRST AFFINE TrANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
-    #
-    #     # Some random selected features (of the buidling)
-    #     input_building_features = np.array([clustered_input_features[0], clustered_input_features[2], clustered_input_features[6], clustered_input_features[14]])
-    #     model_building_features = np.array([clustered_model_features[0], clustered_model_features[2], clustered_model_features[6], clustered_model_features[14]])
-    #
-    #
-    #
-    #     # Calc the transformation matrix
-    #     (input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(model_building_features,
-    #                                                                                            input_building_features)
-    #
-    #     # Calc the transformed features again with same transformation matrix
-    #     # But now with the people keypoints appended
-    #     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    #     unpad = lambda x: x[:, :-1]
-    #     transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
-    #     input_transformed = transform(input_features)
-    #
-    #
-    #
-    #
-    #     markersize = 3
-    #
-    #     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    #     implot = ax1.imshow(model_image)
-    #     # ax1.set_title(model_image_name + ' (model)')
-    #     ax1.set_title("model")
-    #     ax1.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
-    #              ms=markersize)  # ms = markersize
-    #     red_patch = mpatches.Patch(color='magenta', label='model')
-    #     ax1.legend(handles=[red_patch])
-    #
-    #     # ax2.set_title(input_image_name + ' (input)')
-    #     ax2.set_title("input")
-    #     ax2.imshow(input_image)
-    #     ax2.plot(*zip(*input_features), marker='o', color='r', ls='', ms=markersize)
-    #     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
-    #
-    #     ax3.set_title("transformation")
-    #     ax3.imshow(model_image)
-    #     ax3.plot(*zip(*output_features), marker='o', color='magenta', ls='', label='model',
-    #              ms=markersize)  # ms = markersize
-    #     ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
-    #     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
-    #                         mpatches.Patch(color='magenta', label='model')])
-    #     #plt.tight_layout()
-    #     plt.show(block=False)
-    #
-    #     plt.figure()
-    #
-    #
-    #
-    #
-    #
-    # else: # More than one building
-    #     for feat in clustered_model_features:
-    #         plt.scatter(feat[:, 0], feat[:, 1])
-    #     plt.xlabel('Height'),plt.ylabel('Weight')
-    #     plt.imshow(model_image)
-    #     plt.show(block=False)
-    #     plt.figure()
-    #
-    #
-    #     for feat in clustered_input_features:
-    #         plt.scatter(feat[:, 0], feat[:, 1])
-    #     plt.xlabel('Height'),plt.ylabel('Weight')
-    #     plt.imshow(input_image)
-    #     plt.show(block=False)
-    #     plt.figure()
-    #
-    #     # -------------  CALC AFFINE TRANSFORMATION  ------------------##
-    #
-    #     # p9_r_pols = np.array([[152, 334]])  #pisa9
-    #     # p9_l_pols = np.array([[153,425]])
-    #     # p10_r_pols = np.array([[256, 362]])   #pisa10
-    #     # p10_l_pols = np.array([[247, 400]])
-    #
-    #     input_features = np.array([[256, 362], [247, 400]], np.float32)   # pisa9
-    #     output_features = np.array([[152, 334], [153, 425]], np.float32) # pisa10
-    #
-    #
-    #     input_features = np.array([[127, 237], [206, 234], [317, 205] ], np.float32)  # trap1
-    #     #input_features = np.array([[218, 299], [280, 300]])  # trap3
-    #     #input_features = np.array([[136, 230], [297, 536], [343, 542]])  #trap9  rpols, renkel, lenkel
-    #     input_features = np.array([[113, 290], [179, 290]], np.float32)  # trap1
-    #
-    #     output_features = np.array([[116, 289], [188, 284], [307, 257]], np.float32)  # trap2
-    #     #output_features = np.array([[150, 230],[319, 570], [376, 587]], np.float32) #trap8   rpols, renkel, lenkel
-    #     #output_features = np.array([[254, 248], [293, 253]], np.float32)  # trap4
-    #     output_features = np.array([[127, 237], [206, 234]], np.float32)  # trap1
-    #
-    #     object_index = 1
-    #
-    #     whole_input_features = np.append(input_features, [clustered_input_features[object_index][0]], 0)
-    #     whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][2]], 0)
-    #     whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][6]], 0)
-    #     whole_input_features = np.append(whole_input_features, [clustered_input_features[object_index][8]], 0)
-    #
-    #     whole_output_features = np.append(output_features, [clustered_model_features[object_index][0]], 0)
-    #     whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][2]], 0)
-    #     whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][6]], 0)
-    #     whole_output_features = np.append(whole_output_features, [clustered_model_features[object_index][8]], 0)
-    #
-    #     ### EERSTE MANIER: calc affine trans of whole (building features + person key-points)
-    #     (input_transformed, transformation_matrix) = affine_transformation.find_transformation(whole_output_features,
-    #                                                                                            whole_input_features)
-    #
-    #     #####################################################################################
-    #
-    #
-    #     ### TWEEDE MANIER: CALC FIRST AFFINE TANS MATRIX OF ONLY THE BUILDING FEATURES ###################"
-    #
-    #     # Some random selected features (of the buidling)
-    #     # input_building_features = np.array(
-    #     #     [clustered_input_features[object_index][0], clustered_input_features[object_index][2], clustered_input_features[object_index][6],
-    #     #      clustered_input_features[object_index][14]])
-    #     # model_building_features = np.array(
-    #     #     [clustered_model_features[object_index][0], clustered_model_features[object_index][2], clustered_model_features[object_index][6],
-    #     #      clustered_model_features[object_index][14]])
-    #     #
-    #     # # Calc the transformation matrix of building features
-    #     # (input_building_transformed, transformation_matrix) = affine_transformation.find_transformation(
-    #     #     model_building_features,
-    #     #     input_building_features)
-    #
-    #
-    #
-    #     #3e MANIER:  Calc transformation of person-features
-    #     input_features = np.append(input_features, clustered_input_features[object_index], 0)
-    #     output_features = np.append(output_features, clustered_model_features[object_index], 0)
-    #
-    #     #print("ejejeje: " , input_features)
-    #
-    #
-    #
-    #     (input_person_transformed, transformation_matrix) = affine_transformation.find_transformation(
-    #         output_features,
-    #         input_features)
-    #
-    #     # Calc the transformed features again with same transformation matrix
-    #     # But now with the people keypoints appended
-    #     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    #     unpad = lambda x: x[:, :-1]
-    #     transform = lambda x: unpad(np.dot(pad(x), transformation_matrix))
-    #     input_transformed = transform(input_features)
-    #
-    #     img = cv2.imread('img/' + model_name + '.' + img_tag)
-    #     rows, cols, ch = img.shape
-    #
-    #     input_features = input_features.astype(np.float32)
-    #     output_features = output_features.astype(np.float32)
-    #     pts1 = np.float32([[56, 65], [368, 52], [28, 387], [389, 390]])
-    #     pts2 = output_features #np.float32([[0, 0], [300, 0], [0, 300], [300, 300]])
-    #
-    #     print("pts: ", pts1)
-    #
-    #
-    #     print("whoooole" , input_features)
-    #     '''
-    #     print("whoooole", output_features)
-    #     print("shape: " , input_features.shape)
-    #     print("shape2; " , output_features.shape)
-    #     '''
-    #
-    #
-    #
-    #
-    #     markersize = 3
-    #
-    #     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    #     implot = ax1.imshow(model_image)
-    #     # ax1.set_title(model_image_name + ' (model)')
-    #     ax1.set_title("model")
-    #     ax1.plot(*zip(*whole_output_features), marker='o', color='magenta', ls='', label='model',
-    #              ms=markersize)  # ms = markersize
-    #     red_patch = mpatches.Patch(color='magenta', label='model')
-    #     ax1.legend(handles=[red_patch])
-    #
-    #     # ax2.set_title(input_image_name + ' (input)')
-    #     ax2.set_title("input")
-    #     ax2.imshow(input_image)
-    #     ax2.plot(*zip(*whole_input_features), marker='o', color='r', ls='', ms=markersize)
-    #     ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
-    #
-    #     ax3.set_title("transformation")
-    #     ax3.imshow(model_image)
-    #     ax3.plot(*zip(*whole_output_features), marker='o', color='magenta', ls='', label='model',
-    #              ms=markersize)  # ms = markersize
-    #     ax3.plot(*zip(*input_transformed), marker='o', color='b', ls='', ms=markersize)
-    #     ax3.legend(handles=[mpatches.Patch(color='blue', label='transformed input'),
-    #                         mpatches.Patch(color='magenta', label='model')])
-    #     # plt.tight_layout()
-    #     plt.show(block=False)
-    #
-    #     plt.figure()
-    #
-    #
-    #
-    # plt.show()
-    # cv2.waitKey(0)
-
 

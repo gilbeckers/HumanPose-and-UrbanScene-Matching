@@ -17,11 +17,19 @@ import parse_openpose_json
 import affine_transformation
 from common import anorm, getsize, resizeAndPad
 
+import logging
+logging.basicConfig(filename='match_urban_scene.log',level=logging.DEBUG)
+logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+rootLogger = logging.getLogger()
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+rootLogger.addHandler(consoleHandler)
+
 FLANN_INDEX_KDTREE = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH    = 6
 MIN_MATCH_COUNT = 4
 
-
+thresh = 0.154
 
 if __name__ == '__main__':
     print(__doc__)
@@ -37,11 +45,11 @@ if __name__ == '__main__':
         fn2 = '../data/box_in_scene.png'''
 
     # combination of detector(orfb, surf, sift, akaze, brisk) and matcher (flann, bruteforce)
-    feature_name = 'sift-flann'
+    feature_name = 'orb-flann'
     path_img = 'img/'  #'posesGeoteam/fotos/'
     path_json = 'json_data/'   #'posesGeoteam/json/'
-    model_name = 'duo3.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-    input_name = 'duo4.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+    model_name = 'other_dart5.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+    input_name = 'other_dart6.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
     model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -49,8 +57,8 @@ if __name__ == '__main__':
     #input_image = resizeAndPad(input_image, (500, 500))
 
 
-    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
-    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] +  '.json')
+    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] + '_keypoints' +  '.json')  # + '_keypoints'
+    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' +  '.json')
     assert model_pose_features.shape == input_pose_features.shape
 
     detector, matcher = feat_ops.init_feature(feature_name)
@@ -67,12 +75,13 @@ if __name__ == '__main__':
         print('unknown feature:', feature_name)
         sys.exit(1)
 
-    print('using', feature_name)
+
+    logging.debug('using '+ feature_name)
 
     # ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT --------------------
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
-    print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
+    logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
 
 
 
@@ -87,7 +96,7 @@ if __name__ == '__main__':
 
     # --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ----------------------
     if(feat_ops.validate_homography(H)):  # H = perspective transformation matrix
-        print("!!Valid HOMOGRAPHY!!")
+        logging.debug("!!Valid HOMOGRAPHY!!")
     #else:
         #exit()
     '''
@@ -163,7 +172,7 @@ if __name__ == '__main__':
     # relation between the person and the building
     #feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
-    print("\n----------- only_pose without correction -------------")
+    #logging.debug("\n----------- only_pose without correction -------------")
     #feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose_features, input_pose_features,
     #                                       model_image, input_image, "only_pose")
 
@@ -174,25 +183,25 @@ if __name__ == '__main__':
 
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE WiITH perspective correction------------------ '''
-    print("\n----------- only_pose WITH COrREctiOnN-------------")
+    #logging.debug("\n----------- only_pose WITH COrREctiOnN-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
     #feat_ops.affine_trans_interaction_only_pose(p_model_good, p_input_persp_only_buildings, model_pose_features, input_pose_trans,
     #                                            model_image, persp_trans_input_img, "only_pose incl correct")
 
-    print("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
+    logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
     feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                 input_pose_trans,
-                                                model_image, persp_trans_input_img, "pose + random scene")
+                                                model_image, persp_trans_input_img, "pose + random scene", True)
 
-    print("\n----------- both 2  WITH COrREctiOnN & ALL FeaTuREs-------------")
-    feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings, model_pose_features,
-                                                input_pose_trans,
-                                                model_image, persp_trans_input_img, "both")
+    #logging.debug("\n----------- both 2  WITH COrREctiOnN & ALL FeaTuREs-------------")
+    # feat_ops.affine_trans_interaction_both(p_model_good, p_input_persp_only_buildings, model_pose_features,
+    #                                             input_pose_trans,
+    #                                             model_image, persp_trans_input_img, "both")
 
-    print("\n----------- both 3 (andere norm) -------------")
+    #logging.debug("\n----------- both 3 (andere norm) -------------")
     '''feat_ops.affine_trans_interaction_pose_rand_scene_normalise(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                       input_pose_trans,
                                                       model_image, persp_trans_input_img, "NORMMM")
