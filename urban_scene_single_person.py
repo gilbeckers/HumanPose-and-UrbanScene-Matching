@@ -31,7 +31,7 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
         # exit()
 
     else:
-        return False
+        return (False, 1, 1)
     '''
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
@@ -67,7 +67,8 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
                                                                                                      model_pose_features,
                                                                                                      input_pose_features,
                                                                                                      model_image,
-                                                                                                     input_image)
+                                                                                                     input_image,
+                                                                                                     False)
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE Without perspective correction------------------ '''
     # Calc affine trans between the wrest points and some random feature points of the building
@@ -83,13 +84,13 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     print("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
-    feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
+    (match, err_torso, err_legs) = feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                       input_pose_trans,
-                                                      model_image, persp_trans_input_img, "pose + random scene")
+                                                      model_image, persp_trans_input_img, "pose + random scene", False)
 
 
 
     #plt.show()
 
 
-    return
+    return (match, err_torso, err_legs)

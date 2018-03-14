@@ -215,7 +215,7 @@ def validate_homography(perspective_trans_matrix):
 
     return True
 
-def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img):
+def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img, plot=False):
     # we assume input_pose and model_pose contain same amount of features, as we would also expected in this stage of pipeline
 
     h, w = input_img.shape
@@ -223,11 +223,12 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     w = round(w * 6 / 5)
 
     perspective_transform_input = cv2.warpPerspective(input_img, H2, (w, h)) # persp_matrix2 transforms input onto model_plane
-    plt.figure()
-    plt.subplot(221), plt.imshow(model_img), plt.title('Model')
-    plt.subplot(222), plt.imshow(perspective_transform_input), plt.title('Perspective transformed Input')
-    plt.subplot(223), plt.imshow(input_img), plt.title('Input')
-    plt.show(block=False)
+    if plot:
+        plt.figure()
+        plt.subplot(221), plt.imshow(model_img), plt.title('Model')
+        plt.subplot(222), plt.imshow(perspective_transform_input), plt.title('Perspective transformed Input')
+        plt.subplot(223), plt.imshow(input_img), plt.title('Input')
+        plt.show(block=False)
 
     my_input_pts2 = np.float32(p_input).reshape(-1, 1, 2)  # bit reshapeing so the cv2.perspectiveTransform() works
     p_input_persp_trans = cv2.perspectiveTransform(my_input_pts2, H2)  # transform(input_pts_2D)
@@ -259,36 +260,37 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     # input_img_arr = np.asarray(input_img)
     # input_persp_img_arr = np.asarray()
 
-    f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(14, 6))
-    #ax1.imshow(model_img)
-    ax1.imshow(np.asarray(model_img), cmap='gray')
-    # ax1.set_title(model_image_name + ' (model)')
-    ax1.set_title("model")
-    ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
-    ax1.plot(*zip(*model_pose_features), marker='o', color='red', ls='', label='pose', ms=markersize )  # ms = markersize
-    red_patch = mpatches.Patch(color='magenta', label='model')
-    ax1.legend(handles=[red_patch])
+    if plot:
+        f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(14, 6))
+        #ax1.imshow(model_img)
+        ax1.imshow(np.asarray(model_img), cmap='gray')
+        # ax1.set_title(model_image_name + ' (model)')
+        ax1.set_title("model")
+        ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
+        ax1.plot(*zip(*model_pose_features), marker='o', color='red', ls='', label='pose', ms=markersize )  # ms = markersize
+        red_patch = mpatches.Patch(color='magenta', label='model')
+        ax1.legend(handles=[red_patch])
 
-    # ax2.set_title(input_image_name + ' (input)')
-    ax2.set_title("input")
-    ax2.imshow(np.asarray(input_img), cmap='gray')
-    ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
-    ax2.plot(*zip(*input_pose_features), marker='*', color='r', ls='', ms=markersize)
-    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+        # ax2.set_title(input_image_name + ' (input)')
+        ax2.set_title("input")
+        ax2.imshow(np.asarray(input_img), cmap='gray')
+        ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
+        ax2.plot(*zip(*input_pose_features), marker='*', color='r', ls='', ms=markersize)
+        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-    ax3.set_title("persp corr input (features+pose)")
-    ax3.imshow(np.asarray(perspective_transform_input), cmap='gray')
-    ax3.plot(*zip(*input_pose_trans), marker='o', color='b', ls='', ms=markersize)
-    ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+        ax3.set_title("persp corr input (features+pose)")
+        ax3.imshow(np.asarray(perspective_transform_input), cmap='gray')
+        ax3.plot(*zip(*input_pose_trans), marker='o', color='b', ls='', ms=markersize)
+        ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
 
-    ax4.set_title("trans-input onto model")
-    ax4.imshow(np.asarray(model_img), cmap='gray')
-    ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
-    ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
-    ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
-    ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
-    # plt.tight_layout()
-    plt.show(block=False)
+        ax4.set_title("trans-input onto model")
+        ax4.imshow(np.asarray(model_img), cmap='gray')
+        ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
+        ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
+        ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
+        ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+        # plt.tight_layout()
+        plt.show(block=False)
 
     return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
@@ -440,7 +442,7 @@ def affine_trans_interaction_only_pose(p_model_good, p_input_good, model_pose, i
     plt.show(block=False)
     return None
 
-def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
+def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label, plot=False):
     # TODO: Deze geeft (momenteel betere resultaten dan den _normalise => verschillen tussen matches en niet-matches is pak groter
     #TODO: normalising van whole !! en niet normaliseren van legs en torso appart
     (model_face, model_torso, model_legs) = prepocessing.split_in_face_legs_torso(model_pose)
@@ -467,19 +469,21 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_torso)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_torso)
 
-    max_euclidean_error_torso = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_torso: ", max_euclidean_error_torso)
+    max_euclidean_error_torso_norm = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE RAND NORM " + label + "  error_torso: ", max_euclidean_error_torso_norm)
 
     model_features_norm = normalising.feature_scaling(np.vstack((p_model_good, model_legs)))
     input_features_trans_norm = normalising.feature_scaling(input_transformed_legs)
 
-    max_euclidean_error_legs = max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    print("#### AFFINE RAND NORM " + label + "  error_legs: ", max_euclidean_error_legs)
+    max_euclidean_error_legs_norm = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    print("#### AFFINE RAND NORM " + label + "  error_legs: ", max_euclidean_error_legs_norm)
 
-    if max_euclidean_error_torso < 0.15 and max_euclidean_error_legs < 0.15:
+    if max_euclidean_error_torso_norm < 0.15 and max_euclidean_error_legs_norm < 0.15:
         print("#### MATCH!!!  ###")
+        match = True
     else:
         print("#### NO MATCH!! ###")
+        match = False
 
     max_euclidean_error_torso = max_euclidean_distance(np.vstack((p_model_good, model_torso)), input_transformed_torso)
     max_euclidean_error_legs = max_euclidean_distance(np.vstack((p_model_good, model_legs)), input_transformed_legs)
@@ -489,41 +493,41 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
 
 
     markersize = 3
+    if plot:
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+        implot = ax1.imshow(np.asarray(model_img), cmap='gray')
+        # ax1.set_title(model_image_name + ' (model)')
+        ax1.set_title("model")
+        ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        red_patch = mpatches.Patch(color='magenta', label='model')
+        ax1.legend(handles=[red_patch])
 
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    implot = ax1.imshow(np.asarray(model_img), cmap='gray')
-    # ax1.set_title(model_image_name + ' (model)')
-    ax1.set_title("model")
-    ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    red_patch = mpatches.Patch(color='magenta', label='model')
-    ax1.legend(handles=[red_patch])
+        # ax2.set_title(input_image_name + ' (input)')
+        ax2.set_title("input")
+        ax2.imshow(np.asarray(input_img), cmap='gray')
+        ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+        ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-    # ax2.set_title(input_image_name + ' (input)')
-    ax2.set_title("input")
-    ax2.imshow(np.asarray(input_img), cmap='gray')
-    ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
-    ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
-    ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+        ax3.set_title("aff split() " + label)
+        ax3.imshow(np.asarray(model_img), cmap='gray')
+        ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='',
+                 label='model',
+                 ms=markersize)  # ms = markersize
+        ax3.plot(*zip(*input_transformed_legs), marker='o', color='green', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        ax3.plot(*zip(*input_transformed_torso), marker='o', color='blue', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        ax3.legend(handles=[mpatches.Patch(color='blue', label='trans-input torso'),
+                            mpatches.Patch(color='green', label='trans-input legs'),
+                            mpatches.Patch(color='magenta', label='model')])
 
-    ax3.set_title("aff split() " + label)
-    ax3.imshow(np.asarray(model_img), cmap='gray')
-    ax3.plot(*zip(*np.vstack((p_model_good, model_torso, model_legs))), marker='o', color='magenta', ls='',
-             label='model',
-             ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*input_transformed_legs), marker='o', color='green', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    ax3.plot(*zip(*input_transformed_torso), marker='o', color='blue', ls='', label='model',
-             ms=markersize)  # ms = markersize
-    ax3.legend(handles=[mpatches.Patch(color='blue', label='trans-input torso'),
-                        mpatches.Patch(color='green', label='trans-input legs'),
-                        mpatches.Patch(color='magenta', label='model')])
-
-    # plt.tight_layout()
-    plt.show(block=False)
-    return None
+        # plt.tight_layout()
+        plt.show(block=False)
+    return (match, max_euclidean_error_torso_norm, max_euclidean_error_legs_norm)
 
 
 

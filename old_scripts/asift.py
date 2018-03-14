@@ -31,7 +31,7 @@ import numpy as np
 
 # local modules
 from common import Timer
-from testjes.find_obj import init_feature, filter_matches, explore_match
+from old_scripts.find_obj import init_feature, filter_matches, explore_match
 
 
 def affine_skew(tilt, phi, img, mask=None):
