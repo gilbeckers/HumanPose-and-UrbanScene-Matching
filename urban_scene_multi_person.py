@@ -1,10 +1,11 @@
-import cv2
-import feat_ops
-import numpy as np
-from matplotlib import pyplot as plt
-from parse_openpose_json import parse_JSON_multi_person
-from urban_scene_single_person import match_scene_single_person
 import sys
+
+import cv2
+from matplotlib import pyplot as plt
+
+import feat_ops
+import common
+from urban_scene_single_person import match_scene_single_person
 
 feature_name = 'sift-flann'
 path_img = 'img/'  #'posesGeoteam/fotos/'
@@ -31,8 +32,8 @@ if detector is None:
 print('using', feature_name)
 
 
-model_pose_features = parse_JSON_multi_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
-input_pose_features = parse_JSON_multi_person(path_json + input_name.split('.')[0] +  '.json')
+model_pose_features = common.parse_JSON_multi_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
+input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0] +  '.json')
 
 
 for i in range(0, len(model_pose_features)):

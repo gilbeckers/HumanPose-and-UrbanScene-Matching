@@ -1,13 +1,15 @@
+import json
+import logging
+import sys
+
 import cv2
-import feat_ops
 import numpy as np
 from matplotlib import pyplot as plt
-from parse_openpose_json import parse_JSON_single_person
-from urban_scene_single_person import match_scene_single_person
-import sys
-import json
+
+import feat_ops
 import labels
-import logging
+from urban_scene_single_person import match_scene_single_person
+import common
 
 feature_name = 'orb-flann'
 path_img = 'img/'  # 'posesGeoteam/fotos/'
@@ -49,7 +51,7 @@ for i in range(1, amount_img):
         continue
         #sys.exit(1)
 
-    model_pose_features = parse_JSON_single_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
+    model_pose_features = common.parse_JSON_single_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
 
     intermediate_result = {}
 
@@ -63,7 +65,7 @@ for i in range(1, amount_img):
             #sys.exit(1)
             continue
 
-        input_pose_features = parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
+        input_pose_features = common.parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
         (err_torso, err_legs, sum_err_torso, sum_err_legs) = match_scene_single_person(detector, matcher, model_image, input_image, model_pose_features,
                                   input_pose_features, thresh)
 

@@ -9,15 +9,15 @@ uses find_obj.py
 # Python 2/3 compatibility
 from __future__ import print_function
 
+import logging
+
 import cv2
-import feat_ops
 import numpy as np
 from matplotlib import pyplot as plt
-import parse_openpose_json
-import affine_transformation
-from common import anorm, getsize, resizeAndPad
 
-import logging
+import feat_ops
+import common
+
 logging.basicConfig(filename='match_urban_scene.log',level=logging.DEBUG)
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 rootLogger = logging.getLogger()
@@ -34,7 +34,8 @@ thresh = 0.154
 if __name__ == '__main__':
     print(__doc__)
 
-    import sys, getopt
+    import sys
+
     '''opts, args = getopt.getopt(sys.argv[1:], '', ['feature='])
     opts = dict(opts)
     feature_name = opts.get('--feature', 'brisk')
@@ -57,8 +58,8 @@ if __name__ == '__main__':
     #input_image = resizeAndPad(input_image, (500, 500))
 
 
-    model_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + model_name.split('.')[0] + '_keypoints' +  '.json')  # + '_keypoints'
-    input_pose_features = parse_openpose_json.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' +  '.json')
+    model_pose_features = common.parse_JSON_single_person(path_json + model_name.split('.')[0] + '_keypoints' + '.json')  # + '_keypoints'
+    input_pose_features = common.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' + '.json')
     assert model_pose_features.shape == input_pose_features.shape
 
     detector, matcher = feat_ops.init_feature(feature_name)
