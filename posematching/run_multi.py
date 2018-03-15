@@ -24,6 +24,8 @@ input_features = parse_JSON_multi_person(input_json)
 #models_array = [np.array(model1), np.array(model2)]
 models_array = model_features
 
+print("model: ", models_array)
+
 #-------------------Simple case; poses are not checked on relation in space-------------------
 #pose_match.multi_person(models_array, input_features, model_image, input_image)
 

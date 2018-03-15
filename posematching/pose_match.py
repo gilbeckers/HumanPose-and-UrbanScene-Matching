@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import logging
 import numpy as np
-import posematching.proc_do_it as proc_do_it
+import posematching.procrustes as proc_do_it
 from common import feature_scaling, handle_undetected_points, \
     split_in_face_legs_torso, find_transformation, unsplit
 

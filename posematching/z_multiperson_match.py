@@ -5,8 +5,9 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
-import posematching.proc_do_it as proc_do_it
-from urbanscene.old_scripts import affine_transformation
+import posematching.procrustes as proc_do_it
+from common import find_transformation, feature_scaling
+import posematching.z_singleperson_match as singleperson_match
 
 logger = logging.getLogger("multiperson_match")
 
@@ -42,7 +43,9 @@ def find_best_match(models_poses, input_poses):
         logger.debug(" !! WARNING !! Amount of input poses > model poses")
 
     list_of_all_matches = []
-    model_poses = order_poses(model_poses)
+
+    # TODO stond 'model_poses' hier => rare typo ?? ik veronderstel da da gestest is dus zou er geen typo staan in naam van variabl
+    models_poses = order_poses(models_poses)
     input_poses = order_poses(input_poses)
     best_match_combo = None
     used_poses = []
@@ -159,18 +162,19 @@ def multi_person(model_poses, input_poses, normalise=True):
 
 
     if(normalise):
-        input_transformed_combined = normalising.feature_scaling(input_transformed_combined)
-        model_poses = normalising.feature_scaling(model_poses)
+        input_transformed_combined = feature_scaling(input_transformed_combined)
+        model_poses = feature_scaling(model_poses)
 
     # Calc the affine trans of the whole
-    (full_transformation, A_matrix) = affine_transformation.find_transformation(model_poses, input_transformed_combined)
+    (full_transformation, A_matrix) = find_transformation(model_poses, input_transformed_combined)
 
     return (True,0,0)
 
 def order_poses(poses):
     ordered = []
     for i in range(0,len(poses)):
-        if(np.nonzero(poses[i]) > 8):
+        print('reees',  np.nonzero(poses[i]))
+        if np.nonzero(poses[i]) > 8:
             pose= poses[i][:,0]
             placed = False
             place_counter = 1
@@ -202,6 +206,7 @@ def find_ordered_matches(model_poses,input_poses):
 
     if (len(input_poses) > len(model_poses)):
         logger.debug(" !! WARNING !! Amount of input poses > model poses")
+
 
     model_poses = order_poses(model_poses)
     input_poses = order_poses(input_poses)
@@ -252,7 +257,7 @@ def cartesian(arrays, out=None):
     out[:,0] = np.repeat(arrays[0], m)
     if arrays[1:]:
         cartesian(arrays[1:], out=out[0:m,1:])
-        for j in xrange(1, arrays[0].size):
+        for j in range(1, arrays[0].size):
             out[j*m:(j+1)*m,1:] = out[0:m,1:]
     return out
 
