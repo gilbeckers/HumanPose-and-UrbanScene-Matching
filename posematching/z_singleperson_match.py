@@ -6,9 +6,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import feature_scaling, split_in_face_legs_torso, unsplit, split_in_face_legs_torso_v2
+from common import feature_scaling, split_in_face_legs_torso, unsplit, split_in_face_legs_torso_v2, find_transformation
 from posematching import pose_comparison
-from urbanscene.old_scripts import affine_transformation
 
 logger = logging.getLogger("singleperson_match")
 MatchResult = collections.namedtuple("MatchResult", ["match_bool", "error_score", "input_transformation"])
@@ -252,7 +251,7 @@ def single_person_v2(model_features, input_features, normalise=True):
     else:
         result = MatchResult(None,
                              error_score=0,
-                             input_transformation=input_transformation)
+                             input_transformation=None)  #input_transformation
         return result
 
     #Split features in three parts
@@ -267,7 +266,7 @@ def single_person_v2(model_features, input_features, normalise=True):
     eucld_dis_shoulders_tresh = 0.085
     ################################
     #handle face
-    (input_transformed_face, transformation_matrix_face) = affine_transformation.find_transformation(model_face, input_face)
+    (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
     max_euclidean_error_face = pose_comparison.max_euclidean_distance(model_face, input_transformed_face)
     if  np.count_nonzero(model_face)>5:
         if (np.count_nonzero(model_face) - np.count_nonzero(input_face)) < 2:
@@ -279,8 +278,10 @@ def single_person_v2(model_features, input_features, normalise=True):
         logger.debug("too less points for face in model so face match")
         result_face = True
 
+    #print("model torso: ", model_torso)
+    #print("input torso; " , input_torso)
     #handle Torso
-    (input_transformed_torso, transformation_matrix_torso) = affine_transformation.find_transformation(model_torso, input_torso)
+    (input_transformed_torso, transformation_matrix_torso) = find_transformation(model_torso, input_torso)
     max_euclidean_error_torso = pose_comparison.max_euclidean_distance(model_torso, input_transformed_torso)
     max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso, input_transformed_torso)
     if  np.count_nonzero(model_torso)>5:
@@ -296,7 +297,7 @@ def single_person_v2(model_features, input_features, normalise=True):
         result_torso = True
 
     #handle legs
-    (input_transformed_legs, transformation_matrix_legs) = affine_transformation.find_transformation(model_legs, input_legs)
+    (input_transformed_legs, transformation_matrix_legs) = find_transformation(model_legs, input_legs)
     max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
     if  np.count_nonzero(model_legs)>5:
         if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 2:

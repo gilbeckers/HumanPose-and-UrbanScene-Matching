@@ -21,7 +21,7 @@ input_image = images_data_path + input + '.jpg'
 model_features = parse_JSON_multi_person_jochen(model_json)
 input_features = parse_JSON_multi_person_jochen(input_json)
 
-jochen.find_best_match(model_features, input_features)
+#jochen.find_best_match(model_features, input_features)
 
 (result, error_score, input_transform) = jochen.multi_person_ordered(model_features, input_features, True)
 

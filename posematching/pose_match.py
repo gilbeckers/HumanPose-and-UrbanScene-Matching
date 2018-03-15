@@ -619,7 +619,6 @@ def multi_person2(model_poses, input_poses, model_image_name, input_image_name, 
 
 # ----------------- JOCHEN ---------------------------
 
-
 def find_best_match1(models_poses, input_poses):
     logger.debug(" Multi-person matching...")
     logger.debug(" amount of models: %d", len(models_poses))
@@ -852,7 +851,6 @@ def cartesian(arrays, out=None):
         for j in xrange(1, arrays[0].size):
             out[j*m:(j+1)*m,1:] = out[0:m,1:]
     return out
-
 
 # TODO van jochen   MAG WEG??  -> duplicate van in z_multuperson_match ( is oude multi_person() van gil aangepast)
 def find_best_match2(models_poses, input_poses):
