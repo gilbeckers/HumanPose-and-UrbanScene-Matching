@@ -220,7 +220,7 @@ def find_ordered_matches(model_poses,input_poses):
         start_input =0
         if model_counter >0:
             start_input =  matches[model_counter-1][0]
-        for input_counter in range(0,len(input_poses)):
+        for input_counter in range(start_input,len(input_poses)):
             input_pose = input_poses[input_counter]
             # Do single pose matching
             (result_match, error_score, input_transformation) = singleperson_match.single_person_v2(model_pose, input_pose, True)
@@ -246,21 +246,7 @@ def multi_person_ordered(model_poses, input_poses, normalise=True):
 
     return MatchResult(True, error_score=0, input_transformation=None)
 
-def cartesian(arrays, out=None):
-    arrays = [np.asarray(x) for x in arrays]
-    dtype = arrays[0].dtype
 
-    n = np.prod([x.size for x in arrays])
-    if out is None:
-        out = np.zeros([n, len(arrays)], dtype=dtype)
-
-    m = n / arrays[0].size
-    out[:,0] = np.repeat(arrays[0], m)
-    if arrays[1:]:
-        cartesian(arrays[1:], out=out[0:m,1:])
-        for j in range(1, arrays[0].size):
-            out[j*m:(j+1)*m,1:] = out[0:m,1:]
-    return out
 
 def plot_multi_pose(model_image_name, input_image_name, list_of_all_matches):
 

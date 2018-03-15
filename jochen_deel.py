@@ -25,5 +25,5 @@ input_features = parse_JSON_multi_person_jochen(input)
 jochen.find_best_match(model_features, input_features)
 
 (result, error_score, input_transform) = jochen.multi_person_ordered(model_features, input_features, True)
-
+print (result)
 #jochen.multi_person(model_features, input_features)
