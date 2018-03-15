@@ -14,6 +14,8 @@ if PY3:
 
 import numpy as np
 import cv2 as cv
+import json
+import logging
 
 # built-in modules
 import os
@@ -143,7 +145,7 @@ def parse_JSON_single_person(filename):
     keypointsPeople1 = data["people"][0]["pose_keypoints"] #enkel 1 persoon  => [0]
 
     #18 2D coordinatenkoppels (joint-points)
-    array = numpy.zeros((18,2))
+    array = np.zeros((18,2))
     #list = []
     arrayIndex = 0
 
@@ -167,7 +169,7 @@ def parse_JSON_single_person_as_json(filename):
     keypointsPeople1 = data["people"][0]["pose_keypoints"] #enkel 1 persoon  => [0]
 
     #18 2D coordinatenkoppels (joint-points)
-    array = numpy.zeros((18,2))
+    array = np.zeros((18,2))
     #list = []
     arrayIndex = 0
 
@@ -193,7 +195,7 @@ def parse_JSON_multi_person(filename):
         person_keypoints = keypoints[k]["pose_keypoints"]
 
         # 18 3D coordinatenkoppels (joint-points)
-        array = numpy.zeros((18, 2))
+        array = np.zeros((18, 2))
         arrayIndex = 0
         for i in range(0, len(person_keypoints), 3):
             array[arrayIndex][0] = person_keypoints[i]
@@ -213,7 +215,7 @@ def parse_JSON_multi_person_as_json(filename):
         person_keypoints = keypoints[k]["pose_keypoints"]
 
         # 18 3D coordinatenkoppels (joint-points)
-        array = numpy.zeros((18, 2))
+        array = np.zeros((18, 2))
         arrayIndex = 0
         for i in range(0, len(person_keypoints), 3):
             array[arrayIndex][0] = person_keypoints[i]
@@ -229,6 +231,13 @@ def split_in_face_legs_torso(features):
     legs = features[8:14]
     face = np.vstack([features[0], features[14:18]])
 
+    return (face, torso, legs)
+
+def split_in_face_legs_torso_v2(features):
+    # torso = features[2:8]   #zonder nek
+    torso = features[[0,1,2,3,4,5,6,7,8,11]]   #met nek  => if nek incl => compare_incl_schouders aanpassen!!
+    legs = features[[1,8,9,10,11,12,13]]
+    face = np.vstack([features[0], features[14:18]])
     return (face, torso, legs)
 
 def unsplit(face, torso, legs):
@@ -258,7 +267,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in input_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logger.warning(" Undetected body part in input: index(%d) %s", counter,
+                logging.warning(" Undetected body part in input: index(%d) %s", counter,
                                get_bodypart(counter))
                 model_features_copy[counter][0] = 0
                 model_features_copy[counter][1] = 0
@@ -271,7 +280,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in model_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logger.warning(" Undetected body part in MODEL: index(%d) %s", counter,
+                logging.warning(" Undetected body part in MODEL: index(%d) %s", counter,
                                get_bodypart(counter))
                 input_features_copy[counter][0] = 0
                 input_features_copy[counter][1] = 0
