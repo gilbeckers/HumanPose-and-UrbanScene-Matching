@@ -45,7 +45,6 @@ def find_best_match(models_poses, input_poses):
 
     list_of_all_matches = []
 
-    # TODO stond 'model_poses' hier => rare typo ?? ik veronderstel da da gestest is dus zou er geen typo staan in naam van variabl
     models_poses = order_poses(models_poses)
     input_poses = order_poses(input_poses)
     best_match_combo = None
@@ -202,7 +201,7 @@ def find_ordered_matches(model_poses,input_poses):
 
     if(len(input_poses) < len(model_poses)):
         logger.debug(" Multi person match failed. Amount of input poses < model poses")
-        return Fposematching.alse
+        return False
 
     if (len(input_poses) > len(model_poses)):
         logger.debug(" !! WARNING !! Amount of input poses > model poses")
@@ -224,6 +223,7 @@ def find_ordered_matches(model_poses,input_poses):
             input_pose = input_poses[input_counter]
             # Do single pose matching
             (result_match, error_score, input_transformation) = singleperson_match.single_person_v2(model_pose, input_pose, True)
+            logging.debug("model%d & input%d | result: %s  score %f ", model_counter, input_counter, str(result_match), round(error_score, 4))
             if result_match:
                 match_found = True
                 matches[model_counter].append(input_counter)

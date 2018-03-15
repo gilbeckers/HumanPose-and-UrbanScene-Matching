@@ -259,11 +259,11 @@ def single_person_v2(model_features, input_features, normalise=True):
     (input_face, input_torso, input_legs) = split_in_face_legs_torso_v2(input_features)
 
     ######### THE THRESHOLDS #######
-    eucl_dis_tresh_torso = 0.098
+    eucl_dis_tresh_torso = 0.115  #0.098
     rotation_tresh_torso = 10.847
-    eucl_dis_tresh_legs = 0.05
-    rotation_tresh_legs = 14.527
-    eucld_dis_shoulders_tresh = 0.085
+    eucl_dis_tresh_legs = 0.055
+    rotation_tresh_legs = 24.527  #14.527
+    eucld_dis_shoulders_tresh = 0.115
     ################################
     #handle face
     (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
@@ -303,6 +303,7 @@ def single_person_v2(model_features, input_features, normalise=True):
         if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 2:
             result_legs = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,
                                                       eucl_dis_tresh_legs, rotation_tresh_legs)
+
         else:
             logger.debug("Model has more legs feature then input therefore not matched")
             result_legs = False
@@ -315,8 +316,8 @@ def single_person_v2(model_features, input_features, normalise=True):
 
 
     #TODO: construct a solid score algorithm
-    error_score = (max_euclidean_error_torso + max_euclidean_error_legs)/2.0
 
+    error_score = (max_euclidean_error_torso + max_euclidean_error_legs)/2.0
     result = MatchResult((result_torso and result_legs and result_face),
                          error_score=error_score,
                          input_transformation=input_transformation)
