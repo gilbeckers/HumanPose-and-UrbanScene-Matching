@@ -617,8 +617,6 @@ def multi_person2(model_poses, input_poses, model_image_name, input_image_name, 
     return True
 
 
-
-
 # ----------------- JOCHEN ---------------------------
 
 
