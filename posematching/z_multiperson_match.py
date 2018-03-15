@@ -4,6 +4,7 @@ import logging
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import itertools
 
 import posematching.procrustes as proc_do_it
 from common import find_transformation, feature_scaling
@@ -173,8 +174,7 @@ def multi_person(model_poses, input_poses, normalise=True):
 def order_poses(poses):
     ordered = []
     for i in range(0,len(poses)):
-        print('reees',  np.nonzero(poses[i]))
-        if np.nonzero(poses[i]) > 8:
+        if np.count_nonzero(poses[i]) > 8:
             pose= poses[i][:,0]
             placed = False
             place_counter = 1
@@ -202,11 +202,10 @@ def find_ordered_matches(model_poses,input_poses):
 
     if(len(input_poses) < len(model_poses)):
         logger.debug(" Multi person match failed. Amount of input poses < model poses")
-        return False
+        return Fposematching.alse
 
     if (len(input_poses) > len(model_poses)):
         logger.debug(" !! WARNING !! Amount of input poses > model poses")
-
 
     model_poses = order_poses(model_poses)
     input_poses = order_poses(input_poses)
@@ -241,7 +240,9 @@ def multi_person_ordered(model_poses, input_poses, normalise=True):
     if matches == False:
         return MatchResult(False, error_score=0, input_transformation=None)
     #np = np.array(matches)
-    possiblities = cartesian(matches)
+    print (matches)
+    possiblities = list(itertools.product(*matches))
+    print (possiblities)
 
     return MatchResult(True, error_score=0, input_transformation=None)
 

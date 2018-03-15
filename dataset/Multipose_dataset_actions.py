@@ -69,7 +69,7 @@ def check_matches(pose):
     print str(count)+" foto's werden niet meer herkend"
 
 
-#***********************************galabal dataset_actions
+#***********************************galabal dataset_actions*********************************
 def find_galabal_matches(pose):
         model = galabaljson+pose+".json"
         model_features = parse_openpose_json.parse_JSON_multi_person(model)
