@@ -6,7 +6,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import feature_scaling, split_in_face_legs_torso, unsplit, split_in_face_legs_torso_v2
+from common import feature_scaling, split_in_face_legs_torso, unsplit, split_in_face_legs_torso_v2, handle_undetected_points
 from posematching import pose_comparison
 from urbanscene.old_scripts import affine_transformation
 
@@ -35,7 +35,7 @@ def single_person(model_features, input_features, normalise=True):
     #model_features_copy = np.array(model_features)
 
 
-    model_features_copy = copy.copy(model_features)
+    (input_features, model_features_copy) = handle_undetected_points(input_features, model_features)
 
     # First, some safety checks ...
     # Each model must be a valid model, this means no Openpose errors (=a undetected body-part) are allowed
@@ -49,40 +49,7 @@ def single_person(model_features, input_features, normalise=True):
                 #result = MatchResult(False, error_score=0, input_transformation=None)
                 #return result
     '''
-    # Input is allowed to have a certain amount of undetected body parts
-    # In that case, the corresponding point from the model is also changed to (0,0)
-    #   -> afterwards matching can still proceed
-    # The (0,0) points can't just be deleted because
-    # because without them the featurearrays would become ambigu. (the correspondence between model and input)
-    #
-    # !! NOTE !! : the acceptation and introduction of (0,0) points
-    # is a danger for our current normalisation
-    # These particular origin points should not influence the normalisation
-    # (which they do if we neglect them, xmin and ymin you know...)
-    counter_not_found_points = 0
-    if np.any(input_features[:] == [0,0]):
-        counter = 0
-        for feature in input_features:
-            if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                #logger.warning(" Undetected body part in input: index(%d) %s", counter, prepocessing.get_bodypart(counter))
-                if not (model_features_copy[counter][0] == 0 and model_features_copy[counter][1] == 0):
-                    counter_not_found_points = counter_not_found_points+1
-                model_features_copy[counter][0] = 0#np.nan
-                model_features_copy[counter][1] = 0#np.nan
-                #input_features[counter][0] = 0#np.nan
-                #input_features[counter][1] = 0#np.nan
 
-            counter = counter+1
-
-    # if the input has more then 4 points not recognised then the model, then return false
-    if counter_not_found_points > 2:
-        logger.debug("Model has more feature then input therefore not matched")
-        result = MatchResult(False,
-                             error_score=0,
-                             input_transformation=None)
-        return result
-
-    assert len(model_features_copy) == len(input_features)
 
     # Normalise features: crop => delen door Xmax & Ymax (NIEUWE MANIER!!)
     # !Note!: as state above, care should be taken when dealing
@@ -171,7 +138,7 @@ def single_person_v2(model_features, input_features, normalise=True):
     #       verder gewerkt naar callen van single_person()
     #model_features_copy = np.array(model_features)
 
-    model_features_copy = copy.copy(model_features)
+    (input_features, model_features_copy) = handle_undetected_points(input_features, model_features)
 
     # First, some safety checks ...
     # Each model must be a valid model, this means no Openpose errors (=a undetected body-part) are allowed

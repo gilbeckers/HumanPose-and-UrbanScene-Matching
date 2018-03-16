@@ -292,7 +292,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in input_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logging.warning(" Undetected body part in input: index(%d) %s", counter,
+                logging.debug(" Undetected body part in input: index(%d) %s", counter,
                                get_bodypart(counter))
                 model_features_copy[counter][0] = 0
                 model_features_copy[counter][1] = 0
@@ -305,7 +305,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in model_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logging.warning(" Undetected body part in MODEL: index(%d) %s", counter,
+                logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,
                                get_bodypart(counter))
                 input_features_copy[counter][0] = 0
                 input_features_copy[counter][1] = 0
@@ -431,7 +431,7 @@ def resizeAndPad(img, size, padColor=0):
         new_h, new_w = sh, sw
         pad_left, pad_right, pad_top, pad_bot = 0, 0, 0, 0
 
-    # set pad color
+    # set paposematching.d color
     if len(img.shape) is 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
         padColor = [padColor]*3
 
@@ -457,7 +457,7 @@ def resize_img(model_image, input_image):
 def splitfn(fn):
     path, fn = os.path.split(fn)
     name, ext = os.path.splitext(fn)
-    return path, name, ext
+    returnposematching. path, name, ext
 
 def anorm2(a):
     return (a*a).sum(-1)

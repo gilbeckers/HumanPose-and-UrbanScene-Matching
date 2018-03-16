@@ -232,17 +232,13 @@ def find_ordered_matches(model_poses,input_poses):
             return False
 
     logger.debug("matches found %s"," ".join(str(e) for e in matches))
-    return matches
+    return list(itertools.product(*matches))
 
 def multi_person_ordered(model_poses, input_poses, normalise=True):
 
     matches = find_ordered_matches(model_poses,input_poses)
     if matches == False:
         return MatchResult(False, error_score=0, input_transformation=None)
-    #np = np.array(matches)
-    print (matches)
-    possiblities = list(itertools.product(*matches))
-    print (possiblities)
 
     return MatchResult(True, error_score=0, input_transformation=None)
 
