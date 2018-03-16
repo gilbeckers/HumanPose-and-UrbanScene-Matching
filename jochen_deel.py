@@ -3,7 +3,7 @@ import dataset.Multipose_dataset_actions as dataset
 
 from common import parse_JSON_multi_person, parse_JSON_multi_person_jochen
 import logging
-#logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("pose_match_jochen")
 json_data_path = '../json_data/'
 images_data_path = '../img/'

@@ -10,8 +10,8 @@ images_data_path = '../img/'
 '''
 -------------------- MULTI PERSON -------------------------------------
 '''
-model = "duo3"
-input = "duo4"
+model = "duo22"
+input = "duo24"
 model_json = json_data_path + model + '.json'
 input_json = json_data_path + input + '.json'
 model_image = images_data_path + model + '.jpg'
@@ -24,7 +24,6 @@ input_features = parse_JSON_multi_person(input_json)
 #models_array = [np.array(model1), np.array(model2)]
 models_array = model_features
 
-print("model: ", models_array)
 
 #-------------------Simple case; poses are not checked on relation in space-------------------
 #pose_match.multi_person(models_array, input_features, model_image, input_image)

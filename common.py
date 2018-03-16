@@ -65,6 +65,10 @@ def find_transformation(model_features, input_features):
             model_features_zonder_nan.append([model_features[input_counter][0], model_features[input_counter][1]])
         input_counter = input_counter+1
 
+    if len(model_features_zonder_nan)==0 or len(input_features_zonder_nan) ==0:
+        #print("################## hiereeeeee")
+        return (input_features,[])
+
     input_features = np.array(input_features_zonder_nan)
     model_features = np.array(model_features_zonder_nan)
 
@@ -337,7 +341,6 @@ def handle_undetected_points(input_features, model_features):
     # -> NIET ECHT RAAR EIGENLIJK WANT MINDER punten betekent minder constraints, waardoor er meer kan gedraaid worden (meer vrijheidsgraad)
 
     return (input_features_copy, model_features_copy)
-
 
 
 def unpad(matrix):

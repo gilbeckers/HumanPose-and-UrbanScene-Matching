@@ -3,10 +3,10 @@ import logging
 import sys
 
 import cv2
-import labels
+import urbanscene.labels as labels
 import numpy as np
 from matplotlib import pyplot as plt
-from urban_scene_single_person import match_scene_single_person
+from urbanscene.urban_scene_single_person import match_scene_single_person
 
 import common
 from urbanscene import feat_ops
@@ -100,7 +100,6 @@ for i in range(1, amount_img):
             plt.show(block=False)
 
     dataset_result[model_name+str(i)] = intermediate_result
-
 
 with open('dataset.json', 'w') as json_file:
     json.dump(dataset_result, json_file)
