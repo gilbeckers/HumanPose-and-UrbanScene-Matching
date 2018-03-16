@@ -50,7 +50,7 @@ def test_script():
     pose = "4"
     model = galabal+pose+"/json/"+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
-    input = galabal+pose+"/json/148.json"
+    input = galabal+pose+"/json/4.json"
 
     input_features = common.parse_JSON_multi_person(input)
     (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)

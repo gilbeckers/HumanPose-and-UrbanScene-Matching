@@ -1,20 +1,41 @@
 import posematching.z_multiperson_match as jochen
 import dataset.Multipose_dataset_actions as dataset
-
-from common import parse_JSON_multi_person, parse_JSON_multi_person_jochen
 import logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("pose_match_jochen")
-json_data_path = '../json_data/'
-images_data_path = '../img/'
 
-data = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/json/'
-galabal = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/poses/'
-galabaljson = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/json/'
-galabalfotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/'
+
+logger = logging.getLogger(__name__)
+path = '/media/jochen/2FCA69D53AB1BFF49/dataset/poses/'
 '''
--------------------- MULTI PERSON -------------------------------------
+logging.basicConfig(level=logging.INFO)
+for i in range(1,10):
+    print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    print i
+    print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    Multipose_dataset_actions.find_matches_with("0000"+str(i))
+'''
+'''
+logging.basicConfig(level=logging.INFO)
+dataset.find_matches_with("00100")
+'''
+
 '''
 logging.basicConfig(level=logging.DEBUG)
 dataset.check_matches("00100")
-#jochen.multi_person(model_features, input_features)
+'''
+logging.basicConfig(level=logging.DEBUG)
+dataset.test_script()
+
+#*********************galabal*********************
+
+'''
+logging.basicConfig(level=logging.DEBUG)
+dataset.test_script()
+'''
+'''
+logging.basicConfig(level=logging.INFO)
+dataset.find_galabal_matches("1")
+'''
+'''
+logging.basicConfig(level=logging.DEBUG)
+dataset.check_galabal_matches("4")
+'''

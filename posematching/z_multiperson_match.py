@@ -7,7 +7,7 @@ import numpy as np
 import itertools
 
 import posematching.procrustes as proc_do_it
-from common import find_transformation, feature_scaling
+from common import find_transformation, feature_scaling, handle_undetected_points
 import posematching.z_singleperson_match as singleperson_match
 
 logger = logging.getLogger("multiperson_match")
@@ -239,6 +239,34 @@ def multi_person_ordered(model_poses, input_poses, normalise=True):
     matches = find_ordered_matches(model_poses,input_poses)
     if matches == False:
         return MatchResult(False, error_score=0, input_transformation=None)
+    for possible_matches in matches:
+        print(possible_matches)
+        input_transformed_combined = []
+        updated_models_combined = []
+        for i in range(0,len(possible_matches)):
+            (input_pose,model_pose) = handle_undetected_points(input_poses[possible_matches[i]],model_poses[i])
+            (input_transformed,model) = proc_do_it.superimpose(input_pose, model_pose,"/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/1.jpg","/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/1.jpg")
+
+            input_transformed_combined.append(np.array(input_transformed))
+            updated_models_combined.append(np.array(model))
+
+        assert len(input_transformed_combined) == len(updated_models_combined)
+        #not enough corresponding points
+        if not (len(input_transformed_combined) >0 ):
+            logger.debug("not enough corresponding points between model and input")
+            result = MatchResult(False, error_score=0, input_transformation=None)
+            return result
+
+        input_transformed_combined = np.vstack(input_transformed_combined)
+        model_poses =np.vstack(updated_models_combined)
+
+
+        if(normalise):
+            input_transformed_combined = feature_scaling(input_transformed_combined)
+            model_poses = feature_scaling(model_poses)
+
+        # Calc the affine trans of the whole
+        (full_transformation, A_matrix) = find_transformation(model_poses, input_transformed_combined)
 
     return MatchResult(True, error_score=0, input_transformation=None)
 
