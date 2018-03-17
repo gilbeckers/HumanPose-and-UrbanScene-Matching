@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-logger = logging.getLogger("pose_match")
+logger = logging.getLogger("pose_comparison")
 
 
 #Beslist op basis van max_euclidean distance en rotatie hoek en !!! aparte threshold op euclid distance van schouders !!!!

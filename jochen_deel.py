@@ -1,7 +1,8 @@
-import posematching.z_multiperson_match as jochen
 import dataset.Multipose_dataset_actions as dataset
 import logging
+import logging
 
+import dataset.Multipose_dataset_actions as dataset
 
 logger = logging.getLogger(__name__)
 path = '/media/jochen/2FCA69D53AB1BFF49/dataset/poses/'

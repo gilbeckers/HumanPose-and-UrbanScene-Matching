@@ -3,7 +3,7 @@ import logging
 import os
 
 import common
-from posematching import z_multiperson_match
+from posematching.rust import z_multiperson_match
 
 logger = logging.getLogger("Multipose dataset")
 

@@ -5,8 +5,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
+import posematching.rust.z_singleperson_match as proc_do_it
 import posematching.procrustes as proc_do_it
-import posematching.z_singleperson_match as proc_do_it
 from common import feature_scaling
 from urbanscene.old_scripts import affine_transformation
 

@@ -7,8 +7,8 @@ from redis import Redis
 from werkzeug.utils import secure_filename
 
 sys.path.insert(0,"/openpose-master/MultiPersonMatching")
-import parse_openpose_json
-from posematching import z_multiperson_match
+from common import parse_JSON_multi_person, parse_JSON_single_person, parse_JSON_multi_person_jochen
+import posematching.multi_person as multi_person
 import glob
 import base64
 
@@ -130,9 +130,9 @@ def findmatch(filename, id):
     modeladr = "/home/jochen/dataset/poses/pose"+id+"/json/0.json"
 
     #find matched
-    model_features = parse_openpose_json.parse_JSON_single_person(modeladr)
-    input_features = parse_openpose_json.parse_JSON_single_person(inputadr)
-    (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+    model_features = parse_JSON_single_person(modeladr)
+    input_features = parse_JSON_single_person(inputadr)
+    (result, error_score, input_transform) = multi_person.match(model_features, input_features, True)
 
     print("Match or not: ", result)
     with open(inputadr) as json_file:

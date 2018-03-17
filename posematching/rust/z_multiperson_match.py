@@ -1,14 +1,15 @@
 import collections
+import itertools
 import logging
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import itertools
 
-import posematching.procrustes as proc_do_it
+import posematching.procrustes as procrustes
+import posematching.single_person as single_person
+
 from common import find_transformation, feature_scaling, handle_undetected_points
-import posematching.z_singleperson_match as singleperson_match
 
 logger = logging.getLogger("multiperson_match")
 
@@ -69,7 +70,7 @@ def find_best_match(models_poses, input_poses):
 
             logger.debug(" @@@@ Matching model(%d) with input(%d) @@@@", counter_model_pose, counter_input_pose)
             # Do single pose matching
-            (result_match, error_score, input_transformation) = singleperson_match.single_person_v2(model_pose, input_pose, True)
+            (result_match, error_score, input_transformation) = single_person.match(model_pose, input_pose, True)
 
             if (result_match):
                 match_combo = MatchCombo(error_score, counter_input_pose, counter_model_pose,model_pose, input_pose, input_transformation)
@@ -144,7 +145,7 @@ def multi_person(model_poses, input_poses, normalise=True):
                     best_match.model_features[counter][1] = 0
                 counter = counter + 1
 
-        (input_transformed,model) = proc_do_it.superimpose(best_match.input_features, best_match.model_features)
+        (input_transformed,model) = procrustes.superimpose(best_match.input_features, best_match.model_features)
 
         input_transformed_combined.append(np.array(input_transformed))
         updated_models_combined.append(np.array(model))
@@ -222,7 +223,7 @@ def find_ordered_matches(model_poses,input_poses):
         for input_counter in range(start_input,len(input_poses)):
             input_pose = input_poses[input_counter]
             # Do single pose matching
-            (result_match, error_score, input_transformation) = singleperson_match.single_person_v2(model_pose, input_pose, True)
+            (result_match, error_score, input_transformation) = single_person.match_single(model_pose, input_pose, True)
             logging.debug("model%d & input%d | result: %s  score %f ", model_counter, input_counter, str(result_match), round(error_score, 4))
             if result_match:
                 match_found = True
@@ -245,7 +246,7 @@ def multi_person_ordered(model_poses, input_poses, normalise=True):
         updated_models_combined = []
         for i in range(0,len(possible_matches)):
             (input_pose,model_pose) = handle_undetected_points(input_poses[possible_matches[i]],model_poses[i])
-            (input_transformed,model) = proc_do_it.superimpose(input_pose, model_pose,"/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/1.jpg","/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/1.jpg")
+            (input_transformed,model) = procrustes.superimpose(input_pose, model_pose)
 
             input_transformed_combined.append(np.array(input_transformed))
             updated_models_combined.append(np.array(model))
@@ -276,7 +277,7 @@ def plot_multi_pose(model_image_name, input_image_name, list_of_all_matches):
 
     for i in list_of_all_matches:
         if i is not None:
-            (result, error_score, input_transformation) = singleperson_match.single_person_v2(i.model_features, i.input_features, False)
+            (result, error_score, input_transformation) = single_person.match_single(i.model_features, i.input_features, False)
             plot_match(i.model_features, i.input_features, input_transformation, model_image_name, input_image_name)
 
     return

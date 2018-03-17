@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def superimpose_jochen(input, model):
+def superimpose(input, model):
 
     #input = prepocessing.unpad(input)
     #model = prepocessing.unpad(model)
@@ -49,7 +49,7 @@ This is done with a translation and a rotation an again a translation in the y d
     Second Translation
 
 '''
-def superimpose(input, model, input_image, model_image):
+def superimpose_old(input, model, input_image, model_image):
 
     #input = prepocessing.unpad(input)
     #model = prepocessing.unpad(model)

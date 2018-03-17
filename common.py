@@ -16,6 +16,7 @@ import numpy as np
 import cv2 as cv
 import json
 import logging
+logger = logging.getLogger("common")
 
 # built-in modules
 import os
@@ -223,10 +224,11 @@ def parse_JSON_multi_person_jochen(filename):
         array = np.zeros((18, 2))
         arrayIndex = 0
         for i in range(0, len(person_keypoints), 3):
-            if person_keypoints[i+2]> 0.4:
+            if person_keypoints[i+2]> 0.25:  # was 0.4
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
+                logger.warning("openpose certainty(%f) to low index: %d", person_keypoints[i+2], arrayIndex )
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
@@ -296,7 +298,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in input_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logging.debug(" Undetected body part in input: index(%d) %s", counter,
+                logger.debug(" Undetected body part in input: index(%d) %s", counter,
                                get_bodypart(counter))
                 model_features_copy[counter][0] = 0
                 model_features_copy[counter][1] = 0
