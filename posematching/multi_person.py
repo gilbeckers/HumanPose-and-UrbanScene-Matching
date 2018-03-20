@@ -35,6 +35,18 @@ def match(model_poses, input_poses, normalise=True):
     if (len(input_poses) > len(model_poses)):
         logger.warning(" !! WARNING !! Amount of input poses > model poses")
 
+    #
+    if len(model_poses)==1 and len(input_poses)==1:
+        logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
+        match_result_single = match_single(model_poses[0], input_poses[0], True)
+
+        if match_result_single.match_bool:
+            return MatchResultMulti(match_result_single.match_bool, error_score=match_result_single.error_score,
+                                    input_transformation=match_result_single.input_transformation,
+                                    matching_permutations={0:[0]})
+        else:
+            return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
+
     matches_dict = find_ordered_matches(model_poses,input_poses)
 
     logger.debug("matches found %s", str(matches_dict))
@@ -151,8 +163,6 @@ def input_pose_solo_multiple_times(matches_dict, input_length):
         return True
 
     return False
-
-
 
 def order_poses(poses):
     ordered = []

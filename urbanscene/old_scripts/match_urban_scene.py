@@ -16,7 +16,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import common
-from urbanscene import feat_ops
+from urbanscene import features
 
 logging.basicConfig(filename='match_urban_scene.log',level=logging.DEBUG)
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     input_pose_features = common.parse_JSON_single_person(path_json + input_name.split('.')[0] + '_keypoints' + '.json')
     assert model_pose_features.shape == input_pose_features.shape
 
-    detector, matcher = feat_ops.init_feature(feature_name)
+    detector, matcher = features.init_feature(feature_name)
 
     if model_image is None:
         print('Failed to load fn1:', model_name)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
 
     # --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  -------------------------
-    (mask, p_model_good, p_input_good, H, H2) = feat_ops.match_and_draw(feature_name, matcher, desc_model,
+    (mask, p_model_good, p_input_good, H, H2) = features.match_and_draw(feature_name, matcher, desc_model,
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
 
     # --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ----------------------
-    if(feat_ops.validate_homography(H)):  # H = perspective transformation matrix
+    if(features.validate_homography(H)):  # H = perspective transformation matrix
         logging.debug("!!Valid HOMOGRAPHY!!")
     #else:
         #exit()
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
-    (p_persp_trans_input, input_pose_trans, persp_trans_input_img ) = feat_ops.perspective_correction(H2, p_model_good_incl_pose, p_input_good_incl_pose,
+    (p_persp_trans_input, input_pose_trans, persp_trans_input_img ) = features.perspective_correction(H2, p_model_good_incl_pose, p_input_good_incl_pose,
                                                                                                       model_pose_features, input_pose_features,
                                                                                                       model_image, input_image)
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
-    feat_ops.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
+    features.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
                                                       input_pose_trans,
                                                       model_image, persp_trans_input_img, "pose + random scene", True)
 

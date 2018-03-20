@@ -6,10 +6,10 @@ import cv2
 import urbanscene.labels as labels
 import numpy as np
 from matplotlib import pyplot as plt
-from urbanscene.urban_scene_single_person import match_scene_single_person
+from urbanscene.urban_scene import match_scene_single_person
 
 import common
-from urbanscene import feat_ops
+from urbanscene import features
 
 feature_name = 'orb-flann'
 path_img = 'img/'  # 'posesGeoteam/fotos/'
@@ -32,7 +32,7 @@ rootLogger.addHandler(consoleHandler)
 
 
 
-detector, matcher = feat_ops.init_feature(feature_name)
+detector, matcher = features.init_feature(feature_name)
 if detector is None:
     print('unknown feature:', feature_name)
     sys.exit(1)

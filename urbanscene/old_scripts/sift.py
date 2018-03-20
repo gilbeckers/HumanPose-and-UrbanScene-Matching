@@ -1,7 +1,7 @@
 import cv2
 from matplotlib import pyplot as plt
 
-from urbanscene import feat_ops
+from urbanscene import features
 
 img_model = cv2.imread('../img/pisa9.jpg', 0)
 img_input = cv2.imread('../img/pisa_chapel.jpg',0)
@@ -28,7 +28,7 @@ ax2.imshow(img3)
 ax2.set_title("input")
 plt.show()
 
-(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix) = feat_ops.flann_matching(des2, des1, kp2, kp1, img_model, img_input)
+(matchesMask, input_image_homo, good, model_pts, input_pts, perspective_trans_matrix) = features.flann_matching(des2, des1, kp2, kp1, img_model, img_input)
 
 # ---------------- DRAW MATCHES  -------------------------------
 draw_params = dict(matchColor = (0,255,0), # draw matches in green color
