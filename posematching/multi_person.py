@@ -1,4 +1,4 @@
-from posematching.single_person import MatchResult, MatchCombo, match_single
+from posematching.single_person import MatchResult, MatchCombo, match_single, MatchResultMulti
 from common import handle_undetected_points, feature_scaling, find_transformation
 from posematching.procrustes import superimpose
 from posematching.pose_comparison import max_euclidean_distance
@@ -18,7 +18,7 @@ def match(model_poses, input_poses, normalise=True):
     # Some safety checks first ..
     if (len(input_poses) == 0 or len(model_poses) == 0):
         logger.debug("FAIL: Multi person match failed. Inputposes or modelposes are empty")
-        return MatchResult(False, error_score=0, input_transformation=None)
+        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
     # Then check if there are equal or more input poses than model poses
     # When the amount of input poses is smaller than model poses a global match FAILED is decided
@@ -27,7 +27,7 @@ def match(model_poses, input_poses, normalise=True):
     #       -> TODO: ? foreground detection necessary (in case less models than there are inputs)  NOT SURE ...
     if (len(input_poses) < len(model_poses)):
         logger.debug("FAIL: Multi person match failed. Amount of input poses < model poses")
-        return MatchResult(False, error_score=0, input_transformation=None)
+        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
     # When there are more inputposes than modelsposes, print warning
     # I this case pose match still needs to proceed,
@@ -40,12 +40,12 @@ def match(model_poses, input_poses, normalise=True):
     logger.debug("matches found %s", str(matches_dict))
     if matches_dict == False:
         logger.debug("FAIL: No ordered matches found")
-        return MatchResult(False, error_score=0, input_transformation=None)
+        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
     #if not contains_every_input_once(matches_dict):
     if input_pose_solo_multiple_times(matches_dict, len(input_poses)):
         logger.debug("FAIL: An inputpose is linked to multiple modelpose as only possible match => global fail (injection remember)")
-        return MatchResult(False, error_score=0, input_transformation=None)
+        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
 
 
@@ -72,7 +72,7 @@ def match(model_poses, input_poses, normalise=True):
         # not enough corresponding points  #TODO voor wa is dit?
         if not (len(input_transformed_combined) > 0):
             logger.debug("FAIL: not enough corresponding points between model and input")
-            result = MatchResult(False, error_score=0, input_transformation=None)
+            result = MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
             return result
 
         # Calc the affine trans of the whole
@@ -90,8 +90,8 @@ def match(model_poses, input_poses, normalise=True):
 
 
     # TODO: nog max nemen van resultaat.
-    print("result scores: " , result_permuations)
-    return MatchResult(True, error_score=0, input_transformation=None)
+    logger.debug("result scores: " , result_permuations)
+    return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)
 
 
 

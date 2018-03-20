@@ -13,8 +13,8 @@ images_data_path = '../img/'
 -------------------- MULTI PERSON -------------------------------------
 '''
 
-model = "duo3"
-input = "duo4"
+model = "duo21"
+input = "duo25"
 model_json = json_data_path + model + '.json'
 input_json = json_data_path + input + '.json'
 model_image = images_data_path + model + '.jpg'

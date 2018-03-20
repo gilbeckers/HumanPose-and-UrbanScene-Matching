@@ -12,6 +12,7 @@ logger = logging.getLogger("single_person")
 
 # Init the returned tuple
 MatchResult = collections.namedtuple("MatchResult", ["match_bool", "error_score", "input_transformation"])
+MatchResultMulti = collections.namedtuple("MatchResult", ["match_bool", "error_score", "input_transformation", "matching_permutations"])
 
 class MatchCombo(object):
     def __init__(self, error_score, input_id, model_id, model_features, input_features, input_transformation):

@@ -9,7 +9,7 @@ FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH     = 6
 MIN_MATCH_COUNT     = 4
 
-def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features, thresh):
+def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features):
     assert model_pose_features.shape == input_pose_features.shape
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
@@ -82,7 +82,6 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     # relation between the person and the building
     # feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
-    '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE WiITH perspective correction------------------ '''
     logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
