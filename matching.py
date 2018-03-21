@@ -3,7 +3,7 @@ import sys
 import cv2
 from matplotlib import pyplot as plt
 from urbanscene.urban_scene import match_scene_multi
-from posematching.multi_person import match
+import posematching.multi_person as multi_person
 import numpy as np
 
 import logging
@@ -17,7 +17,7 @@ from urbanscene import features
 # First multi pose matching, followed by urbanscene matching
 def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot=False):
 
-    result_pose_matching = match(model_pose_features, input_pose_features)
+    result_pose_matching = multi_person.match(model_pose_features, input_pose_features, plot=plot, input_image = input_image, model_image=model_image)
     #logger.debug("---Result pose matching: --")
     #logger.debug(result_pose_matching)
 
@@ -37,8 +37,11 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
         model_poses = result['model']
         input_poses = result['input']
 
+        model_image_copy = model_image
+        input_image_copy = input_image
+
         (result, error) = match_scene_multi(detector, matcher,
-                                            model_image, input_image,
+                                            model_image_copy, input_image_copy,
                                             model_poses,input_poses,
                                             plot)
         logger.info("---> UrbanScene Matching for permutation %s  result: %s  score:%f", matching_permuations, str(result), round(error, 4))

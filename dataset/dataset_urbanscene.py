@@ -16,14 +16,13 @@ path_json = '../json_data/'  # 'posesGeoteam/json/'
 model_name = 'duo'  # goeie : "pisa9"  taj3  # trap1     trap1
 input_name = 'duo'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_type = '.jpg'
-amount_img = 13 + 1
 
-start_counter = 21
-end_counter = 25
+start_counter = 25
+end_counter = 33
 
 thresh = 0.154
 thresh_sum = 22
-logging.basicConfig(filename='dataset_'+ model_name+'.log',level=logging.INFO)
+logging.basicConfig(filename='dataset_'+ model_name+'.log',level=logging.DEBUG)
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 rootLogger = logging.getLogger()
 consoleHandler = logging.StreamHandler()

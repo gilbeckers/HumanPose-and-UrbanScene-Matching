@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def superimpose(input, model):
+def superimpose(input, model, plot=False, input_image=None, model_image=None):
 
     #input = prepocessing.unpad(input)
     #model = prepocessing.unpad(model)
@@ -34,6 +34,22 @@ def superimpose(input, model):
     translatie_factor = modelmin[1] - transformmin[1]
 
     Z[:,1] = Z[:,1] + translatie_factor
+    if plot:
+        markersize = 3
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+        ax1.imshow(input_image)
+        ax1.set_title('(input)')
+        ax1.plot(*zip(*input), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+
+        ax2.set_title('(model)')
+        ax2.imshow(model_image)
+        ax2.plot(*zip(*model), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+
+        ax3.set_title('(model sumperimposed on input)')
+        ax3.imshow(input_image)
+        ax3.plot(*zip(*Z), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+        plt.show(block=False)
+        #plt.draw()
 
     return (Z,model)
 
@@ -49,7 +65,7 @@ This is done with a translation and a rotation an again a translation in the y d
     Second Translation
 
 '''
-def superimpose_old(input, model, input_image, model_image):
+def superimpose_old(input, model, plot=False, input_image=None, model_image=None):
 
     #input = prepocessing.unpad(input)
     #model = prepocessing.unpad(model)
@@ -71,24 +87,23 @@ def superimpose_old(input, model, input_image, model_image):
     translatie_factor = input[voet_index][1] - Z[voet_index][1]
     Z[:,1] = Z[:,1] + translatie_factor
 
+    if plot:
+        markersize = 3
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+        ax1.imshow(input_image)
+        ax1.set_title('(input)')
+        ax1.plot(*zip(*input), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
 
-    markersize = 3
-    f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-    ax1.imshow(plt.imread(input_image))
-    ax1.set_title(input_image + '(input)')
-    ax1.plot(*zip(*input), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+        ax2.set_title( '(model)')
+        ax2.imshow(model_image)
+        ax2.plot(*zip(*model), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
 
-    ax2.set_title(model_image + '(model)')
-    ax2.imshow(plt.imread(model_image))
-    ax2.plot(*zip(*model), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+        ax3.set_title('(model sumperimposed on input)')
+        ax3.imshow(input_image)
+        ax3.plot(*zip(*Z), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
+        plt.show(block=False)
 
-    ax3.set_title('(model sumperimposed on input)')
-    ax3.imshow(plt.imread(input_image))
-    ax3.plot(*zip(*Z), marker='o', color='r', ls='', label='model', ms=markersize)  # ms = markersize
-    #plt.show()
-    plt.draw()
-
-    return Z
+    return Z,model
 
 def superimpose_plot(input, model, input_image, model_image):
 

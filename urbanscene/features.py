@@ -190,7 +190,7 @@ def validate_homography(perspective_trans_matrix):
                                                                             perspective_trans_matrix[1, 0]
     #print("----- determinant of topleft 2x2 matrix: ", det)
     if det < 0:
-        print("determinant<0, homography unvalid")
+        #print("determinant<0, homography unvalid")
         # exit()
         return False
 
@@ -199,19 +199,19 @@ def validate_homography(perspective_trans_matrix):
     N1 = (perspective_trans_matrix[0, 0] * perspective_trans_matrix[0, 0] + perspective_trans_matrix[0, 1] *
           perspective_trans_matrix[0, 1]) ** 0.5
     if N1 > 4 or N1 < 0.1:
-        print("not ok 1")
+        #print("not ok 1")
         return False
         # exit()
     N2 = (perspective_trans_matrix[1, 0] * perspective_trans_matrix[1, 0] + perspective_trans_matrix[1, 1] *
           perspective_trans_matrix[1, 1]) ** 0.5
     if N2 > 4 or N2 < 0.1:
-        print("not ok 2")
+        #print("not ok 2")
         return False
         # exit()
     N3 = (perspective_trans_matrix[2, 0] * perspective_trans_matrix[2, 0] + perspective_trans_matrix[2, 1] *
           perspective_trans_matrix[2, 1]) ** 0.5
     if N3 > 0.002:
-        print("not ok 3")
+        #print("not ok 3")
         return False
         # exit()
 
