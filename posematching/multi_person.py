@@ -66,7 +66,7 @@ def match(model_poses, input_poses, normalise=True):
     result_permuations = {}
     for permutation in combinations:
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
-            logger.warning("LOCAL FAIL: SAME INPUTPOSES MAPPED ON MULTIPLE MODELPOSES")
+            logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
             continue
 
         input_transformed_combined = []
@@ -82,7 +82,7 @@ def match(model_poses, input_poses, normalise=True):
 
         # not enough corresponding points  #TODO voor wa is dit?
         if not (len(input_transformed_combined) > 0):
-            logger.debug("FAIL: not enough corresponding points between model and input")
+            logger.debug("--> Matching permutation %s : FAIL: not enough corresponding points between model and input", permutation)
             result = MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
             return result
 
@@ -110,7 +110,7 @@ def match(model_poses, input_poses, normalise=True):
 
 
 
-        logger.info("----> Matching for permutation %s  | Max eucl distance: %s  (thresh ca. 0.13)",permutation, str(max_eucl_distance))  # torso thresh is 0.11
+        logger.info("--> Matching for permutation %s  | Max eucl distance: %s  (thresh ca. 0.13)",permutation, str(max_eucl_distance))  # torso thresh is 0.11
 
 
     # TODO: nog max nemen van resultaat.

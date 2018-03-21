@@ -1,23 +1,25 @@
 import json
 import logging
 import sys
-
 import cv2
 import urbanscene.labels as labels
 import numpy as np
 from matplotlib import pyplot as plt
-from urbanscene.urban_scene import match_scene_single_person
-
 import common
 from urbanscene import features
 
+import matching
+
 feature_name = 'orb-flann'
-path_img = 'img/'  # 'posesGeoteam/fotos/'
-path_json = 'json_data/'  # 'posesGeoteam/json/'
-model_name = 'dart'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'dart'  # goeie : "pisa10"  taj4  # trap2     trap3
+path_img = '../img/'  # 'posesGeoteam/fotos/'
+path_json = '../json_data/'  # 'posesGeoteam/json/'
+model_name = 'duo'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'duo'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_type = '.jpg'
 amount_img = 13 + 1
+
+start_counter = 21
+end_counter = 25
 
 thresh = 0.154
 thresh_sum = 22
@@ -29,9 +31,6 @@ consoleHandler.setFormatter(logFormatter)
 rootLogger.addHandler(consoleHandler)
 
 
-
-
-
 detector, matcher = features.init_feature(feature_name)
 if detector is None:
     print('unknown feature:', feature_name)
@@ -40,70 +39,45 @@ if detector is None:
 logging.info("start iterating over dataset, group = " + model_name)
 logging.info('using ' + feature_name  + "  threshold=" + str(thresh) + "  sum_thresh=" + str(thresh_sum) + "(not used)")
 
-plot = False
+plot = True
+include_keypoints = False
 
-dataset_result = {}
+for i in range(start_counter, end_counter+1):
 
-for i in range(1, amount_img):
     model_image = cv2.imread(path_img + model_name + str(i) + img_type, cv2.IMREAD_GRAYSCALE)
     if model_image is None:
-        print('Failed to load fn1:', model_name + str(i) + img_type)
+        logging.info('Failed to load fn1: %s', model_name + str(i) + img_type)
         continue
         #sys.exit(1)
 
     #model_pose_features = common.parse_JSON_single_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
-    model_pose_features = common.parse_JSON_multi_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
+    if include_keypoints:
+        model_pose_features = common.parse_JSON_multi_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
+    else:
+        model_pose_features = common.parse_JSON_multi_person(
+            path_json + model_name + str(i) + '.json')  # + '_keypoints'
+
     intermediate_result = {}
 
-    for j in range(1, amount_img):
+    for j in range(start_counter, end_counter+1):
+        logging.info("Matching model(%d) with input(%d)", i, j)
         if i == j:
+            logging.info("--> Skip: don't compare the same image")
             continue  # don't compare the same image
 
         input_image = cv2.imread(path_img + input_name + str(j) + img_type, cv2.IMREAD_GRAYSCALE)
         if input_image is None:
-            print('Failed to load fn2:', input_name + str(j) + img_type)
+            logging.info('Failed to load fn2:', input_name + str(j) + img_type)
             #sys.exit(1)
             continue
 
-        #input_pose_features = common.parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
-        input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '_keypoints' + '.json')
-
-        result_pose_matching = match(model_pose_features, input_pose_features)
-
-        label = labels.chech_same_class(model_name, i, j)
-
-        if err_torso < thresh and err_legs < thresh: #and sum_err_legs < thresh_sum and sum_err_torso < thresh_sum:
-            logging.debug("#### MATCH!!!  ###")
-            match = True
+        if include_keypoints:
+            #input_pose_features = common.parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
+            input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '_keypoints' + '.json')
         else:
-            logging.debug("#### NO MATCH!! ###")
-            match = False
+            input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '.json')
 
-        if label == match:
-            intermediate_result[input_name + str(j)] = [match, "ok", round(err_torso, 3), round(err_legs, 3), round(sum_err_torso, 3)]
-        else:
-            intermediate_result[input_name + str(j)] = [match, "wrong", round(err_torso, 3), round(err_legs, 3), round(sum_err_torso, 3)]
-            logging.error("False match! |  model:" + str(i) + " , input:" + str(j)
-                          + "  |  false-result: " + str(match)+ " torso %f  legs:%f  sum:%f" , round(err_torso, 3), round(err_legs, 3), round(sum_err_torso, 3))
-
-
-
-
-        if plot:
-            f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(14, 6))
-            ax1.imshow(np.asarray(model_image), cmap='gray')
-            # ax1.set_title(model_image_name + ' (model)')
-            ax1.set_title("M "+ model_name + str(i) + " ->result:" + str(match)  )
-
-            # ax2.set_title(input_image_name + ' (input)')
-            ax2.set_title("I " + input_name + str(j) + " torso: " + str(round(err_torso, 3)) + "  legs: " + str(round(err_legs, 3)) )
-            ax2.imshow(np.asarray(input_image), cmap='gray')
-            plt.show(block=False)
-
-    dataset_result[model_name+str(i)] = intermediate_result
-
-with open('dataset.json', 'w') as json_file:
-    json.dump(dataset_result, json_file)
+        result_pose_matching = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot)
 
 
 if plot:

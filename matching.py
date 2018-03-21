@@ -15,7 +15,7 @@ from urbanscene import features
 
 # Performs the whole matching
 # First multi pose matching, followed by urbanscene matching
-def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image):
+def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot=False):
 
     result_pose_matching = match(model_pose_features, input_pose_features)
     #logger.debug("---Result pose matching: --")
@@ -23,11 +23,12 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
 
     if result_pose_matching.match_bool:
         #logger.debug(result_pose_matching.matching_permutations)
-        logger.debug("Pose matching succes!")
+        logger.info("Pose matching succes!")
 
     else:
-        logger.debug("No matching poses found, so quit URBAN SCENE MATCHING")
-        exit()
+        logger.info("No matching poses found, so quit URBAN SCENE MATCHING")
+        return
+        #exit()
 
     logger.debug("--- Starting urbanscene matching ---")
     # Loop over all found matching comnbinations
@@ -38,10 +39,9 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
 
         (result, error) = match_scene_multi(detector, matcher,
                                             model_image, input_image,
-                                            model_poses,input_poses)
-        logger.info("Match result: %s   score:%f", str(result), round(error, 4))
-
-    plt.show()
+                                            model_poses,input_poses,
+                                            plot)
+        logger.info("---> UrbanScene Matching for permutation %s  result: %s  score:%f", matching_permuations, str(result), round(error, 4))
 
 
     return

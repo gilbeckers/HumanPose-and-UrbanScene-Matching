@@ -9,7 +9,7 @@ FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH     = 6
 MIN_MATCH_COUNT     = 4
 
-def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features):
+def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features, plot=False):
     assert model_pose_features.shape == input_pose_features.shape
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
@@ -91,7 +91,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
                                                                 model_pose_features, input_pose_trans,
                                                                 model_image, persp_trans_input_img,
-                                                                "test", True)
+                                                                "test", plot)
 
 
 

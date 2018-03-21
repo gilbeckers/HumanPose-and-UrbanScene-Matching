@@ -115,11 +115,11 @@ def match_single(model_features, input_features, normalise=True):
         return result
 
     ######### THE THRESHOLDS #######
-    eucl_dis_tresh_torso = 0.115  # 0.098
+    eucl_dis_tresh_torso = 0.125  # 0.098
     rotation_tresh_torso = 10.847
-    eucl_dis_tresh_legs = 0.055
+    eucl_dis_tresh_legs = 0.058
     rotation_tresh_legs = 24.527  # 14.527
-    eucld_dis_shoulders_tresh = 0.115
+    eucld_dis_shoulders_tresh = 0.125
     ################################
 
 
