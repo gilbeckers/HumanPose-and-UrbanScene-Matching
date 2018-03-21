@@ -51,8 +51,8 @@ for i in range(1, amount_img):
         continue
         #sys.exit(1)
 
-    model_pose_features = common.parse_JSON_single_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
-
+    #model_pose_features = common.parse_JSON_single_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
+    model_pose_features = common.parse_JSON_multi_person(path_json + model_name + str(i) + '_keypoints' + '.json')  # + '_keypoints'
     intermediate_result = {}
 
     for j in range(1, amount_img):
@@ -65,9 +65,10 @@ for i in range(1, amount_img):
             #sys.exit(1)
             continue
 
-        input_pose_features = common.parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
-        (err_torso, err_legs, sum_err_torso, sum_err_legs) = match_scene_single_person(detector, matcher, model_image, input_image, model_pose_features,
-                                  input_pose_features, thresh)
+        #input_pose_features = common.parse_JSON_single_person(path_json + input_name + str(j) + '_keypoints' + '.json')
+        input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '_keypoints' + '.json')
+
+        result_pose_matching = match(model_pose_features, input_pose_features)
 
         label = labels.chech_same_class(model_name, i, j)
 

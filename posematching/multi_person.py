@@ -54,7 +54,6 @@ def match(model_poses, input_poses, normalise=True):
         logger.debug("FAIL: No ordered matches found")
         return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
-    #if not contains_every_input_once(matches_dict):
     if input_pose_solo_multiple_times(matches_dict, len(input_poses)):
         logger.debug("FAIL: An inputpose is linked to multiple modelpose as only possible match => global fail (injection remember)")
         return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
@@ -91,13 +90,26 @@ def match(model_poses, input_poses, normalise=True):
         input_transformed_combined = np.vstack(input_transformed_combined)
         updated_models_combined = np.vstack(updated_models_combined)
 
+        input_transformed_combined_nonorm = input_transformed_combined
+        updated_models_combined_nonorm =updated_models_combined
+
         if (normalise):
             input_transformed_combined = feature_scaling(input_transformed_combined)
             updated_models_combined = feature_scaling(updated_models_combined)
         logger.debug("shape model_pose %s", str(updated_models_combined.shape))
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
-        result_permuations[permutation] = max_eucl_distance
+
+
+        #result_permuations[permutation] = max_eucl_distance
+        result_permuations[permutation] = {
+            "score" : max_eucl_distance ,
+            "model" : updated_models_combined_nonorm,
+            "input" : input_transformed_combined_nonorm
+        }
+
+
+
         logger.info("----> Matching for permutation %s  | Max eucl distance: %s  (thresh ca. 0.13)",permutation, str(max_eucl_distance))  # torso thresh is 0.11
 
 

@@ -189,7 +189,7 @@ def parse_JSON_single_person_as_json(filename):
     return array
     #return list
 
-def parse_JSON_multi_person(filename):
+def parse_JSON_multi_person_old(filename):
     with open(filename) as data_file:
         data = json.load(data_file)
 
@@ -210,7 +210,7 @@ def parse_JSON_multi_person(filename):
 
     return list_of_features
 
-def parse_JSON_multi_person_jochen(filename):
+def parse_JSON_multi_person(filename):
     with open(filename) as data_file:
         data = json.load(data_file)
 
@@ -224,7 +224,7 @@ def parse_JSON_multi_person_jochen(filename):
         array = np.zeros((18, 2))
         arrayIndex = 0
         for i in range(0, len(person_keypoints), 3):
-            if person_keypoints[i+2]> 0.25:  # was 0.4
+            if person_keypoints[i+2]> 0.18:  # was 0.25 was 0.4
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
