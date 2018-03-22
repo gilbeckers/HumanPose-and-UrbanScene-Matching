@@ -12,6 +12,7 @@ multipose = ' /media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/1WDataset/'
 path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/'
 data = '/media/jochen/2FCA69D53AB1BFF41/dataset/data/'
 matched = '/media/jochen/2FCA69D53AB1BFF41/dataset/matched/'
+poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
 
 def make_poses_left():
     count = 0
@@ -167,16 +168,15 @@ def reorder_json_fout():
                     foto = foto +".png"
                     os.system("mv "+foto+" "+path+pose+"/fotos/")
                     moved = moved +1
-    # print "finished and moved : "+str(moved)
+    print ("finished and moved : "+str(moved))
 
 
 def replace_json_files(pose):
-    for foto in glob.iglob(path+pose+"/fotosfout/*"):
+    for foto in glob.iglob(poses+"/fotosfout/*"):
         foto = foto.split(".")[0];
         foto = foto.replace("fotosfout","json")
         foto = foto +".json"
-        string ="mv "+foto+" "+path+pose+"/jsonfout/"
-        os.system("mv "+foto+" "+path+pose+"/jsonfout/")
+        os.system("mv "+foto+" "+poses+"/jsonfout/")
 
 def replace_json_files_all():
     for i in range(1,8):

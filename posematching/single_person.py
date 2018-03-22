@@ -6,7 +6,7 @@ import numpy as np
 import posematching.procrustes as proc_do_it
 from common import feature_scaling, handle_undetected_points, \
     split_in_face_legs_torso, find_transformation, unsplit, split_in_face_legs_torso_v2
-
+from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
 import posematching.pose_comparison as pose_comparison
 logger = logging.getLogger("single_person")
 
@@ -115,13 +115,21 @@ def match_single(model_features, input_features, normalise=True):
         return result
 
     ######### THE THRESHOLDS #######
+    '''
     eucl_dis_tresh_torso = 0.18  # 0.098
     rotation_tresh_torso = 12
     eucl_dis_tresh_legs = 0.058
     rotation_tresh_legs = 24.527  # 14.527
     eucld_dis_shoulders_tresh = 0.125
-    ################################
+    '''
+    eucl_dis_tresh_torso =  dataset.eucl_dis_tresh_torso
+    rotation_tresh_torso =  dataset.rotation_tresh_torso
+    eucl_dis_tresh_legs =  dataset.eucl_dis_tresh_legs
+    rotation_tresh_legs =  dataset.rotation_tresh_legs
+    eucld_dis_shoulders_tresh =  dataset.eucld_dis_shoulders_tresh
 
+    ################################
+    
 
     # TODO @j3 keer het zelfde!! -> bad code design :'(
     (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
@@ -132,7 +140,7 @@ def match_single(model_features, input_features, normalise=True):
             #
             result_face = True
         else:
-            logger.debug("Model has more face feature then input therefore not matched")
+            logger.debug("Model has more face feature then input therefore not matched %d" , (np.count_nonzero(model_face) - np.count_nonzero(input_face)) )
             result_face = False
     else:
         logger.debug("too less points for face in model so face match")
@@ -142,7 +150,7 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_torso = pose_comparison.max_euclidean_distance(model_torso, input_transformed_torso)
     max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso,
                                                                                      input_transformed_torso)
-    if (np.count_nonzero(model_torso) > 5):
+    if (np.count_nonzero(model_torso) > 4):
         if (np.count_nonzero(model_torso) - np.count_nonzero(input_torso)) < 2:
 
             result_torso = pose_comparison.decide_torso_shoulders_incl(max_euclidean_error_torso,
@@ -151,7 +159,7 @@ def match_single(model_features, input_features, normalise=True):
                                                                        max_euclidean_error_shoulders,
                                                                        eucld_dis_shoulders_tresh)
         else:
-            logger.debug("Model has more Torso feature then input therefore not matched")
+            logger.debug("Model has more Torso feature then input therefore not matched %d", (np.count_nonzero(model_torso) - np.count_nonzero(input_torso)))
             result_torso = False
     else:
         logger.debug("too less points for Torso in model so Torso match %d",np.count_nonzero(model_torso)  )
@@ -166,10 +174,10 @@ def match_single(model_features, input_features, normalise=True):
                                                       eucl_dis_tresh_legs, rotation_tresh_legs)
             logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
         else:
-            logger.debug("Model has more legs feature then input therefore not matched")
+            logger.debug("Model has more legs feature then input therefore not matched %d", (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) )
             result_legs = False
     else:
-        logger.debug("too less points for legs in model so legs match")
+        logger.debug("too less points for legs in model so legs match %d", np.count_nonzero(model_legs))
         result_legs = True
 
     # Wrapped the transformed input in one whole pose
