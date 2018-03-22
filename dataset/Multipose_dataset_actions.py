@@ -3,7 +3,7 @@ import logging
 import os
 
 import common
-import posematching.multi_person as multiperson
+#import posematching.multi_person as multiperson
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
