@@ -88,7 +88,7 @@ def match_single(model_features, input_features, normalise=True):
         result = MatchResult(False,
                              error_score=0,
                              input_transformation=None)
-        return result
+        #return result
 
     assert len(model_features_copy) == len(input_features_copy)
 
