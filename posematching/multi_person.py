@@ -7,7 +7,7 @@ import logging
 import itertools
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-
+import thresholds
 logger = logging.getLogger("multi_person")
 
 
@@ -41,9 +41,18 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         match_result_single = match_single(model_poses[0], input_poses[0], True)
 
         if match_result_single.match_bool:
-            return MatchResultMulti(match_result_single.match_bool, error_score=match_result_single.error_score,
-                                    input_transformation=match_result_single.input_transformation,
-                                    matching_permutations={0:[0]})
+            result_single = {}
+            result_single[0] = {
+                "score": match_result_single.error_score,
+                "model": model_poses[0],
+                # "model":updated_models_combined_nonorm,
+                "input": input_poses[0]
+                # "input": input_transformed_combined_nonorm
+            }
+            return MatchResultMulti(match_result_single.match_bool,
+                                    error_score=match_result_single.error_score,
+                                    input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??
+                                    matching_permutations=result_single)
         else:
             return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
 
@@ -109,25 +118,25 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         if (normalise):
             input_transformed_combined = feature_scaling(input_transformed_combined)
             updated_models_combined = feature_scaling(updated_models_combined)
+
         logger.debug("shape model_pose %s", str(updated_models_combined.shape))
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
 
-
-        #result_permuations[permutation] = max_eucl_distance
-        result_permuations[permutation] = {
-            "score" : max_eucl_distance ,
-            "model" : unchanged_model,
-            #"model":updated_models_combined_nonorm,
-            "input" : unchanged_input
-            #"input": input_transformed_combined_nonorm
-        }
-
-
-
-        logger.info("--> Matching for permutation %s  | Max eucl distance: %s  (thresh ca. 0.13)",permutation, str(max_eucl_distance))  # torso thresh is 0.11
-
-
+        if max_eucl_distance<=thresholds.MP_DISCTANCE:
+            result_permuations[permutation] = {
+                "score" : max_eucl_distance ,
+                "model" : unchanged_model,
+                #"model":updated_models_combined_nonorm,
+                "input" : unchanged_input
+                #"input": input_transformed_combined_nonorm
+            }
+            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
+                        max_eucl_distance,thresholds.MP_DISCTANCE )
+        else:
+            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
+                        max_eucl_distance, thresholds.MP_DISCTANCE)
+    print(result_permuations)
     # TODO: nog max nemen van resultaat.
     logger.debug("result scores: " , result_permuations)
     return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)

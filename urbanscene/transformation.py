@@ -395,7 +395,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose,  model_img,
                             mpatches.Patch(color='magenta', label='model')])
 
         # plt.tight_layout()
-        plt.show(block=False)
+        #plt.show(block=False)
 
     return max_euclidean_error_norm
 

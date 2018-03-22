@@ -33,7 +33,7 @@ def find_matches_with(pose):
         for json in glob.iglob(data+"*_keypoints.json"):
             logger.info(json)
             input_features = common.parse_JSON_multi_person(json)
-            (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+            (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
             if result == True:
                 place = json.split("_keypoints")[0]
                 place = place.split("json/")[1]
@@ -69,7 +69,7 @@ def test_script():
     eucld_dis_shoulders_tresh= 0.085
 
     input_features = common.parse_JSON_multi_person(input)
-    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
     print (result)
 
 def calculate_pr(pose):
@@ -164,7 +164,7 @@ def find_galabal_matches(pose):
     for json in glob.iglob(galabaljson+"*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
         if result == True:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
@@ -185,7 +185,7 @@ def check_galabal_matches(pose):
     for json in glob.iglob(galabal+pose+"/json/*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
         if result == False:
             count = count +1
             print ("error at: "+json)

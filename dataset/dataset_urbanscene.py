@@ -13,12 +13,12 @@ import matching
 feature_name = 'orb-flann'
 path_img = '../img/'  # 'posesGeoteam/fotos/'
 path_json = '../json_data/'  # 'posesGeoteam/json/'
-model_name = 'duo'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'duo'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'dart'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'dart'  # goeie : "pisa10"  taj4  # trap2     trap3
 img_type = '.jpg'
 
-start_counter = 25
-end_counter = 33
+start_counter = 4
+end_counter = 13
 
 thresh = 0.154
 thresh_sum = 22
@@ -39,7 +39,7 @@ logging.info("start iterating over dataset, group = " + model_name)
 logging.info('using ' + feature_name  + "  threshold=" + str(thresh) + "  sum_thresh=" + str(thresh_sum) + "(not used)")
 
 plot = True
-include_keypoints = False
+include_keypoints = True
 
 for i in range(start_counter, end_counter+1):
 
@@ -75,9 +75,11 @@ for i in range(start_counter, end_counter+1):
             input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '_keypoints' + '.json')
         else:
             input_pose_features = common.parse_JSON_multi_person(path_json + input_name + str(j) + '.json')
+        copy_model_pose_features = list(model_pose_features)
 
         result_pose_matching = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot)
-
+        if plot:
+            plt.show()
 
 if plot:
     plt.show()

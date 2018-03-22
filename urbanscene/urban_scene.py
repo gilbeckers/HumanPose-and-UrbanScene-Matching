@@ -1,9 +1,9 @@
 import logging
-
 import cv2
 import numpy as np
-
 from urbanscene import features, transformation
+import thresholds
+logger = logging.getLogger("urban_scene")
 
 FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH     = 6
@@ -27,16 +27,17 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
     ''' --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ---------------------- '''
     if H is None: # not enough matches found in feature matching
-        return (False,np.inf)
+        logging.info("!!not enough matches found in feature matching!!")
+        return np.inf
     elif (features.validate_homography(H)):  # H = perspective transformation matrix
         logging.debug("!!Valid HOMOGRAPHY!!")
         # else:
         # exit()
 
     else:
-        logging.debug("UNVALID HOMOGRAPHY")
+        logging.info("!!!UNVALID HOMOGRAPHY!!!")
         #return (1,1,1000,1000)
-        return (False, np.inf)
+        return np.inf
     '''
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
@@ -91,14 +92,9 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
                                                                 model_pose_features, input_pose_trans,
                                                                 model_image, persp_trans_input_img,
+
                                                                 "test", plot)
-
-
-
-    #plt.show()
-
-
-    return (True, err)
+    return err
 
 
 def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features):

@@ -1,16 +1,8 @@
-import sys
-
-import cv2
-from matplotlib import pyplot as plt
 from urbanscene.urban_scene import match_scene_multi
 import posematching.multi_person as multi_person
-import numpy as np
-
 import logging
-logger = logging.getLogger("-MAIN matching- ")
-
-import common
-from urbanscene import features
+import thresholds
+logger = logging.getLogger("match_whole")
 
 
 # Performs the whole matching
@@ -27,7 +19,7 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
 
     else:
         logger.info("No matching poses found, so quit URBAN SCENE MATCHING")
-        return
+        return False
         #exit()
 
     logger.debug("--- Starting urbanscene matching ---")
@@ -36,15 +28,21 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
     for matching_permuations, result in result_pose_matching.matching_permutations.items():
         model_poses = result['model']
         input_poses = result['input']
+        #logger.debug(model_poses)
+        #logger.debug(input_poses)
 
-        model_image_copy = model_image
+        model_image_copy = model_image  #TODO make hard copy ??
         input_image_copy = input_image
 
-        (result, error) = match_scene_multi(detector, matcher,
+        error = match_scene_multi(detector, matcher,
                                             model_image_copy, input_image_copy,
                                             model_poses,input_poses,
                                             plot)
-        logger.info("---> UrbanScene Matching for permutation %s  result: %s  score:%f", matching_permuations, str(result), round(error, 4))
-
-
-    return
+        if error <= thresholds.AFFINE_TRANS_WHOLE_DISTANCE:
+            logger.info("===> MATCH! permutation %s  score:%0.4f (thresh ca %0.3f)",
+                        matching_permuations, round(error, 4), 0.10)
+            return True
+        else:
+            logger.info("===> NO-MATCH! permutation %s  score:%0.4f (thresh ca %0.3f)",
+                        matching_permuations, round(error, 4), 0.10)
+            return False

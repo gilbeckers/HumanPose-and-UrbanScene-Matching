@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import logging
 import numpy as np
-import posematching.procrustes as proc_do_it
 from common import feature_scaling, handle_undetected_points, \
     split_in_face_legs_torso, find_transformation, unsplit, split_in_face_legs_torso_v2
 from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
+import thresholds
 import posematching.pose_comparison as pose_comparison
 logger = logging.getLogger("single_person")
 
@@ -81,11 +81,6 @@ def match_single(model_features, input_features, normalise=True):
     # Filter the undetected features and mirror them in the other pose
     (input_features_copy, model_features_copy) = handle_undetected_points(input_features, model_features)
 
-    # print(input_features_copy)
-    # print("-------------------amoint zero rows: " , np.count_nonzero(input_features_copy[:]))
-    # print("sum= ", (input_features_copy != 0).sum(1))
-    # print("count zeros ", np.count_nonzero((input_features_copy != 0).sum(1)))
-    # Check howmany zero-rows
     non_zero_rows = np.count_nonzero((input_features_copy != 0).sum(1))
     zero_rows = len(input_features_copy) - non_zero_rows
     if zero_rows > 4:
@@ -93,7 +88,7 @@ def match_single(model_features, input_features, normalise=True):
         result = MatchResult(False,
                              error_score=0,
                              input_transformation=None)
-        #return result
+        return result
 
     assert len(model_features_copy) == len(input_features_copy)
 
@@ -116,11 +111,11 @@ def match_single(model_features, input_features, normalise=True):
 
     ######### THE THRESHOLDS #######
     '''
-    eucl_dis_tresh_torso = 0.18  # 0.098
-    rotation_tresh_torso = 12
-    eucl_dis_tresh_legs = 0.058
-    rotation_tresh_legs = 24.527  # 14.527
-    eucld_dis_shoulders_tresh = 0.125
+    eucl_dis_tresh_torso = thresholds.SP_DISTANCE_TORSO
+    rotation_tresh_torso = thresholds.SP_ROTATION_TORSO
+    eucl_dis_tresh_legs = thresholds.SP_DISTANCE_LEGS
+    rotation_tresh_legs = thresholds.SP_ROTATION_LEGS
+    eucld_dis_shoulders_tresh =thresholds.SP_ROTATION_SHOULDER
     '''
     eucl_dis_tresh_torso =  dataset.eucl_dis_tresh_torso
     rotation_tresh_torso =  dataset.rotation_tresh_torso
@@ -129,7 +124,7 @@ def match_single(model_features, input_features, normalise=True):
     eucld_dis_shoulders_tresh =  dataset.eucld_dis_shoulders_tresh
 
     ################################
-    
+
 
     # TODO @j3 keer het zelfde!! -> bad code design :'(
     (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
