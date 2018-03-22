@@ -6,14 +6,14 @@ import logging
 import matching
 from matplotlib import pyplot as plt
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("urban scene matching (multi)-- ")
+logger = logging.getLogger("main")
 
 
 feature_name = 'orb-flann'
 path_img = '../img/'  #'posesGeoteam/fotos/'
 path_json = '../json_data/'   #'posesGeoteam/json/'
-model_name = 'duo46.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'duo49.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'dart1.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'dart2.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -35,9 +35,11 @@ logger.debug(" using %s", feature_name)
 
 
 logger.debug("---Starting pose matching --")
-model_pose_features = common.parse_JSON_multi_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
-input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0] +  '.json')
+model_pose_features = common.parse_JSON_multi_person(path_json + model_name.split('.')[0]+ '_keypoints' +  '.json')  # + '_keypoints'
+input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0]+ '_keypoints' +  '.json')
 
-matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,plot=True)
+result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,plot=True)
 
+
+#logger.info("Final result total matching: %s" , str(result_whole))
 plt.show()

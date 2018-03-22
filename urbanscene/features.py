@@ -1,19 +1,11 @@
-import heapq
 import logging
-
 import cv2
-import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-
 from common import anorm
-import common
-#from old_scripts import normalising, affine_transformation as at, prepocessing
+import thresholds
 
-MIN_MATCH_COUNT = 15
-FLANN_INDEX_KDTREE = 1
-FLANN_INDEX_LSH    = 6
-FILTER_RATIO = 0.8 #lagere ratio geeft minder 'good' matches
+
 
 def init_feature(name):
     chunks = name.split('-')
@@ -39,9 +31,9 @@ def init_feature(name):
     if 'flann' in chunks:
         search_params = dict(checks=50)
         if norm == cv2.NORM_L2:
-            flann_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+            flann_params = dict(algorithm=thresholds.FLANN_INDEX_KDTREE, trees=5)
         else:
-            flann_params = dict(algorithm=FLANN_INDEX_LSH,
+            flann_params = dict(algorithm=thresholds.FLANN_INDEX_LSH,
                                 table_number=6,  # 12
                                 key_size=12,  # 20
                                 multi_probe_level=1)  # 2
@@ -50,7 +42,7 @@ def init_feature(name):
         matcher = cv2.BFMatcher(norm)
     return detector, matcher
 
-def filter_matches(kp1, kp2, matches, ratio = FILTER_RATIO):
+def filter_matches(kp1, kp2, matches, ratio = thresholds.FILTER_RATIO):
     mkp1, mkp2 = [], []
     for m in matches:
         if len(m) == 2 and m[0].distance < m[1].distance * ratio:  #lagere ratio geeft minder 'good' matches
@@ -69,7 +61,7 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
     # p_model and p_input are the 'first-good' matches
     p_model, p_input, kp_pairs = filter_matches(kp_model, kp_input, raw_matches)
 
-    if len(p_model) >= MIN_MATCH_COUNT:
+    if len(p_model) >= thresholds.MIN_MATCH_COUNT:
         # Returns the perspective transformation matrix M: transformaion from model to inputplane
         H, mask = cv2.findHomography(p_model, p_input, cv2.RANSAC, 5.0)
 
@@ -104,9 +96,10 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
     else:
         H, mask = None, None
         logging.debug('%d matches found, not enough for homography estimation' % len(p_model))
+        return (mask, None, None, H, None)
 
     # Render nice window with nice view of matches
-    _vis = explore_match(win + '| (raw matches: ' + str(len(p_model)) + '  homography matches: ' + str(len(good_model_pts)) + ')', model_img, input_img, kp_pairs, mask, H, show_win)
+    #_vis = explore_match(win + '| (raw matches: ' + str(len(p_model)) + '  homography matches: ' + str(len(good_model_pts)) + ')', model_img, input_img, kp_pairs, mask, H, show_win)
 
     # matchesMask, input_image_homo, good, model_pts, input_pts, M, M2
     return(mask, good_model_pts, good_input_pts, H, H2)
@@ -231,133 +224,4 @@ def euclidean_distance(model, transformed_input):
     euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
 
     return euclidean_distance
-
-
-
-# ---- vanaf hier voooooral oude rommel
-
-def sift_detect_and_compute(image):
-    # --------- SIFT FEATURE DETETCION & DESCRIPTION ------------------------
-    # Initiate SIFT detector  # TODO: what is best? ORB SIFT  &&& FLANN?
-    sift = cv2.xfeatures2d.SIFT_create()
-    # find the keypoints and descriptors with SIFT
-    kp_model, des_model = sift.detectAndCompute(image,None)  # returns keypoints and descriptors
-    return (kp_model, des_model)
-
-def orb_detect_and_compute(image):
-
-    '''detector = cv2.ORB_create()
-    kp_scene = detector.detect(image)
-    k_scene, d_scene = detector.compute(image, kp_scene)'''
-    orb = cv2.ORB_create()
-
-    kp, des = orb.detectAndCompute(image, None)
-    des = np.float32(des)
-
-    return (kp, des)
-
-def flann_matching(des_model, des_input, kp_model, kp_input, model_image, input_image):
-    # --------- FEATURE MATCHING : FLANN MATCHER -------------------
-    index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)   # voor met SIFT
-
-    FLANN_INDEX_LSH = 6
-    # index_params = dict(algorithm=FLANN_INDEX_LSH,    # voor met ORB
-    #                     table_number=6,  # 12
-    #                     key_size=12,  # 20
-    #                     multi_probe_level=1)  # 2
-
-    search_params = dict(checks = 50)
-    flann = cv2.FlannBasedMatcher(index_params, search_params)
-    matches = flann.knnMatch(des_model,des_input,k=2)
-
-    # store all the good matches as per Lowe's ratio test.
-    good = []
-    for m,n in matches:
-        if m.distance < 0.80*n.distance:
-            good.append(m)
-
-    print("aantal matches= ", len(good))
-
-    if len(good)>MIN_MATCH_COUNT:
-        model_pts = np.float32([ kp_model[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-        input_pts = np.float32([ kp_input[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-
-        # Checken in andere kant
-
-        # Find only the good, corresponding points (lines of matching points may not cross)
-        # Returns the perspective transformation matrix M
-        M, mask = cv2.findHomography(model_pts, input_pts, cv2.RANSAC,5.0)  #tresh : 5
-        #M, mask = cv2.findHomography(input_pts, model_pts, cv2.RANSAC, 5.0)  # tresh : 5
-
-        matchesMask = mask.ravel().tolist()
-        # TODO wat als model_image en input_image niet zelfde resolutie hebben?
-        h,w = model_image.shape
-
-        print("aantal good matches: " , matchesMask.count(1))
-
-        # the square that's drawn on the model. Just the prerspective transformation of the model image contours
-        pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-        #print("###points: ", pts)
-        dst = cv2.perspectiveTransform(pts,M)
-
-        #Homography RANSAC is used to reject outliers
-        M2, mask2 = cv2.findHomography(input_pts, model_pts, cv2.RANSAC, 5.0)  # we want to transform the input-plane to the model-plane
-        h2,w2 = input_image.shape
-        '''
-        perspective_transform_input = cv2.warpPerspective(input_image, M2, (w2, h2 ))
-        plt.figure()
-        plt.subplot(131), plt.imshow(model_image), plt.title('Model')
-        plt.subplot(132), plt.imshow(perspective_transform_input), plt.title('Perspective transformed Input')
-        plt.subplot(133), plt.imshow(input_image), plt.title('Input')
-        plt.show(block=False)
-        '''
-        input_image_homo = cv2.polylines(input_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)  # draw homography square
-        #model_image_homo = cv2.polylines(model_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)  # draw homography square
-
-
-        return (matchesMask, input_image_homo, good, model_pts, input_pts, M, M2)
-        #return (matchesMask, model_image_homo, good, model_pts, input_pts)
-
-    else:
-        print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
-        matchesMask = None
-        return None
-
-def plot_features(clustered_model_features, clustered_input_features, one_building, model_image, input_image):
-    if one_building:  # Take the first found homography, no more computations needed
-        # Reduce dimensions
-        print("one building only")
-        plt.figure()
-        plt.scatter(clustered_model_features[:, 0], clustered_model_features[:, 1])
-        # plt.scatter(model_center[:,0],model_center[:,1],s = 80,c = 'y', marker = 's')
-        plt.xlabel('Width'), plt.ylabel('Height')
-        plt.imshow(model_image)
-        plt.show(block=False)
-
-        plt.figure()
-        plt.scatter(clustered_input_features[:, 0], clustered_input_features[:, 1])
-        # plt.scatter(input_center[:,0],input_center[:,1],s = 80,c = 'y', marker = 's')
-        plt.xlabel('Width'), plt.ylabel('Height')
-        #plt.imshow(cv2.imread('img/' + input_name + '.' + img_tag))
-        plt.imshow(input_image)
-        plt.show(block=False)
-
-
-    else: # More than one building
-        plt.figure()
-        for feat in clustered_model_features:
-            plt.scatter(feat[:, 0], feat[:, 1], c=np.random.rand(3,), s=5)
-        plt.xlabel('Width'), plt.ylabel('Height')
-        plt.imshow(model_image)
-        plt.show(block=False)
-
-        plt.figure()
-        for feat in clustered_input_features:
-            plt.scatter(feat[:, 0], feat[:, 1], c=np.random.rand(3,), s=5)
-        plt.xlabel('Width'), plt.ylabel('Height')
-        plt.imshow(input_image)
-        plt.show(block=False)
-
-
-    return None
 

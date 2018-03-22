@@ -228,7 +228,7 @@ def parse_JSON_multi_person(filename):
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
-                logger.warning("openpose certainty(%f) to low index: %d", person_keypoints[i+2], arrayIndex )
+                logger.warning("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
@@ -463,7 +463,7 @@ def resize_img(model_image, input_image):
 def splitfn(fn):
     path, fn = os.path.split(fn)
     name, ext = os.path.splitext(fn)
-    returnposematching. path, name, ext
+    #return posematching. path, name, ext
 
 def anorm2(a):
     return (a*a).sum(-1)
