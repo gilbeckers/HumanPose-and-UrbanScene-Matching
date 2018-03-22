@@ -46,7 +46,8 @@ def match(model_poses, input_poses, normalise=True):
                                     matching_permutations={0:[0]})
         else:
             return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
-
+    model_poses = order_poses(model_poses)
+    input_poses = order_poses(input_poses)
     matches_dict = find_ordered_matches(model_poses,input_poses)
 
     logger.debug("matches found %s", str(matches_dict))
@@ -122,9 +123,6 @@ def match(model_poses, input_poses, normalise=True):
 
 def find_ordered_matches(model_poses,input_poses):
 
-    model_poses = order_poses(model_poses)
-    input_poses = order_poses(input_poses)
-
     matches = []
     matches_dict = {}
 
@@ -199,10 +197,6 @@ def order_poses(poses):
                     ordered.insert(0,poses[i])
                     placed = True
     return ordered
-
-
-
-
 
 
 

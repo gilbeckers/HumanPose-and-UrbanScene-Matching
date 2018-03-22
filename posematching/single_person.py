@@ -30,14 +30,14 @@ class MatchCombo(object):
 Description single_person(model_features, input_features):
 GOAL: Decides if the inputpose matches with the modelpose.
 
-Both valid and unvalid modelposes are allowed, that is, modelposes with no undetected body parts are also allowed. 
-If a unvalid model pose is used, the inputpose is adjusted and the matching continues. 
+Both valid and unvalid modelposes are allowed, that is, modelposes with no undetected body parts are also allowed.
+If a unvalid model pose is used, the inputpose is adjusted and the matching continues.
 
-The inputpose is also allowed to contain a number of undetected body-parts. 
+The inputpose is also allowed to contain a number of undetected body-parts.
 These undetected features are marked as (0,0). The algorithm is designed to handle these incomplete situations as follow:
 
-In order to proceed the matching with these undetected points, a copy is made of the model pose 
-where the corresponding undetected points of the input pose are also set to (0,0). 
+In order to proceed the matching with these undetected points, a copy is made of the model pose
+where the corresponding undetected points of the input pose are also set to (0,0).
 -- So, the inputpose and modelpose_copy still have the same length of features (18) and also the same
 amount of undetected features. --
 
@@ -51,13 +51,13 @@ NOTE 1: The (0,0) points can't just be deleted because
 without them the feature-arrays would become ambigu. (the correspondence between model and input)
 
 NOTE 2: In order to disregard the undetected feauters of the inputpose, the corresponding modelpose features
-are also altered to (0,0). Because we don't want the loose the original information of the complete modelpose, 
+are also altered to (0,0). Because we don't want the loose the original information of the complete modelpose,
 first a local copy is made of the modelpose before the altering. The rest of the function (the actual matching)
-uses this copy. At the end, the original (the unaltered version) model is returned, so the next step in the pipeline 
-still has all the original data. 
+uses this copy. At the end, the original (the unaltered version) model is returned, so the next step in the pipeline
+still has all the original data.
 
 NOTE 3: the acceptation and introduction of (0,0) points is a danger for our current normalisation
-These particular origin points should not influence the normalisation 
+These particular origin points should not influence the normalisation
 (which they do if we neglect them, xmin and ymin you know ... )
 
 
@@ -65,8 +65,8 @@ These particular origin points should not influence the normalisation
 Parameters:
 Takes two parameters, model name and input name.
 Both have a .json file in json_data and a .jpg or .png in image_data
-@:param model_features: 
-@:param input_features: 
+@:param model_features:
+@:param input_features:
 @:param normalise:
 
 Returns:
@@ -93,7 +93,7 @@ def match_single(model_features, input_features, normalise=True):
         result = MatchResult(False,
                              error_score=0,
                              input_transformation=None)
-        return result
+        #return result
 
     assert len(model_features_copy) == len(input_features_copy)
 
@@ -115,8 +115,8 @@ def match_single(model_features, input_features, normalise=True):
         return result
 
     ######### THE THRESHOLDS #######
-    eucl_dis_tresh_torso = 0.125  # 0.098
-    rotation_tresh_torso = 10.847
+    eucl_dis_tresh_torso = 0.18  # 0.098
+    rotation_tresh_torso = 12
     eucl_dis_tresh_legs = 0.058
     rotation_tresh_legs = 24.527  # 14.527
     eucld_dis_shoulders_tresh = 0.125
@@ -126,7 +126,7 @@ def match_single(model_features, input_features, normalise=True):
     # TODO @j3 keer het zelfde!! -> bad code design :'(
     (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
     max_euclidean_error_face = pose_comparison.max_euclidean_distance(model_face, input_transformed_face)
-    if np.count_nonzero(model_face) > 5:
+    if np.count_nonzero(model_face) < 4:
         if (np.count_nonzero(model_face) - np.count_nonzero(input_face)) < 2:
             #
             #
@@ -142,7 +142,7 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_torso = pose_comparison.max_euclidean_distance(model_torso, input_transformed_torso)
     max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso,
                                                                                      input_transformed_torso)
-    if np.count_nonzero(model_torso) > 5:
+    if (np.count_nonzero(model_torso) < 5):
         if (np.count_nonzero(model_torso) - np.count_nonzero(input_torso)) < 2:
 
             result_torso = pose_comparison.decide_torso_shoulders_incl(max_euclidean_error_torso,
@@ -160,11 +160,11 @@ def match_single(model_features, input_features, normalise=True):
     # handle legs
     (input_transformed_legs, transformation_matrix_legs) = find_transformation(model_legs, input_legs)
     max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
-    if np.count_nonzero(model_legs) > 5:
+    if (np.count_nonzero(model_legs) < 2):
         if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 2:
             result_legs = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,
                                                       eucl_dis_tresh_legs, rotation_tresh_legs)
-
+            logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
         else:
             logger.debug("Model has more legs feature then input therefore not matched")
             result_legs = False
