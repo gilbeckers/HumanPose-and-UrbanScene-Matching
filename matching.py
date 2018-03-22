@@ -19,7 +19,7 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
 
     else:
         logger.info("No matching poses found, so quit URBAN SCENE MATCHING")
-        return False
+        return (False,False)
         #exit()
 
     logger.debug("--- Starting urbanscene matching ---")
@@ -41,8 +41,8 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
         if error <= thresholds.AFFINE_TRANS_WHOLE_DISTANCE:
             logger.info("===> MATCH! permutation %s  score:%0.4f (thresh ca %0.3f)",
                         matching_permuations, round(error, 4), 0.10)
-            return True
+            return (True,True)
         else:
             logger.info("===> NO-MATCH! permutation %s  score:%0.4f (thresh ca %0.3f)",
                         matching_permuations, round(error, 4), 0.10)
-            return False
+            return (True,False)

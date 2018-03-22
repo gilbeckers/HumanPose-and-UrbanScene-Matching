@@ -15,6 +15,9 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     logger.debug(" amount of models: %d", len(model_poses))
     logger.debug(" amount of inputs: %d", len(input_poses))
 
+    model_poses = np.copy(model_poses)
+    input_poses = np.copy(input_poses)
+
     # Some safety checks first ..
     if (len(input_poses) == 0 or len(model_poses) == 0):
         logger.debug("FAIL: Multi person match failed. Inputposes or modelposes are empty")
@@ -94,8 +97,8 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
             input_transformed_combined.append(np.array(input_transformed))
             updated_models_combined.append(np.array(model))
 
-            unchanged_input.append(np.array(input_poses[input_index_val]))
-            unchanged_model.append(np.array(model_poses[model_index]))
+            unchanged_input.append(np.array(input_pose))
+            unchanged_model.append(np.array(model_pose))
 
         assert len(input_transformed_combined) == len(updated_models_combined)
 
@@ -136,10 +139,14 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         else:
             logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
                         max_eucl_distance, thresholds.MP_DISCTANCE)
-    print(result_permuations)
     # TODO: nog max nemen van resultaat.
-    logger.debug("result scores: " , result_permuations)
-    return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)
+    #logger.debug("result scores: " , result_permuations)
+
+    # If result_permutations is still empty, no match was found so return false
+    if result_permuations:
+        return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)
+
+    return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=result_permuations)
 
 
 

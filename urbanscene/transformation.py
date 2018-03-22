@@ -1,14 +1,13 @@
 import heapq
 import logging
-
 import cv2
 import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-
 from urbanscene.features import  max_euclidean_distance, euclidean_distance
 import common
-
+import thresholds
+import random
 
 def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img, plot=False):
     # we assume input_pose and model_pose contain same amount of features, as we would also expected in this stage of pipeline
@@ -335,12 +334,27 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
         plt.show(block=False)
     return (max_euclidean_error_torso_norm, max_euclidean_error_legs_norm, sum(euclidean_error_torso_norm), sum(euclidean_error_legs_norm))
 
-
 def affine_multi(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label, plot=False):
 
     # include some random features of background:
-    model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1], p_model_good[5] ))
-    input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1], p_input_good[5]))
+    #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
+    #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))
+
+
+
+    random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
+    model_pose = [np.array(model_pose)]
+    input_pose = [np.array(input_pose)]
+    logging.debug("THE RANDOM FEATURES: %s", str(random_features))
+
+    # include some random features of background:
+    for i in random_features:
+        model_pose.append(np.array(p_model_good[i]))
+        input_pose.append(np.array(p_input_good[i]))
+
+    model_pose = np.vstack(model_pose)
+    input_pose = np.vstack(input_pose)
+
 
     (input_transformed, M) = common.find_transformation(model_pose, input_pose)
 
@@ -357,6 +371,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose,  model_img,
     #  index 2(rechts) en 5(links) zijn de polsen
     #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
     logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
+    logging.debug("#### AFFINE RAND NORM Sum TOTAL/#matches: %f", sum(euclidean_error_norm)/len(p_model_good))
     max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
     logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
 

@@ -96,13 +96,13 @@ def match_and_draw(win, matcher, desc_model, desc_input, kp_model, kp_input, mod
     else:
         H, mask = None, None
         logging.debug('%d matches found, not enough for homography estimation' % len(p_model))
-        return (mask, None, None, H, None)
+        return (mask, None, None, H, None, None)
 
     # Render nice window with nice view of matches
     #_vis = explore_match(win + '| (raw matches: ' + str(len(p_model)) + '  homography matches: ' + str(len(good_model_pts)) + ')', model_img, input_img, kp_pairs, mask, H, show_win)
 
     # matchesMask, input_image_homo, good, model_pts, input_pts, M, M2
-    return(mask, good_model_pts, good_input_pts, H, H2)
+    return(mask, good_model_pts, good_input_pts, H, H2, len(good_model_pts))
 
 def explore_match(win, img1, img2, kp_pairs, status = None, H = None, show_win= True):
     h1, w1 = img1.shape[:2]

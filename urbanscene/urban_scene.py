@@ -18,7 +18,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
 
     ''' --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  ------------------------- '''
-    (mask, p_model_good, p_input_good, H, H2) = features.match_and_draw("multipips", matcher, desc_model,
+    (mask, p_model_good, p_input_good, H, H2, matching_features) = features.match_and_draw("multipips", matcher, desc_model,
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
 
@@ -92,7 +92,6 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
                                                                 model_pose_features, input_pose_trans,
                                                                 model_image, persp_trans_input_img,
-
                                                                 "test", plot)
     return err
 
