@@ -7,7 +7,7 @@ SP_ROTATION_TORSO = 12
 SP_DISTANCE_LEGS = 0.058
 SP_ROTATION_LEGS = 24   # 14.527
 
-eucld_dis_shoulders_tresh = 0.125
+SP_DISTANCE_SHOULDER = 0.125
 
 
 
