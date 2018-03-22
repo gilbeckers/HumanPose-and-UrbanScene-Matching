@@ -80,7 +80,7 @@ def find_transformation(model_features, input_features):
 
     # Solve the least squares problem X * A = Y
     # to find our transformation matrix A and then we can display the input on the model = Y'
-    A, res, rank, s = np.linalg.lstsq(X, Y)
+    A, res, rank, s = np.linalg.lstsq(X, Y,rcond=None)
     transform = lambda x: unpad(np.dot(pad(x), A))
     input_transform = transform(input_features)
 
@@ -283,6 +283,8 @@ def handle_undetected_points(input_features, model_features):
     # model_features_copy = np.array(model_features)
     model_features_copy = model_features.copy()
     input_features_copy = input_features.copy()
+    print (model_features)
+    print (input_features)
 
     # Input is allowed to have a certain amount of undetected body parts
     # In that case, the corresponding point from the model is also changed to (0,0)

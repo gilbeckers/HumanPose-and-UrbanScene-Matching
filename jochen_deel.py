@@ -14,14 +14,14 @@ for i in range(1,10):
     print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     Multipose_dataset_actions.find_matches_with("0000"+str(i))
 '''
-
+'''
 logging.basicConfig(level=logging.INFO)
 dataset.find_matches_with("00100")
+'''
 
-'''
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 dataset.check_matches("00100")
-'''
+
 '''
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()

@@ -339,8 +339,8 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
 def affine_multi(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label, plot=False):
 
     # include some random features of background:
-    model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1], p_model_good[10] ))
-    input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1], p_input_good[10]))
+    model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1], p_model_good[5] ))
+    input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1], p_input_good[5]))
 
     (input_transformed, M) = common.find_transformation(model_pose, input_pose)
 

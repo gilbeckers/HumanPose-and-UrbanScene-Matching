@@ -22,8 +22,8 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
 
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+    #cv2.waitKey()
+    #cv2.destroyAllWindows()
 
     ''' --------- STEP 3: VALIDATE HOMOGRAPHY/PERSPECTIVE MATRIX ---------------------- '''
     if H is None: # not enough matches found in feature matching
