@@ -4,9 +4,20 @@ import logging
 import thresholds
 logger = logging.getLogger("match_whole")
 
+import time
+
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        logger.critical('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
+        return ret
+    return wrap
 
 # Performs the whole matching
 # First multi pose matching, followed by urbanscene matching
+@timing
 def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot=False):
 
     result_pose_matching = multi_person.match(model_pose_features, input_pose_features, plot=plot, input_image = input_image, model_image=model_image)
