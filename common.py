@@ -80,7 +80,7 @@ def find_transformation(model_features, input_features):
 
     # Solve the least squares problem X * A = Y
     # to find our transformation matrix A and then we can display the input on the model = Y'
-    A, res, rank, s = np.linalg.lstsq(X, Y,rcond=None)
+    A, res, rank, s = np.linalg.lstsq(X, Y)
     transform = lambda x: unpad(np.dot(pad(x), A))
     input_transform = transform(input_features)
 
@@ -228,7 +228,7 @@ def parse_JSON_multi_person(filename):
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
-            #    logger.debug("openpose certainty(%f) to low index: %d", person_keypoints[i+2], arrayIndex )
+                logger.warning("openpose certainty(%f) to low index: %d", person_keypoints[i+2], arrayIndex )
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
@@ -299,7 +299,8 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in input_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
+                logger.debug(" Undetected body part in input: index(%d) %s", counter,
+                               get_bodypart(counter))
                 model_features_copy[counter][0] = 0
                 model_features_copy[counter][1] = 0
                 # input_features[counter][0] = 0#np.nan
@@ -311,7 +312,8 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in model_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                #logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,get_bodypart(counter))
+                logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,
+                               get_bodypart(counter))
                 input_features_copy[counter][0] = 0
                 input_features_copy[counter][1] = 0
             counter = counter + 1
