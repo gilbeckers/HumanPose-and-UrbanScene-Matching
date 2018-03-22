@@ -126,7 +126,7 @@ def match_single(model_features, input_features, normalise=True):
     # TODO @j3 keer het zelfde!! -> bad code design :'(
     (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
     max_euclidean_error_face = pose_comparison.max_euclidean_distance(model_face, input_transformed_face)
-    if np.count_nonzero(model_face) < 4:
+    if np.count_nonzero(model_face) > 8:
         if (np.count_nonzero(model_face) - np.count_nonzero(input_face)) < 2:
             #
             #
@@ -142,7 +142,7 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_torso = pose_comparison.max_euclidean_distance(model_torso, input_transformed_torso)
     max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso,
                                                                                      input_transformed_torso)
-    if (np.count_nonzero(model_torso) < 5):
+    if (np.count_nonzero(model_torso) > 5):
         if (np.count_nonzero(model_torso) - np.count_nonzero(input_torso)) < 2:
 
             result_torso = pose_comparison.decide_torso_shoulders_incl(max_euclidean_error_torso,
@@ -154,13 +154,13 @@ def match_single(model_features, input_features, normalise=True):
             logger.debug("Model has more Torso feature then input therefore not matched")
             result_torso = False
     else:
-        logger.debug("too less points for Torso in model so Torso match")
+        logger.debug("too less points for Torso in model so Torso match %d",np.count_nonzero(model_torso)  )
         result_torso = True
 
     # handle legs
     (input_transformed_legs, transformation_matrix_legs) = find_transformation(model_legs, input_legs)
     max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
-    if (np.count_nonzero(model_legs) < 2):
+    if (np.count_nonzero(model_legs) > 8):
         if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 2:
             result_legs = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,
                                                       eucl_dis_tresh_legs, rotation_tresh_legs)

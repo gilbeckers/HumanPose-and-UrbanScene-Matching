@@ -3,7 +3,7 @@ import logging
 import os
 
 import common
-from posematching.rust import z_multiperson_match
+import posematching.multi_person as multiperson
 
 logger = logging.getLogger("Multipose dataset")
 
@@ -29,7 +29,7 @@ def find_matches_with(pose):
         for json in glob.iglob(data+"*_keypoints.json"):
             logger.info(json)
             input_features = common.parse_JSON_multi_person(json)
-            (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+            (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
             if result == True:
                 place = json.split("_keypoints")[0]
                 place = place.split("json/")[1]
@@ -53,7 +53,7 @@ def test_script():
     input = galabal+pose+"/json/4.json"
 
     input_features = common.parse_JSON_multi_person(input)
-    (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
     print (result)
 
 def check_matches(pose):
@@ -61,8 +61,9 @@ def check_matches(pose):
     model_features = common.parse_JSON_multi_person(model)
     count =0
     for json in glob.iglob(poses+pose+"/json/*.json"):
+        print (json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if result == False:
             count = count +1
             print ("error at: "+json)
@@ -82,7 +83,7 @@ def find_galabal_matches(pose):
     for json in glob.iglob(galabaljson+"*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if result == True:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
@@ -103,7 +104,7 @@ def check_galabal_matches(pose):
     for json in glob.iglob(galabal+pose+"/json/*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform) = z_multiperson_match.multi_person_ordered(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if result == False:
             count = count +1
             print ("error at: "+json)

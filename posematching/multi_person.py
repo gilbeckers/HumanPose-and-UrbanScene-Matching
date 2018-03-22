@@ -1,6 +1,6 @@
 from posematching.single_person import MatchResult, MatchCombo, match_single, MatchResultMulti
 from common import handle_undetected_points, feature_scaling, find_transformation
-from posematching.procrustes import superimpose, superimpose_old
+from posematching.procrustes import superimpose
 from posematching.pose_comparison import max_euclidean_distance
 import numpy as np
 import logging
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 logger = logging.getLogger("multi_person")
 
 
-def match(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
+def match(model_poses, input_poses, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))
     logger.debug(" amount of inputs: %d", len(input_poses))
 
@@ -46,17 +46,13 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
                                     matching_permutations={0:[0]})
         else:
             return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
-    model_poses = order_poses(model_poses)
-    input_poses = order_poses(input_poses)
+
     matches_dict = find_ordered_matches(model_poses,input_poses)
 
     logger.debug("matches found %s", str(matches_dict))
-    if matches_dict == None:
+    if matches_dict == False:
         logger.debug("FAIL: No ordered matches found")
         return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
-    else: # override poses with the ordered ones
-        model_poses = ordered_model_poses
-        input_poses = ordered_input_poses
 
     if input_pose_solo_multiple_times(matches_dict, len(input_poses)):
         logger.debug("FAIL: An inputpose is linked to multiple modelpose as only possible match => global fail (injection remember)")
@@ -75,19 +71,12 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
         input_transformed_combined = []
         updated_models_combined = []
-
-        unchanged_input = []
-        unchanged_model = []
         for model_index, input_index_val in enumerate(permutation):
-            logger.debug("Superimposing for model %d  and input %d", model_index, input_index_val)
             (input_pose, model_pose) = handle_undetected_points(input_poses[input_index_val], model_poses[model_index])
-            (input_transformed, model) = superimpose_old(input_pose, model_pose, plot=False, input_image= None, model_image=None)
+            (input_transformed, model) = superimpose(input_pose, model_pose)
 
             input_transformed_combined.append(np.array(input_transformed))
             updated_models_combined.append(np.array(model))
-
-            unchanged_input.append(np.array(input_poses[input_index_val]))
-            unchanged_model.append(np.array(model_poses[model_index]))
 
         assert len(input_transformed_combined) == len(updated_models_combined)
 
@@ -100,9 +89,6 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         # Calc the affine trans of the whole
         input_transformed_combined = np.vstack(input_transformed_combined)
         updated_models_combined = np.vstack(updated_models_combined)
-
-        unchanged_input = np.vstack(unchanged_input)
-        unchanged_model = np.vstack(unchanged_model)
 
         input_transformed_combined_nonorm = input_transformed_combined
         updated_models_combined_nonorm =updated_models_combined
@@ -118,10 +104,8 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         #result_permuations[permutation] = max_eucl_distance
         result_permuations[permutation] = {
             "score" : max_eucl_distance ,
-            "model" : unchanged_model,
-            #"model":updated_models_combined_nonorm,
-            "input" : unchanged_input
-            #"input": input_transformed_combined_nonorm
+            "model" : updated_models_combined_nonorm,
+            "input" : input_transformed_combined_nonorm
         }
 
 
@@ -137,6 +121,9 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
 
 def find_ordered_matches(model_poses,input_poses):
+
+    model_poses = order_poses(model_poses)
+    input_poses = order_poses(input_poses)
 
     matches = []
     matches_dict = {}
@@ -164,14 +151,14 @@ def find_ordered_matches(model_poses,input_poses):
                 model_matches.append(input_counter)
         if match_found == False:
             logger.debug("no match found for model %d", model_counter)
-            return (None, None, None)
+            return False
         matches_dict[model_counter] = model_matches
 
 
     #logger.debug("matches found %s"," ".join(str(e) for e in matches))
     #return list(itertools.product(*matches))
     #return matches
-    return matches_dict, model_poses, input_poses
+    return matches_dict
 
 
 # Check if an inputpose is linked to multiple modelpose as only possible match.
@@ -212,6 +199,7 @@ def order_poses(poses):
                     ordered.insert(0,poses[i])
                     placed = True
     return ordered
+
 
 
 

@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 dataset.find_matches_with("00100")
 '''
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 dataset.check_matches("00100")
 
 '''

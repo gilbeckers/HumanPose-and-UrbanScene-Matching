@@ -283,8 +283,7 @@ def handle_undetected_points(input_features, model_features):
     # model_features_copy = np.array(model_features)
     model_features_copy = model_features.copy()
     input_features_copy = input_features.copy()
-    print (model_features)
-    print (input_features)
+
 
     # Input is allowed to have a certain amount of undetected body parts
     # In that case, the corresponding point from the model is also changed to (0,0)
