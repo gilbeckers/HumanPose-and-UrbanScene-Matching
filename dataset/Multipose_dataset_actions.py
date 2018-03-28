@@ -98,9 +98,7 @@ def check_matches(pose):
     eucld_dis_shoulders_tresh= 0.125
     path = poses+pose
     model = path+"/json/"+pose+".json"
-    #pose = "1"
-    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
-    #model = path+"/json/0.json"
+
     model_features = common.parse_JSON_multi_person(model)
 
     true_positive =0
@@ -207,12 +205,14 @@ def replace_json_files(pose):
         os.system("mv "+foto+" "+poses+pose+"/jsonfout/  2>/dev/null")
 
 #**************************************precision recall********************************************
-def calculate_pr(pose):
+def calculate_pr(pose,error_score_tresh):
+    '''
     path = poses+pose
     model = path+"/json/"+pose+".json"
-    #pose = "1"
-    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
-    #model = path+"/json/0.json"
+    '''
+    pose = "1"
+    path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
+    model = path+"/json/0.json"
     model_features = common.parse_JSON_multi_person(model)
 
     true_positive =0
@@ -224,8 +224,9 @@ def calculate_pr(pose):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
-        if result == True:
+        if error_score < error_score_tresh:
             true_positive = true_positive +1
+            print ("score is: "+str(error_score))
         else:
             false_negative = false_negative +1
             print ("error at: "+json)
@@ -234,7 +235,7 @@ def calculate_pr(pose):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
-        if result == True:
+        if error_score < error_score_tresh:
             false_positive = false_positive +1
             print ("error at: "+json)
         else:
@@ -265,13 +266,13 @@ def make_pr_curve(pose):
     global eucl_dis_tresh_legs
     global rotation_tresh_legs
     global eucld_dis_shoulders_tresh
-    '''
+
     eucl_dis_tresh_torso= 0.098
     rotation_tresh_torso= 10.847
     eucl_dis_tresh_legs= 0.05
     rotation_tresh_legs= 14.527
     eucld_dis_shoulders_tresh= 0.085
-    
+    '''
     SP_DISTANCE_TORSO = 0.18 # 0.098
     SP_ROTATION_TORSO = 19
 
@@ -280,22 +281,26 @@ def make_pr_curve(pose):
 
     SP_DISTANCE_SHOULDER = 0.125
     '''
-
-
+    '''
     start_eucl_dis_tresh_torso= 0.0 #=>0.13
-    start_rotation_tresh_torso=  20#=> 14
-    start_eucl_dis_tresh_legs= 0.08 #=> 0.09
+    start_rotation_tresh_torso=  19#=> 14
+    start_eucl_dis_tresh_legs= 0.06 #=> 0.09
     start_rotation_tresh_legs= 25#=>18
     start_eucld_dis_shoulders_tresh= 0.2 #=>0.12
+    '''
     precisions = [];
     recalls = []
-    for i in range(0,1000):
+    error_tresh = 0
+    for i in range(0,500):
+        '''
         eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
-        rotation_tresh_torso= start_rotation_tresh_torso +(i*0.1)
+        rotation_tresh_torso= start_rotation_tresh_torso +(i*0.2)
         eucl_dis_tresh_legs= start_eucl_dis_tresh_legs +(i*0.001)
         rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
         eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
-        (precision,recall) = calculate_pr(pose)
+        '''
+        error_tresh = error_tresh + 0.01*i
+        (precision,recall) = calculate_pr(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
 
