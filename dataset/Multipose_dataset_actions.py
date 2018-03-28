@@ -3,7 +3,7 @@ import logging
 import os
 
 import common
-#import posematching.multi_person as multiperson
+import posematching.multi_person as multiperson
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
@@ -21,6 +21,18 @@ galabalfotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/'
 
 #pose should look like 00100
 def find_matches_with(pose):
+
+    global eucl_dis_tresh_torso
+    global rotation_tresh_torso
+    global eucl_dis_tresh_legs
+    global rotation_tresh_legs
+    global eucld_dis_shoulders_tresh
+
+    eucl_dis_tresh_torso= 0.18
+    rotation_tresh_torso= 19
+    eucl_dis_tresh_legs= 0.058
+    rotation_tresh_legs= 24
+    eucld_dis_shoulders_tresh= 0.125
     if len(pose) == 5 and pose.isdigit():
         model = data+pose+"_keypoints.json"
         model_features = common.parse_JSON_multi_person(model)
@@ -54,7 +66,7 @@ def test_script():
     pose = "00100"
     model = poses+pose+"/json/"+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
-    input = poses+pose+"/json/00139.json"
+    input = poses+pose+"/json/01179.json"
 
     global eucl_dis_tresh_torso
     global rotation_tresh_torso
@@ -62,17 +74,28 @@ def test_script():
     global rotation_tresh_legs
     global eucld_dis_shoulders_tresh
 
-    eucl_dis_tresh_torso= 0.09
-    rotation_tresh_torso= 10
-    eucl_dis_tresh_legs= 0.05
-    rotation_tresh_legs= 14
-    eucld_dis_shoulders_tresh= 0.085
+    eucl_dis_tresh_torso= 0.18
+    rotation_tresh_torso= 19
+    eucl_dis_tresh_legs= 0.058
+    rotation_tresh_legs= 24
+    eucld_dis_shoulders_tresh= 0.125
 
     input_features = common.parse_JSON_multi_person(input)
     (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
     print (result)
 
-def calculate_pr(pose):
+def check_matches(pose):
+    global eucl_dis_tresh_torso
+    global rotation_tresh_torso
+    global eucl_dis_tresh_legs
+    global rotation_tresh_legs
+    global eucld_dis_shoulders_tresh
+
+    eucl_dis_tresh_torso= 0.18
+    rotation_tresh_torso= 19
+    eucl_dis_tresh_legs= 0.058
+    rotation_tresh_legs= 24
+    eucld_dis_shoulders_tresh= 0.125
     path = poses+pose
     model = path+"/json/"+pose+".json"
     #pose = "1"
@@ -113,6 +136,7 @@ def calculate_pr(pose):
         recall = true_positive / (true_positive+false_negative)
 
     #******** print small raport ******************
+
     print ("*************raport of pose "+pose+" ****************")
     print ("true_positive: " + str(true_positive))
     print ("false_positive: "+ str(false_positive))
@@ -121,39 +145,7 @@ def calculate_pr(pose):
     print ("recall: "+ str(recall))
     print ("precision: "+ str(precision))
 
-    return (precision,recall)
 
-def make_pr_curve(pose):
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
-    '''
-    eucl_dis_tresh_torso= 0.098
-    rotation_tresh_torso= 10.847
-    eucl_dis_tresh_legs= 0.05
-    rotation_tresh_legs= 14.527
-    eucld_dis_shoulders_tresh= 0.085
-    '''
-    start_eucl_dis_tresh_torso= 0.05 #=>0.13
-    start_rotation_tresh_torso=  6#=> 14
-    start_eucl_dis_tresh_legs= 0.01 #=> 0.09
-    start_rotation_tresh_legs= 10 #=>18
-    start_eucld_dis_shoulders_tresh= 0.04 #=>0.12
-    precisions = [];
-    recalls = []
-    for i in range(0,80):
-        eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
-        rotation_tresh_torso= start_rotation_tresh_torso +(i*0.1)
-        eucl_dis_tresh_legs= start_eucl_dis_tresh_legs +(i*0.001)
-        rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
-        eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
-        (precision,recall) = calculate_pr(pose)
-        precisions.append(precision)
-        recalls.append(recall)
-
-    draw_pr_curve(precisions,recalls, pose)
 
 
 #***********************************galabal dataset_actions*********************************
@@ -214,7 +206,102 @@ def replace_json_files(pose):
         foto = foto +".json"
         os.system("mv "+foto+" "+poses+pose+"/jsonfout/  2>/dev/null")
 
-#**************************************graphs********************************************
+#**************************************precision recall********************************************
+def calculate_pr(pose):
+    path = poses+pose
+    model = path+"/json/"+pose+".json"
+    #pose = "1"
+    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
+    #model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
+
+    true_positive =0
+    false_positive =0
+    true_negative =0
+    false_negative =0
+
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if result == True:
+            true_positive = true_positive +1
+        else:
+            false_negative = false_negative +1
+            print ("error at: "+json)
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if result == True:
+            false_positive = false_positive +1
+            print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    precision = 0
+    recall =0
+    if (true_positive+false_positive) !=0:
+        precision = true_positive / (true_positive+false_positive)
+    if  (true_positive+false_negative) !=0:
+        recall = true_positive / (true_positive+false_negative)
+
+    #******** print small raport ******************
+
+    print ("*************raport of pose "+pose+" ****************")
+    print ("true_positive: " + str(true_positive))
+    print ("false_positive: "+ str(false_positive))
+    print ("true_negative: " + str(true_negative))
+    print ("false_negative: "+ str(false_negative))
+    print ("recall: "+ str(recall))
+    print ("precision: "+ str(precision))
+
+    return (precision,recall)
+
+def make_pr_curve(pose):
+    global eucl_dis_tresh_torso
+    global rotation_tresh_torso
+    global eucl_dis_tresh_legs
+    global rotation_tresh_legs
+    global eucld_dis_shoulders_tresh
+    '''
+    eucl_dis_tresh_torso= 0.098
+    rotation_tresh_torso= 10.847
+    eucl_dis_tresh_legs= 0.05
+    rotation_tresh_legs= 14.527
+    eucld_dis_shoulders_tresh= 0.085
+    
+    SP_DISTANCE_TORSO = 0.18 # 0.098
+    SP_ROTATION_TORSO = 19
+
+    SP_DISTANCE_LEGS = 0.058
+    SP_ROTATION_LEGS = 24   # 14.527
+
+    SP_DISTANCE_SHOULDER = 0.125
+    '''
+
+
+    start_eucl_dis_tresh_torso= 0.0 #=>0.13
+    start_rotation_tresh_torso=  20#=> 14
+    start_eucl_dis_tresh_legs= 0.08 #=> 0.09
+    start_rotation_tresh_legs= 25#=>18
+    start_eucld_dis_shoulders_tresh= 0.2 #=>0.12
+    precisions = [];
+    recalls = []
+    for i in range(0,1000):
+        eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
+        rotation_tresh_torso= start_rotation_tresh_torso +(i*0.1)
+        eucl_dis_tresh_legs= start_eucl_dis_tresh_legs +(i*0.001)
+        rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
+        eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
+        (precision,recall) = calculate_pr(pose)
+        precisions.append(precision)
+        recalls.append(recall)
+
+    draw_pr_curve(precisions,recalls, pose)
+
+
 def draw_pr_curve(precision, recall, pose):
     plt.plot(recall,precision)
     plt.ylabel('precision')
