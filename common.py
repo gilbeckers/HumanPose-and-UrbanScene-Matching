@@ -81,6 +81,7 @@ def find_transformation(model_features, input_features):
     # Solve the least squares problem X * A = Y
     # to find our transformation matrix A and then we can display the input on the model = Y'
     A, res, rank, s = np.linalg.lstsq(X, Y)
+    #logger.debug("Res: %s  rank %d  sing: %s", str(res), rank, str(s))
     transform = lambda x: unpad(np.dot(pad(x), A))
     input_transform = transform(input_features)
 
@@ -228,7 +229,7 @@ def parse_JSON_multi_person(filename):
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
-                logger.warning("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
+                logger.debug("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
@@ -668,6 +669,19 @@ def draw_keypoints(vis, keypoints, color = (0, 255, 255)):
         x, y = kp.pt
         cv.circle(vis, (int(x), int(y)), 2, color)
 
+
+def scene_feature_scaling(input, xmax, ymax):
+
+    xmin = 0
+    ymin = 0
+
+    sec_x = (input[:, 0] - xmin) / (xmax - xmin)
+    sec_y = (input[:, 1] - ymin) / (ymax - ymin)
+
+    output = np.vstack([sec_x, sec_y]).T
+    #output[output < 0] = 0
+    #logger.info("out: %s", str(output))
+    return output
 
 #Cut pose out of image
 def feature_scaling(input):

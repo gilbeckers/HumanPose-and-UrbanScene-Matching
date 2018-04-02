@@ -6,15 +6,17 @@ import logging
 import matching
 from matplotlib import pyplot as plt
 import timer
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("main")
 
 
 feature_name = 'orb-flann'
-path_img = '../img/'  #'posesGeoteam/fotos/'
-path_json = '../json_data/'   #'posesGeoteam/json/'
-model_name = 'duo22.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'duo24.jpg'  # goeie : "pisa10"  taj4  # trap2     trap3
+#path_img = '../img/galabal2018/fotos/'    #'../img/'  #'posesGeoteam/fotos/'
+#path_json = '../img/galabal2018/json/' #'../json_data/'   #'posesGeoteam/json/'
+path_img = '../img/'  # 'posesGeoteam/fotos/'
+path_json = '../json_data/'  # 'posesGeoteam/json/'
+model_name = 'duo43.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'duo46.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -35,16 +37,16 @@ if detector is None:
 logger.debug(" using %s", feature_name)
 
 include_keypoints = False
-plot = False
+plot = True
 
 
 logger.debug("---Starting pose matching --")
 if include_keypoints:
     model_pose_features = common.parse_JSON_multi_person(path_json + model_name.split('.')[0] + '_keypoints' +  '.json')  # + '_keypoints'
-    input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0] + '_keypoints' + '.json')
+    input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0]  +'_keypoints' + '.json')
 else:
     model_pose_features = common.parse_JSON_multi_person(path_json + model_name.split('.')[0] +  '.json')  # + '_keypoints'
-    input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0] + '.json')
+    input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0]  +'.json')
 
 
 

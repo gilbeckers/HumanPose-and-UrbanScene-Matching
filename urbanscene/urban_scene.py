@@ -11,6 +11,7 @@ MIN_MATCH_COUNT     = 4
 
 def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features, plot=False):
     assert model_pose_features.shape == input_pose_features.shape
+
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
@@ -89,10 +90,15 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
     p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
 
+    model_image_height = model_image.shape[0]
+    model_image_width = model_image.shape[1]
+
     (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
-                                                                model_pose_features, input_pose_trans,
-                                                                model_image, persp_trans_input_img,
-                                                                "test", plot)
+                                        model_pose_features, input_pose_trans,
+                                        model_image_height, model_image_width,
+                                        "test",
+                                        model_image, persp_trans_input_img,
+                                         plot)
     return err
 
 

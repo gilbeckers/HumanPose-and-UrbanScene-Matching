@@ -88,6 +88,101 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
+def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image_height, model_image_width, label, model_img, input_img, plot=False):
+
+    # include some random features of background:
+    #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
+    #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))
+
+    random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
+    model_pose = [np.array(model_pose)]
+    input_pose = [np.array(input_pose)]
+    logging.debug("THE RANDOM FEATURES: %s", str(random_features))
+
+    # include some random features of background:
+    for i in random_features:
+        model_pose.append(np.array(p_model_good[i]))
+        input_pose.append(np.array(p_input_good[i]))
+
+    model_pose = np.vstack(model_pose)
+    input_pose = np.vstack(input_pose)
+
+
+    (input_transformed, M) = common.find_transformation(model_pose, input_pose)
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    input_transformed = unpad(np.dot(pad(np.vstack((p_input_good, input_pose))), M))
+
+    # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
+
+    # Norm manier 1: pose normaliseren
+    #model_features_norm = common.feature_scaling(np.vstack((p_model_good, model_pose)))
+    #input_features_trans_norm = common.feature_scaling(input_transformed)
+
+    # Norm manier 2: image_resolution normaliseren
+    model_features_norm = common.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
+    input_features_trans_norm = common.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
+
+    # f, (ax1) = plt.subplots(1, 1, sharey=True, figsize=(14, 6))
+    # # ax1.set_title(model_image_name + ' (model)')
+    # ax1.set_title("model norm")
+    # ax1.plot(*zip(*model_features_norm), marker='o', color='magenta', ls='', label='model',
+    #          ms=3)
+    # ax1.plot(*zip(*input_features_trans_norm), marker='o', color='r', ls='', ms=3)
+
+    euclidean_error_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    #  index 2(rechts) en 5(links) zijn de polsen
+    #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
+    logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
+    logging.debug("#### AFFINE RAND NORM Sum TOTAL/#matches: %f", sum(euclidean_error_norm)/len(p_model_good))
+    max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
+
+    max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
+
+    logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
+
+    markersize = 3
+    if plot:
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
+        implot = ax1.imshow(np.asarray(model_img), cmap='gray')
+        # ax1.set_title(model_image_name + ' (model)')
+        ax1.set_title("model")
+        ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        red_patch = mpatches.Patch(color='magenta', label='model')
+        ax1.legend(handles=[red_patch])
+
+        # ax2.set_title(input_image_name + ' (input)')
+        ax2.set_title("input")
+        ax2.imshow(np.asarray(input_img), cmap='gray')
+        ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+        ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+
+        ax3.set_title("aff split() " + label)
+        ax3.imshow(np.asarray(model_img), cmap='gray')
+        ax3.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+                 label='model',
+                 ms=markersize)  # ms = markersize
+        ax3.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='model',
+                 ms=markersize)  # ms = markersize
+        ax3.legend(handles=[mpatches.Patch(color='green', label='trans-input'),
+                            mpatches.Patch(color='magenta', label='model')])
+
+        # plt.tight_layout()
+        #plt.show(block=False)
+
+    return max_euclidean_error_norm
+
+
+
+
+
+
 def affine_trans_interaction_both(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label):
     #input_pose = p_input_good[len(p_input_good) - size_pose: len(p_input_good)]  # niet perse perspective corrected, hangt af van input
     #model_pose = p_model_good[len(p_model_good) - size_pose: len(p_input_good)]
@@ -334,83 +429,5 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
         plt.show(block=False)
     return (max_euclidean_error_torso_norm, max_euclidean_error_legs_norm, sum(euclidean_error_torso_norm), sum(euclidean_error_legs_norm))
 
-def affine_multi(p_model_good, p_input_good, model_pose, input_pose,  model_img, input_img, label, plot=False):
 
-    # include some random features of background:
-    #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
-    #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))
-
-
-
-    random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
-    model_pose = [np.array(model_pose)]
-    input_pose = [np.array(input_pose)]
-    logging.debug("THE RANDOM FEATURES: %s", str(random_features))
-
-    # include some random features of background:
-    for i in random_features:
-        model_pose.append(np.array(p_model_good[i]))
-        input_pose.append(np.array(p_input_good[i]))
-
-    model_pose = np.vstack(model_pose)
-    input_pose = np.vstack(input_pose)
-
-
-    (input_transformed, M) = common.find_transformation(model_pose, input_pose)
-
-    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
-    unpad = lambda x: x[:, :-1]
-    input_transformed = unpad(np.dot(pad(np.vstack((p_input_good, input_pose))), M))
-
-    # TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
-    # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
-    model_features_norm = common.feature_scaling(np.vstack((p_model_good, model_pose)))
-    input_features_trans_norm = common.feature_scaling(input_transformed)
-
-    euclidean_error_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
-    #  index 2(rechts) en 5(links) zijn de polsen
-    #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
-    logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
-    logging.debug("#### AFFINE RAND NORM Sum TOTAL/#matches: %f", sum(euclidean_error_norm)/len(p_model_good))
-    max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
-
-    max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
-
-    logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
-
-    markersize = 3
-    if plot:
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-        implot = ax1.imshow(np.asarray(model_img), cmap='gray')
-        # ax1.set_title(model_image_name + ' (model)')
-        ax1.set_title("model")
-        ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        red_patch = mpatches.Patch(color='magenta', label='model')
-        ax1.legend(handles=[red_patch])
-
-        # ax2.set_title(input_image_name + ' (input)')
-        ax2.set_title("input")
-        ax2.imshow(np.asarray(input_img), cmap='gray')
-        ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
-        ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
-        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
-
-        ax3.set_title("aff split() " + label)
-        ax3.imshow(np.asarray(model_img), cmap='gray')
-        ax3.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
-                 label='model',
-                 ms=markersize)  # ms = markersize
-        ax3.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        ax3.legend(handles=[mpatches.Patch(color='green', label='trans-input'),
-                            mpatches.Patch(color='magenta', label='model')])
-
-        # plt.tight_layout()
-        #plt.show(block=False)
-
-    return max_euclidean_error_norm
 
