@@ -57,10 +57,11 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
                                     input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??
                                     matching_permutations=result_single)
         else:
-            return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
+            return MatchResultMulti(False, error_score=match_result_single.error_score, input_transformation=None, matching_permutations=None )
 
-    matches_dict, ordered_model_poses, ordered_input_poses = find_ordered_matches(model_poses,input_poses)
-
+    matches_dict, errors, ordered_model_poses, ordered_input_poses = find_ordered_matches(model_poses,input_poses)
+    print (errors)
+    print (matches_dict)
     logger.debug("matches found %s", str(matches_dict))
     if matches_dict == None:
         logger.debug("FAIL: No ordered matches found")
@@ -78,8 +79,12 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     # source : https://stackoverflow.com/questions/38721847/python-generate-all-combination-from-values-in-dict-of-lists
     allInputs = sorted(matches_dict)
     combinations = list(itertools.product(*(matches_dict[Name] for Name in allInputs)))
+    allInputs_error = sorted(errors)
+    combinations_error = list(itertools.product(*(errors[Name] for Name in allInputs)))
     result_permuations = {}
+    permutation_counter = 0
     for permutation in combinations:
+        error_score=0
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
             continue
@@ -89,6 +94,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
         unchanged_input = []
         unchanged_model = []
+
         for model_index, input_index_val in enumerate(permutation):
             logger.debug("Superimposing for model %d  and input %d", model_index, input_index_val)
             (input_pose, model_pose) = handle_undetected_points(input_poses[input_index_val], model_poses[model_index])
@@ -99,6 +105,8 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
             unchanged_input.append(np.array(input_pose))
             unchanged_model.append(np.array(model_pose))
+
+            error_score = error_score + combinations_error[permutation_counter][model_index]
 
         assert len(input_transformed_combined) == len(updated_models_combined)
 
@@ -125,10 +133,12 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         logger.debug("shape model_pose %s", str(updated_models_combined.shape))
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
+        error_score = error_score + max_eucl_distance
 
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
                 "score" : max_eucl_distance ,
+
                 "model" : unchanged_model,
                 #"model":updated_models_combined_nonorm,
                 "input" : unchanged_input
@@ -136,9 +146,11 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
             }
             logger.info("--> MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
                         max_eucl_distance,thresholds.MP_DISCTANCE )
+            return MatchResultMulti(False, error_score=error_score, input_transformation=None, matching_permutations=result_permuations)
         else:
             logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
                         max_eucl_distance, thresholds.MP_DISCTANCE)
+        permutation_counter = permutation_counter +1
     # TODO: nog max nemen van resultaat.
     #logger.debug("result scores: " , result_permuations)
 
@@ -158,12 +170,13 @@ def find_ordered_matches(model_poses,input_poses):
 
     matches = []
     matches_dict = {}
+    errors = []
 
     #find first match of poses
     for model_counter in range(0,len(model_poses)):
         model_pose = model_poses[model_counter]
-
         matches.append([])
+        errors.append([])
         model_matches = []
 
         match_found = False
@@ -178,6 +191,7 @@ def find_ordered_matches(model_poses,input_poses):
             if result_match:
                 match_found = True
                 matches[model_counter].append(input_counter)
+                errors[model_counter].append(error_score)
 
                 model_matches.append(input_counter)
         if match_found == False:
@@ -189,7 +203,7 @@ def find_ordered_matches(model_poses,input_poses):
     #logger.debug("matches found %s"," ".join(str(e) for e in matches))
     #return list(itertools.product(*matches))
     #return matches
-    return matches_dict, model_poses, input_poses
+    return matches_dict, errors, model_poses, input_poses
 
 
 # Check if an inputpose is linked to multiple modelpose as only possible match.

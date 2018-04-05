@@ -1,6 +1,7 @@
 import numpy as np
 
 def calculateAngleOf3Points(point1 , point2, point3):
+
     ba = (point1[0][0] -point2[0][0],point1[0][1] -point2[0][1],)
     bc = (point3[0][0] -point2[0][0],point3[0][1] -point2[0][1],)
     cosine_angle = 0
@@ -11,6 +12,7 @@ def calculateAngleOf3Points(point1 , point2, point3):
     return np.degrees(angle)
 
 def prepareangles(points):
+    points = points[0]
     result = np.array([])
     #angle of right shoulder
     right_shoulder = calculateAngleOf3Points(points[1:2],points[2:3],points[3:4])
@@ -55,14 +57,14 @@ def compare(prim,second):
     print("max error is : ", max_error)
     return max_error
 
-def succes(prim,second):
+def succes(prim,second,angle_tresh):
     angles = 0
     for i in range(0, prim.size):
             angles = np.append(angles,abs(prim[i]-second[i]))
 
     succes = True
     for angle in angles:
-        if angle > 20:
+        if angle > angle_tresh:
             succes = False
     return succes
 

@@ -4,10 +4,12 @@ import os
 
 import common
 import posematching.multi_person as multiperson
+import posematching.calcAngle as calcAngle
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
 
+Singleposes = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
 multipose = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/fotos/'
 poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
 data = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/json/'
@@ -63,11 +65,12 @@ def find_matches_with(pose):
         print ("find_matches_with has wrong input")
 
 def test_script():
-    pose = "00100"
-    model = poses+pose+"/json/"+pose+".json"
-    model_features = common.parse_JSON_multi_person(model)
-    input = poses+pose+"/json/01179.json"
 
+    model = data+"00100_keypoints.json"
+    model_features = common.parse_JSON_multi_person(model)
+
+    input = data+"00100_keypoints.json"
+    input_features = common.parse_JSON_multi_person(input)
     global eucl_dis_tresh_torso
     global rotation_tresh_torso
     global eucl_dis_tresh_legs
@@ -83,6 +86,7 @@ def test_script():
     input_features = common.parse_JSON_multi_person(input)
     (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
     print (result)
+    print (error_score)
 
 def check_matches(pose):
     global eucl_dis_tresh_torso
@@ -127,7 +131,7 @@ def check_matches(pose):
             true_negative = true_negative +1
 
     precision = 0
-    recall =0
+    recall = 0
     if (true_positive+false_positive) !=0:
         precision = true_positive / (true_positive+false_positive)
     if  (true_positive+false_negative) !=0:
@@ -198,11 +202,12 @@ def rename_files():
         os.system("cp "+foto+" "+galabalfotos+str(i)+".jpg")
 
 def replace_json_files(pose):
-    for foto in glob.iglob(poses+pose+"/fotosfout/*"):
+    for foto in glob.iglob(poses+pose+"/fotos/*"):
+        print(foto)
         foto = foto.split(".")[0];
-        foto = foto.replace("fotosfout","json")
+        foto = foto.replace("fotos","json")
         foto = foto +".json"
-        os.system("mv "+foto+" "+poses+pose+"/jsonfout/  2>/dev/null")
+        os.system("mv "+foto+" "+poses+pose+"/json/  2>/dev/null")
 
 #**************************************precision recall********************************************
 def calculate_pr(pose,error_score_tresh):
@@ -210,8 +215,9 @@ def calculate_pr(pose,error_score_tresh):
     path = poses+pose
     model = path+"/json/"+pose+".json"
     '''
+    poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
     pose = "1"
-    path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
+    path = poses+pose
     model = path+"/json/0.json"
     model_features = common.parse_JSON_multi_person(model)
 
@@ -226,10 +232,10 @@ def calculate_pr(pose,error_score_tresh):
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if error_score < error_score_tresh:
             true_positive = true_positive +1
-            print ("score is: "+str(error_score))
+            #print ("score is: "+str(error_score))
         else:
             false_negative = false_negative +1
-            print ("error at: "+json)
+            #print ("error at: "+json)
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
         #print (json)
@@ -237,9 +243,128 @@ def calculate_pr(pose,error_score_tresh):
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if error_score < error_score_tresh:
             false_positive = false_positive +1
-            print ("error at: "+json)
+            #print ("error at: "+json)
         else:
             true_negative = true_negative +1
+
+    pose = "2"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    pose = "3"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "4"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "5"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "6"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+#//////////////////////////////////////////////check for pose5
+    pose = "2"
+    path = poses+pose
+    model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            true_positive = true_positive +1
+            #print ("score is: "+str(error_score))
+        else:
+            false_negative = false_negative +1
+            #print ("error at: "+json)
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    pose = "5"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    pose = "3"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "4"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
 
     precision = 0
     recall =0
@@ -257,6 +382,7 @@ def calculate_pr(pose,error_score_tresh):
     print ("false_negative: "+ str(false_negative))
     print ("recall: "+ str(recall))
     print ("precision: "+ str(precision))
+    print ("error_score_tresh: "+str(error_score_tresh))
 
     return (precision,recall)
 
@@ -272,26 +398,41 @@ def make_pr_curve(pose):
     eucl_dis_tresh_legs= 0.05
     rotation_tresh_legs= 14.527
     eucld_dis_shoulders_tresh= 0.085
-    '''
-    SP_DISTANCE_TORSO = 0.18 # 0.098
-    SP_ROTATION_TORSO = 19
 
-    SP_DISTANCE_LEGS = 0.058
-    SP_ROTATION_LEGS = 24   # 14.527
-
-    SP_DISTANCE_SHOULDER = 0.125
-    '''
-    '''
-    start_eucl_dis_tresh_torso= 0.0 #=>0.13
-    start_rotation_tresh_torso=  19#=> 14
-    start_eucl_dis_tresh_legs= 0.06 #=> 0.09
-    start_rotation_tresh_legs= 25#=>18
-    start_eucld_dis_shoulders_tresh= 0.2 #=>0.12
-    '''
     precisions = [];
     recalls = []
-    error_tresh = 0
-    for i in range(0,500):
+    start_error_tresh = 0
+    for i in range(0,60):
+        error_tresh = start_error_tresh + 0.02*i
+        (precision,recall) = calculate_pr(pose,error_tresh)
+        precisions.append(precision)
+        recalls.append(recall)
+
+    return (precisions,recalls)
+
+
+def draw_pr_curve():
+    (precission,recall) = make_pr_curve("1")
+    (angle_precission,angle_recall) = make_pr_curve_angle("1")
+    plt.plot(recall,precission)
+    plt.plot(angle_recall, angle_precission)
+
+    plt.legend(['Affine transformation', 'Angle script'], loc='center left')
+    plt.ylabel('precision')
+    plt.xlabel('recall')
+    plt.title('Pr curve of pose : 1')
+    plt.axis([0,1,0,1])
+    plt.legend()
+
+    plt.show()
+
+#**********************************pr curve angles*******************************
+def make_pr_curve_angle(pose):
+
+    precisions = [];
+    recalls = []
+    start_error_tresh = 0
+    for i in range(0,100):
         '''
         eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
         rotation_tresh_torso= start_rotation_tresh_torso +(i*0.2)
@@ -299,20 +440,204 @@ def make_pr_curve(pose):
         rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
         eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
         '''
-        error_tresh = error_tresh + 0.01*i
-        (precision,recall) = calculate_pr(pose,error_tresh)
+        error_tresh = start_error_tresh + 0.6*i
+        (precision,recall) = calculate_pr_angle(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
 
-    draw_pr_curve(precisions,recalls, pose)
+    return (precisions,recalls)
 
+def calculate_pr_angle(pose,error_score_tresh):
+    '''
+    path = poses+pose
+    model = path+"/json/"+pose+".json"
+    '''
+    poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
+    pose = "1"
+    path = poses+pose
+    model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
 
-def draw_pr_curve(precision, recall, pose):
-    plt.plot(recall,precision)
-    plt.ylabel('precision')
-    plt.xlabel('recall')
-    plt.title('Pr curve of pose : '+pose)
-    plt.axis([0,1,0,1])
-    plt.legend()
+    true_positive =0
+    false_positive =0
+    true_negative =0
+    false_negative =0
 
-    plt.show()
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            true_positive = true_positive +1
+            #print ("score is: "+str(error_score))
+        else:
+            false_negative = false_negative +1
+            #print ("error at: "+json)
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "2"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    pose = "3"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "4"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "5"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "6"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+#///////////////////////check for pose5
+    pose = "2"
+    path = poses+pose
+    model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            true_positive = true_positive +1
+            #print ("score is: "+str(error_score))
+        else:
+            false_negative = false_negative +1
+            #print ("error at: "+json)
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "5"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    pose = "3"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    pose = "4"
+    path = poses+pose
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        primary_angles = calcAngle.prepareangles(model_features)
+        secondary_angles = calcAngle.prepareangles(input_features)
+        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        if result:
+            false_positive = false_positive +1
+            #print ("error at: "+json)
+        else:
+            true_negative = true_negative +1
+    precision = 0
+    recall =0
+    if (true_positive+false_positive) !=0:
+        precision = true_positive / (true_positive+false_positive)
+    if  (true_positive+false_negative) !=0:
+        recall = true_positive / (true_positive+false_negative)
+
+    #******** print small raport ******************
+
+    print ("*************raport of pose "+pose+" ****************")
+    print ("true_positive: " + str(true_positive))
+    print ("false_positive: "+ str(false_positive))
+    print ("true_negative: " + str(true_negative))
+    print ("false_negative: "+ str(false_negative))
+    print ("recall: "+ str(recall))
+    print ("precision: "+ str(precision))
+    print ("error_score_tresh: "+str(error_score_tresh))
+
+    return (precision,recall)

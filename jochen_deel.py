@@ -27,8 +27,10 @@ dataset.check_matches("00100")
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()
 '''
+'''
+dataset.replace_json_files("1")
+'''
 #*********************galabal*********************
-
 '''
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()
@@ -45,4 +47,4 @@ dataset.check_galabal_matches("4")
 #**************************pr curves*********************
 
 logging.basicConfig(level=logging.ERROR)
-dataset.make_pr_curve("00100")
+dataset. draw_pr_curve()
