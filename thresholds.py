@@ -1,6 +1,7 @@
 #lel
 
 '''------- SINGLE POSE PARAMETERS -----------'''
+SP_DISTANCE_FACE = 1
 SP_DISTANCE_TORSO = 0.18 # 0.098
 SP_ROTATION_TORSO = 19
 

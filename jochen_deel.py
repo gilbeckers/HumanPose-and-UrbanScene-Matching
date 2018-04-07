@@ -28,21 +28,24 @@ logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()
 '''
 #*********************galabal*********************
-
 '''
+dataset.rename_files()
+'''
+
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()
-'''
+
 '''
 logging.basicConfig(level=logging.INFO)
-dataset.find_galabal_matches("1")
+dataset.find_galabal_matches()
 '''
 '''
-logging.basicConfig(level=logging.DEBUG)
-dataset.check_galabal_matches("4")
-'''
-
-#**************************pr curves*********************
-
 logging.basicConfig(level=logging.ERROR)
-dataset.make_pr_curve("00100")
+dataset.check_galabal_matches("14")
+
+'''
+#**************************pr curves*********************
+'''
+logging.basicConfig(level=logging.ERROR)
+dataset.draw_pr_curve("00100")
+'''

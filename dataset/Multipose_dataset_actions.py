@@ -13,11 +13,29 @@ poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
 data = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/json/'
 poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
 
-galabal = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/poses/'
-galabaljson = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/json/'
-galabalfotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/'
+galabal_18 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/poses/'
+galabal_18_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/json/'
+galabal_18_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/'
 
+galabal_17 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/poses/'
+galabal_17_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/json/'
+galabal_17_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/fotos/'
 
+galabal_economica = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/poses/'
+galabal_economica_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/json/'
+galabal_economica_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/fotos/'
+
+galabal_medica = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/poses/'
+galabal_medica_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/json/'
+galabal_medica_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/fotos/'
+
+galabal_medica2 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/poses/'
+galabal_medica2_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/json/'
+galabal_medica2_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/fotos/'
+
+galabal_psycho = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/poses/'
+galabal_psycho_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/json/'
+galabal_psycho_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/fotos/'
 
 #pose should look like 00100
 def find_matches_with(pose):
@@ -63,26 +81,19 @@ def find_matches_with(pose):
         print ("find_matches_with has wrong input")
 
 def test_script():
-    pose = "00100"
-    model = poses+pose+"/json/"+pose+".json"
+    pose = "7"
+    galabal = galabal_medica
+    galabaljson = galabal_medica_json
+
+    model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
-    input = poses+pose+"/json/01179.json"
 
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
-
-    eucl_dis_tresh_torso= 0.18
-    rotation_tresh_torso= 19
-    eucl_dis_tresh_legs= 0.058
-    rotation_tresh_legs= 24
-    eucld_dis_shoulders_tresh= 0.125
-
+    input = galabaljson+"7.json"
     input_features = common.parse_JSON_multi_person(input)
+
     (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
     print (result)
+    print (error_score)
 
 def check_matches(pose):
     global eucl_dis_tresh_torso
@@ -147,7 +158,11 @@ def check_matches(pose):
 
 
 #***********************************galabal dataset_actions*********************************
-def find_galabal_matches(pose):
+def find_galabal_matches():
+    pose = "7"
+    galabal = galabal_medica
+    galabaljson = galabal_medica_json
+
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
     count = 0
@@ -174,6 +189,7 @@ def find_galabal_matches(pose):
     print ("there are "+str(count)+" matches found")
 
 def check_galabal_matches(pose):
+    galabal = galabal_18
     model = galabal+pose+"/json/"+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
     count =0
@@ -183,36 +199,45 @@ def check_galabal_matches(pose):
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
         if result == False:
             count = count +1
-            print ("error at: "+json)
-    print (str(count)+" foto's werden niet meer herkend")
+            #print ("error at: "+json)
+    print (str(count)+" false negatives")
+    count = 0
+    for json in glob.iglob(galabal+pose+"/jsonfout/*.json"):
+        logger.info(json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+        if result == True:
+            count = count +1
+            #print ("error at: "+json)
+    print (str(count)+" false positves")
 
 #*****************************************logic*********************************************
 def rename_files():
     i=0
-    for json in glob.iglob(galabal+"*_keypoints.json"):
+    foto_path = galabal_17_fotos
+    json_path = galabal_17_json
+    for json in glob.iglob(json_path+"*_keypoints.json"):
         i = i+1
-        os.system("cp "+json+" "+galabal+str(i)+".json")
+        os.system("mv "+json+" "+json_path+str(i)+".json")
         foto = json.split("_keypoints")[0];
         foto = foto.replace("json","fotos")
         foto = foto +".jpg"
-        os.system("cp "+foto+" "+galabalfotos+str(i)+".jpg")
+        os.system("cp "+foto+" "+foto_path+str(i)+".jpg")
 
 def replace_json_files(pose):
-    for foto in glob.iglob(poses+pose+"/fotosfout/*"):
+    path = galabal+pose
+    for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
         foto = foto.replace("fotosfout","json")
         foto = foto +".json"
-        os.system("mv "+foto+" "+poses+pose+"/jsonfout/  2>/dev/null")
+        os.system("mv "+foto+" "+path+"/jsonfout/ ")
 
 #**************************************precision recall********************************************
 def calculate_pr(pose,error_score_tresh):
-    '''
+
     path = poses+pose
     model = path+"/json/"+pose+".json"
-    '''
-    pose = "1"
-    path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
-    model = path+"/json/0.json"
+
     model_features = common.parse_JSON_multi_person(model)
 
     true_positive =0
@@ -226,10 +251,10 @@ def calculate_pr(pose,error_score_tresh):
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if error_score < error_score_tresh:
             true_positive = true_positive +1
-            print ("score is: "+str(error_score))
+
         else:
             false_negative = false_negative +1
-            print ("error at: "+json)
+
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
         #print (json)
@@ -237,7 +262,6 @@ def calculate_pr(pose,error_score_tresh):
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
         if error_score < error_score_tresh:
             false_positive = false_positive +1
-            print ("error at: "+json)
         else:
             true_negative = true_negative +1
 
@@ -257,58 +281,26 @@ def calculate_pr(pose,error_score_tresh):
     print ("false_negative: "+ str(false_negative))
     print ("recall: "+ str(recall))
     print ("precision: "+ str(precision))
-
+    print ("error_score_tresh: "+str(error_score_tresh))
     return (precision,recall)
 
 def make_pr_curve(pose):
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
 
-    eucl_dis_tresh_torso= 0.098
-    rotation_tresh_torso= 10.847
-    eucl_dis_tresh_legs= 0.05
-    rotation_tresh_legs= 14.527
-    eucld_dis_shoulders_tresh= 0.085
-    '''
-    SP_DISTANCE_TORSO = 0.18 # 0.098
-    SP_ROTATION_TORSO = 19
-
-    SP_DISTANCE_LEGS = 0.058
-    SP_ROTATION_LEGS = 24   # 14.527
-
-    SP_DISTANCE_SHOULDER = 0.125
-    '''
-    '''
-    start_eucl_dis_tresh_torso= 0.0 #=>0.13
-    start_rotation_tresh_torso=  19#=> 14
-    start_eucl_dis_tresh_legs= 0.06 #=> 0.09
-    start_rotation_tresh_legs= 25#=>18
-    start_eucld_dis_shoulders_tresh= 0.2 #=>0.12
-    '''
     precisions = [];
     recalls = []
-    error_tresh = 0
-    for i in range(0,500):
-        '''
-        eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
-        rotation_tresh_torso= start_rotation_tresh_torso +(i*0.2)
-        eucl_dis_tresh_legs= start_eucl_dis_tresh_legs +(i*0.001)
-        rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
-        eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
-        '''
-        error_tresh = error_tresh + 0.01*i
+    error_tresh_start = 0
+    for i in range(0,100):
+        error_tresh = error_tresh_start + 0.05*i
         (precision,recall) = calculate_pr(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
 
-    draw_pr_curve(precisions,recalls, pose)
+    return (precisions,recalls)
 
 
-def draw_pr_curve(precision, recall, pose):
-    plt.plot(recall,precision)
+def draw_pr_curve(pose):
+    (precisions,recalls) = make_pr_curve(pose)
+    plt.plot(recalls,precisions)
     plt.ylabel('precision')
     plt.xlabel('recall')
     plt.title('Pr curve of pose : '+pose)

@@ -110,19 +110,15 @@ def match_single(model_features, input_features, normalise=True):
         return result
 
     ######### THE THRESHOLDS #######
-    '''
+    eucl_dis_tresh_face = thresholds.SP_DISTANCE_FACE
     eucl_dis_tresh_torso = thresholds.SP_DISTANCE_TORSO
     rotation_tresh_torso = thresholds.SP_ROTATION_TORSO
     eucl_dis_tresh_legs = thresholds.SP_DISTANCE_LEGS
     rotation_tresh_legs = thresholds.SP_ROTATION_LEGS
     eucld_dis_shoulders_tresh =thresholds.SP_DISTANCE_SHOULDER
-    '''
 
-    eucl_dis_tresh_torso =  dataset.eucl_dis_tresh_torso
-    rotation_tresh_torso =  dataset.rotation_tresh_torso
-    eucl_dis_tresh_legs =  dataset.eucl_dis_tresh_legs
-    rotation_tresh_legs =  dataset.rotation_tresh_legs
-    eucld_dis_shoulders_tresh =  dataset.eucld_dis_shoulders_tresh
+
+
 
     ################################
 

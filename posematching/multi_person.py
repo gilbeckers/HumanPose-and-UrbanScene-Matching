@@ -21,7 +21,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     # Some safety checks first ..
     if (len(input_poses) == 0 or len(model_poses) == 0):
         logger.debug("FAIL: Multi person match failed. Inputposes or modelposes are empty")
-        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+        return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None)
 
     # Then check if there are equal or more input poses than model poses
     # When the amount of input poses is smaller than model poses a global match FAILED is decided
@@ -30,7 +30,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     #       -> TODO: ? foreground detection necessary (in case less models than there are inputs)  NOT SURE ...
     if (len(input_poses) < len(model_poses)):
         logger.debug("FAIL: Multi person match failed. Amount of input poses < model poses")
-        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+        return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None)
 
     # When there are more inputposes than modelsposes, print warning
     # I this case pose match still needs to proceed,
@@ -57,21 +57,21 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
                                     input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??
                                     matching_permutations=result_single)
         else:
-            return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None )
+            return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None )
 
     matches_dict, ordered_model_poses, ordered_input_poses = find_ordered_matches(model_poses,input_poses)
 
     logger.debug("matches found %s", str(matches_dict))
     if matches_dict == None:
         logger.debug("FAIL: No ordered matches found")
-        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+        return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None)
     else: # override poses with the ordered ones
         model_poses = ordered_model_poses
         input_poses = ordered_input_poses
 
     if input_pose_solo_multiple_times(matches_dict, len(input_poses)):
         logger.debug("FAIL: An inputpose is linked to multiple modelpose as only possible match => global fail (injection remember)")
-        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+        return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None)
 
 
 
@@ -79,6 +79,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     allInputs = sorted(matches_dict)
     combinations = list(itertools.product(*(matches_dict[Name] for Name in allInputs)))
     result_permuations = {}
+    min_error = 10
     for permutation in combinations:
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
@@ -105,7 +106,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         # not enough corresponding points  #TODO voor wa is dit?
         if not (len(input_transformed_combined) > 0):
             logger.debug("--> Matching permutation %s : FAIL: not enough corresponding points between model and input", permutation)
-            result = MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+            result = MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None)
             return result
 
         # Calc the affine trans of the whole
@@ -125,7 +126,9 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         logger.debug("shape model_pose %s", str(updated_models_combined.shape))
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
-
+        if max_eucl_distance < min_error:
+            min_error= max_eucl_distance
+        
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
                 "score" : max_eucl_distance ,
@@ -143,11 +146,12 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
     #logger.debug("result scores: " , result_permuations)
 
     # If result_permutations is still empty, no match was found so return false
+
+
     if result_permuations:
-        return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)
+        return MatchResultMulti(True, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
-    return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=result_permuations)
-
+    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
 
 
