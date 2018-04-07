@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from common import feature_scaling, handle_undetected_points, \
     split_in_face_legs_torso, find_transformation, unsplit, split_in_face_legs_torso_v2
-from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
+#from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
 import thresholds
 import posematching.pose_comparison as pose_comparison
 logger = logging.getLogger("single_person")
@@ -164,8 +164,14 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
     if (np.count_nonzero(model_legs) > 8):
         if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 2:
+<<<<<<< HEAD
             (result_legs,rotation_legs) = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,eucl_dis_tresh_legs, rotation_tresh_legs)
             logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
+=======
+            result_legs = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,
+                                                      eucl_dis_tresh_legs, rotation_tresh_legs)
+            #logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
+>>>>>>> master
         else:
             logger.debug("Model has more legs feature then input therefore not matched %d", (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) )
             result_legs = False
