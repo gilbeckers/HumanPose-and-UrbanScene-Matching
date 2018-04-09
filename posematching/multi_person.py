@@ -126,6 +126,11 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
 
+        if plot:
+            (full_transformation_nonorm, A_matrix) = find_transformation(updated_models_combined_nonorm, input_transformed_combined_nonorm)
+            plot_match(updated_models_combined_nonorm, input_transformed_combined_nonorm, full_transformation_nonorm, model_image, input_image)
+
+
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
                 "score" : max_eucl_distance ,
@@ -147,8 +152,6 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         return MatchResultMulti(True, error_score=0, input_transformation=None, matching_permutations=result_permuations)
 
     return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=result_permuations)
-
-
 
 
 def find_ordered_matches(model_poses,input_poses):
@@ -260,7 +263,7 @@ def plot_match(model_features, input_features, input_transform_features, model_i
     ax3.plot(*zip(*model_features), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transform_features), marker='o', color='blue', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='magenta', label='Model'), mpatches.Patch(color='blue', label='Input transformed')])
-    plt.draw()
-    #plt.show()
+    #plt.draw()
+    #plt.show(block=True)
 
     return
