@@ -8,6 +8,7 @@ from urbanscene.features import  max_euclidean_distance, euclidean_distance
 import common
 import thresholds
 import random
+import plot_vars
 
 def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img, plot=False):
     # we assume input_pose and model_pose contain same amount of features, as we would also expected in this stage of pipeline
@@ -88,12 +89,12 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
 
     return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
-def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image_height, model_image_width, label, model_img, input_img, plot=False):
+def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image_height, model_image_width,input_image_h, input_image_w, label, model_img, persp_input_img, input_pose_org, plot=False):
 
     # include some random features of background:
     #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
     #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))
-
+    model_pose_org = np.copy(model_pose)
     random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
     model_pose = [np.array(model_pose)]
     input_pose = [np.array(input_pose)]
@@ -122,6 +123,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
 
     # Norm manier 2: image_resolution normaliseren
     model_features_norm = common.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
+    #input_features_trans_norm = common.scene_feature_scaling(input_transformed, input_image_w, input_image_h)
     input_features_trans_norm = common.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
 
     # f, (ax1) = plt.subplots(1, 1, sharey=True, figsize=(14, 6))
@@ -144,37 +146,93 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
 
     markersize = 3
+    fs= 8  #fontsize
     if plot:
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
-        implot = ax1.imshow(np.asarray(model_img), cmap='gray')
-        # ax1.set_title(model_image_name + ' (model)')
-        ax1.set_title("model")
-        ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        red_patch = mpatches.Patch(color='magenta', label='model')
-        ax1.legend(handles=[red_patch])
+        # --- First row plot ---
+        plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+        f = plt.figure(figsize=(10, 8))
 
-        # ax2.set_title(input_image_name + ' (input)')
-        ax2.set_title("input")
-        ax2.imshow(np.asarray(input_img), cmap='gray')
-        ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
-        ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
-        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-        ax3.set_title("aff split() " + label)
-        ax3.imshow(np.asarray(model_img), cmap='gray')
-        ax3.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+        f.suptitle("US matching | score="+ str(round(max_euclidean_error_norm,4)) + " (thresh=ca " + str(thresholds.AFFINE_TRANS_WHOLE_DISTANCE) +" )", fontsize=10)
+        plt.subplot(2, 2, 1)
+        plt.imshow(np.asarray(plain_input_img), cmap='gray')
+        plt.title("input: " + plot_vars.input_name, fontsize=fs)
+        plt.plot(*zip(*input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+        plain_model_img = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
+        plt.subplot(2, 2, 2)
+        plt.imshow(np.asarray(plain_model_img), cmap='gray')
+        plt.title("model: " + plot_vars.model_name, fontsize=fs)
+        plt.plot(*zip(*model_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+        # --- Second row plot ---
+        #f.set_figheight(20)
+        plt.subplot(2, 3, 4)
+        plt.imshow(np.asarray(persp_input_img), cmap='gray')
+        #plt.axis('off')
+        plt.title("corrected input", fontsize=fs)
+        plt.plot(*zip(*p_input_good), marker='o', color='r', label='features', ls='', ms=markersize)
+        plt.plot(*zip(*input_pose), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
+        plt.legend(fontsize=fs - 1)
+        #plt.legend(handles=[mpatches.Patch(color='red', label='features'),mpatches.Patch(color='blue', label='pose')])
+
+
+        plt.subplot(2, 3, 5)
+        plt.imshow(np.asarray(plain_model_img), cmap='gray')
+        plt.title("model", fontsize=fs)
+        #plt.axis('off')
+        plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
+        plt.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
+        #red_patch = mpatches.Patch(color='magenta', label='model')
+        #plt.legend(handles=[red_patch])
+        plt.legend(fontsize=fs - 1)
+
+        plt.subplot(2, 3, 6)
+        plt.imshow(np.asarray(model_img), cmap='gray')
+        plt.title("transform on model", fontsize=fs)
+        plt.axis('off')
+        plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
                  label='model',
-                 ms=markersize)  # ms = markersize
-        ax3.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='model',
-                 ms=markersize)  # ms = markersize
-        ax3.legend(handles=[mpatches.Patch(color='green', label='trans-input'),
-                            mpatches.Patch(color='magenta', label='model')])
+                 ms=markersize-1)  # ms = markersize
+        plt.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='input',
+                 ms=markersize-1)  # ms = markersize
+        #plt.legend(handles=[mpatches.Patch(color='green', label='trans-input'), mpatches.Patch(color='magenta', label='model')])
+        plt.legend(fontsize=fs-1)
 
-        # plt.tight_layout()
-        #plt.show(block=False)
+        plot_name= plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0]
+        plt.savefig('./plots/'+plot_name+'.png')
+
+        #f, axes = plt.subplots(2, )
+        #f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(16, 5))
+        # implot = ax1.imshow(np.asarray(model_img), cmap='gray')
+        # # ax1.set_title(model_image_name + ' (model)')
+        # ax1.set_title("model")
+        # ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # red_patch = mpatches.Patch(color='magenta', label='model')
+        # ax1.legend(handles=[red_patch])
+        #
+        # # ax2.set_title(input_image_name + ' (input)')
+        # ax2.set_title("input")
+        # ax2.imshow(np.asarray(input_img), cmap='gray')
+        # ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+        # ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+        # ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+        #
+        # ax3.set_title("aff split() " + label)
+        # ax3.imshow(np.asarray(model_img), cmap='gray')
+        # ax3.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+        #          label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax3.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax3.legend(handles=[mpatches.Patch(color='green', label='trans-input'),
+        #                     mpatches.Patch(color='magenta', label='model')])
+        #
+        # # plt.tight_layout()
+        # #plt.show(block=False)
 
     return max_euclidean_error_norm
 

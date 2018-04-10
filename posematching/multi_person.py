@@ -43,13 +43,16 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
         match_result_single = match_single(model_poses[0], input_poses[0], True)
 
+        # !!! BELANGRIJK!!  wordt ook gedaan in match_single(), maar maakt copy, dus hier opnieuw doen!!
+        (model_pose, input_pose) = handle_undetected_points(model_poses[0], input_poses[0])
+
         if match_result_single.match_bool:
             result_single = {}
             result_single[0] = {
                 "score": match_result_single.error_score,
-                "model": model_poses[0],
+                "model": model_pose, #model_poses[0],
                 # "model":updated_models_combined_nonorm,
-                "input": input_poses[0]
+                "input": input_pose, #input_poses[0]
                 # "input": input_transformed_combined_nonorm
             }
             return MatchResultMulti(match_result_single.match_bool,
@@ -244,9 +247,13 @@ def plot_match(model_features, input_features, input_transform_features, model_i
     # plot vars
     markersize = 2
 
-    # Load images
-    model_image = plt.imread(model_image_name)
-    input_image = plt.imread(input_image_name)
+    # Load images , if model_image_name is of type string => it's a path, so read the image in mem
+    if isinstance(model_image_name, str):
+        model_image = plt.imread(model_image_name)
+        input_image = plt.imread(input_image_name)
+    else:
+        model_image = model_image_name  # plt.imread(model_image_name)
+        input_image = input_image_name  # plt.imread(input_image_name)
 
     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
     implot = ax1.imshow(model_image)

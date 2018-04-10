@@ -13,8 +13,8 @@ images_data_path = '../img/galabal2018/fotos/' #'../img/'
 -------------------- MULTI PERSON -------------------------------------
 '''
 
-model = "117" #"duo3"
-input = "62"  #"duo4"
+model = "15" #"duo3"
+input = "16"  #"duo4"
 model_json = json_data_path + model + '.json'
 input_json = json_data_path + input + '.json'
 model_image = images_data_path + model + '.jpg'
