@@ -6,3 +6,5 @@ input_path = ""
 
 model_image = ""
 input_image = ""
+
+write_img = False

@@ -2,9 +2,9 @@
 from os import walk
 import os
 
-path = "img/bull/"
-new_name = 'bull'
+path = "json_bull/" #"img/bull/"
 
+new_name = 'bull'
 start_counter = 1
 
 # Read all files in dir
@@ -15,7 +15,13 @@ for (dirpath, dirnames, filenames) in walk(path):
 
 for img_file in f:
     print(path + img_file)
-    os.rename(path + img_file, path + new_name + str(start_counter) + '.jpg')
-    start_counter = start_counter+1
+    # rename pictures
+    #os.rename(path + img_file, path + new_name + str(start_counter) + '.jpg')
+    #start_counter = start_counter+1
+
+    # rename jsons
+    new_name = str(img_file).split("_")[0]
+    os.rename(path + img_file, path + new_name +  '.json')
+    # start_counter = start_counter+1
 
 

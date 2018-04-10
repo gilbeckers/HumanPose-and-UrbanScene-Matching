@@ -7,6 +7,7 @@ This module contains some common routines used by other samples.
 # Python 2/3 compatibility
 from __future__ import print_function
 import sys
+import thresholds
 PY3 = sys.version_info[0] == 3
 
 if PY3:
@@ -225,7 +226,7 @@ def parse_JSON_multi_person(filename):
         array = np.zeros((18, 2))
         arrayIndex = 0
         for i in range(0, len(person_keypoints), 3):
-            if person_keypoints[i+2]> 0.18:  # was 0.25 was 0.4
+            if person_keypoints[i+2]> thresholds.OPENPOSE_ZEKERHEID:  # 0.18 was 0.25 was 0.4
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:

@@ -199,8 +199,9 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         #plt.legend(handles=[mpatches.Patch(color='green', label='trans-input'), mpatches.Patch(color='magenta', label='model')])
         plt.legend(fontsize=fs-1)
 
-        plot_name= plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0]
-        plt.savefig('./plots/'+plot_name+'.png')
+        if plot_vars.write_img:
+            plot_name= plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0]
+            plt.savefig('./plots/'+plot_name+'.png')
 
         #f, axes = plt.subplots(2, )
         #f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(16, 5))
