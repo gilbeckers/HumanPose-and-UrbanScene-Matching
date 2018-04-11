@@ -215,7 +215,7 @@ def calculate_pr(pose,error_score_tresh):
     path = poses+pose
     model = path+"/json/"+pose+".json"
     '''
-    poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
+    poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
     pose = "1"
     path = poses+pose
     model = path+"/json/0.json"
@@ -452,7 +452,7 @@ def calculate_pr_angle(pose,error_score_tresh):
     path = poses+pose
     model = path+"/json/"+pose+".json"
     '''
-    poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
+    poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
     pose = "1"
     path = poses+pose
     model = path+"/json/0.json"
