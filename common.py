@@ -229,11 +229,7 @@ def parse_JSON_multi_person(filename):
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
-<<<<<<< HEAD
                 #logger.warning("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
-=======
-                logger.debug("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
->>>>>>> master
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
