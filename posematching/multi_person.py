@@ -128,7 +128,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
         if max_eucl_distance < min_error:
             min_error= max_eucl_distance
-        
+
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
                 "score" : max_eucl_distance ,

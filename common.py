@@ -22,6 +22,7 @@ logger = logging.getLogger("common")
 import os
 import itertools as it
 from contextlib import contextmanager
+import thresholds
 
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
@@ -224,8 +225,9 @@ def parse_JSON_multi_person(filename):
         # 18 3D coordinatenkoppels (joint-points)
         array = np.zeros((18, 2))
         arrayIndex = 0
+
         for i in range(0, len(person_keypoints), 3):
-            if person_keypoints[i+2]> 0.18:  # was 0.25 was 0.4
+            if person_keypoints[i+2]> thresholds.CP_ACCURACY:
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
@@ -296,16 +298,16 @@ def handle_undetected_points(input_features, model_features):
     # is a danger for our current normalisation
     # These particular origin points should not influence the normalisation
     # (which they do if we neglect them, xmin and ymin you know ... )
-    if np.any(input_features[:] == [0, 0]):
-        counter = 0
-        for feature in input_features:
-            if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
-                model_features_copy[counter][0] = 0
-                model_features_copy[counter][1] = 0
-                # input_features[counter][0] = 0#np.nan
-                # input_features[counter][1] = 0#np.nan
-            counter = counter + 1
+    # if np.any(input_features[:] == [0, 0]):
+    #     counter = 0
+    #     for feature in input_features:
+    #         if feature[0] == 0 and feature[1] == 0:  # (0,0)
+    #             #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
+    #             model_features_copy[counter][0] = 0
+    #             model_features_copy[counter][1] = 0
+    #             # input_features[counter][0] = 0#np.nan
+    #             # input_features[counter][1] = 0#np.nan
+    #         counter = counter + 1
 
     # In this second version, the model is allowed to have undetected features
     if np.any(model_features[:] == [0, 0]):

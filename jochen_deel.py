@@ -31,19 +31,18 @@ dataset.test_script()
 '''
 dataset.rename_files()
 '''
-
+'''
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script()
-
+'''
 '''
 logging.basicConfig(level=logging.INFO)
 dataset.find_galabal_matches()
 '''
-'''
+
 logging.basicConfig(level=logging.ERROR)
 dataset.check_galabal_matches("14")
 
-'''
 #**************************pr curves*********************
 '''
 logging.basicConfig(level=logging.ERROR)

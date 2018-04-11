@@ -8,35 +8,35 @@ import posematching.multi_person
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
+schijfnaam = '/media/jochen/2FCA69D53AB1BFF42'
+multipose = schijfnaam+'dataset/Multipose/fotos/'
+poses = schijfnaam+'/dataset/Multipose/poses/'
+data = schijfnaam+'/dataset/Multipose/json/'
+poses = schijfnaam+'/dataset/Multipose/poses/'
 
-multipose = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/fotos/'
-poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
-data = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/json/'
-poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
+galabal_18 = schijfnaam+'/dataset/galabal2018/poses/'
+galabal_18_json = schijfnaam+'/dataset/galabal2018/json/'
+galabal_18_fotos = schijfnaam+'/dataset/galabal2018/fotos/'
 
-galabal_18 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/poses/'
-galabal_18_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/json/'
-galabal_18_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/fotos/'
+galabal_17 = schijfnaam+'/dataset/galabal2017/poses/'
+galabal_17_json = schijfnaam+'/dataset/galabal2017/json/'
+galabal_17_fotos = schijfnaam+'/dataset/galabal2017/fotos/'
 
-galabal_17 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/poses/'
-galabal_17_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/json/'
-galabal_17_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2017/fotos/'
+galabal_economica = schijfnaam+'/dataset/galabal_Ekonomica/poses/'
+galabal_economica_json = schijfnaam+'/dataset/galabal_Ekonomica/json/'
+galabal_economica_fotos = schijfnaam+'/dataset/galabal_Ekonomica/fotos/'
 
-galabal_economica = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/poses/'
-galabal_economica_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/json/'
-galabal_economica_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Ekonomica/fotos/'
+galabal_medica = schijfnaam+'/dataset/galabal_Medica/poses/'
+galabal_medica_json = schijfnaam+'/dataset/galabal_Medica/json/'
+galabal_medica_fotos = schijfnaam+'/dataset/galabal_Medica/fotos/'
 
-galabal_medica = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/poses/'
-galabal_medica_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/json/'
-galabal_medica_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica/fotos/'
+galabal_medica2 = schijfnaam+'/dataset/galabal_Medica2/poses/'
+galabal_medica2_json = schijfnaam+'/dataset/galabal_Medica2/json/'
+galabal_medica2_fotos = schijfnaam+'/dataset/galabal_Medica2/fotos/'
 
-galabal_medica2 = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/poses/'
-galabal_medica2_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/json/'
-galabal_medica2_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_Medica2/fotos/'
-
-galabal_psycho = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/poses/'
-galabal_psycho_json = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/json/'
-galabal_psycho_fotos = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal_psycho/fotos/'
+galabal_psycho = schijfnaam+'/dataset/galabal_psycho/poses/'
+galabal_psycho_json = schijfnaam+'/dataset/galabal_psycho/json/'
+galabal_psycho_fotos = schijfnaam+'/dataset/galabal_psycho/fotos/'
 
 #pose should look like 00100
 def find_matches_with(pose):
@@ -81,20 +81,7 @@ def find_matches_with(pose):
     else:
         print ("find_matches_with has wrong input")
 
-def test_script():
-    pose = "7"
-    galabal = galabal_medica
-    galabaljson = galabal_medica_json
 
-    model = galabaljson+pose+".json"
-    model_features = common.parse_JSON_multi_person(model)
-
-    input = galabaljson+"7.json"
-    input_features = common.parse_JSON_multi_person(input)
-
-    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
-    print (result)
-    print (error_score)
 
 def check_matches(pose):
     global eucl_dis_tresh_torso
@@ -156,7 +143,26 @@ def check_matches(pose):
     print ("precision: "+ str(precision))
 
 
+#*****************************************logic*********************************************
+def rename_files():
+    i=0
+    foto_path = galabal_17_fotos
+    json_path = galabal_17_json
+    for json in glob.iglob(json_path+"*_keypoints.json"):
+        i = i+1
+        os.system("mv "+json+" "+json_path+str(i)+".json")
+        foto = json.split("_keypoints")[0];
+        foto = foto.replace("json","fotos")
+        foto = foto +".jpg"
+        os.system("cp "+foto+" "+foto_path+str(i)+".jpg")
 
+def replace_json_files(pose):
+    path = galabal+pose
+    for foto in glob.iglob(path+"/fotosfout/*"):
+        foto = foto.split(".")[0];
+        foto = foto.replace("fotosfout","json")
+        foto = foto +".json"
+        os.system("mv "+foto+" "+path+"/jsonfout/ ")
 
 #***********************************galabal dataset_actions*********************************
 def find_galabal_matches():
@@ -195,12 +201,13 @@ def check_galabal_matches(pose):
     model_features = common.parse_JSON_multi_person(model)
     count =0
     for json in glob.iglob(galabal+pose+"/json/*.json"):
+
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
         if result == False:
             count = count +1
-            #print ("error at: "+json)
+            print ("error at: "+json)
     print (str(count)+" false negatives")
     count = 0
     for json in glob.iglob(galabal+pose+"/jsonfout/*.json"):
@@ -212,26 +219,23 @@ def check_galabal_matches(pose):
             #print ("error at: "+json)
     print (str(count)+" false positves")
 
-#*****************************************logic*********************************************
-def rename_files():
-    i=0
-    foto_path = galabal_17_fotos
-    json_path = galabal_17_json
-    for json in glob.iglob(json_path+"*_keypoints.json"):
-        i = i+1
-        os.system("mv "+json+" "+json_path+str(i)+".json")
-        foto = json.split("_keypoints")[0];
-        foto = foto.replace("json","fotos")
-        foto = foto +".jpg"
-        os.system("cp "+foto+" "+foto_path+str(i)+".jpg")
 
-def replace_json_files(pose):
-    path = galabal+pose
-    for foto in glob.iglob(path+"/fotosfout/*"):
-        foto = foto.split(".")[0];
-        foto = foto.replace("fotosfout","json")
-        foto = foto +".json"
-        os.system("mv "+foto+" "+path+"/jsonfout/ ")
+
+#****************************************test_script**********************
+def test_script():
+    pose = "14"
+    galabal = galabal_18
+    galabaljson = galabal_18_json
+
+    model = galabaljson+pose+".json"
+    model_features = common.parse_JSON_multi_person(model)
+
+    input = galabaljson+"96.json"
+    input_features = common.parse_JSON_multi_person(input)
+
+    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+    print (result)
+    print (error_score)
 
 #**************************************precision recall********************************************
 def calculate_pr(pose,error_score_tresh):
