@@ -1,4 +1,5 @@
-#lel
+'''------- COMMON PARAMETER ---------'''
+CP_ACCURACY = 0.1  # was 0.18 <-- 0.25 <-- 0.4
 
 '''------- SINGLE POSE PARAMETERS -----------'''
 SP_DISTANCE_TORSO = 0.18 # 0.098
