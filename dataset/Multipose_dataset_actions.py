@@ -154,9 +154,11 @@ def rename_files():
         foto = json.split("_keypoints")[0];
         foto = foto.replace("json","fotos")
         foto = foto +".jpg"
-        os.system("cp "+foto+" "+foto_path+str(i)+".jpg")
+        os.system("mv "+foto+" "+foto_path+str(i)+".jpg")
 
-def replace_json_files(pose):
+def replace_json_files():
+    pose = "14"
+    galabal = galabal_18
     path = galabal+pose
     for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
@@ -230,7 +232,7 @@ def test_script():
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"96.json"
+    input = galabaljson+"16.json"
     input_features = common.parse_JSON_multi_person(input)
 
     (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
