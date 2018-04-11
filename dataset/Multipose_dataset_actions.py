@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
 
-Singleposes = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'
-multipose = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/fotos/'
-poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
-data = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/json/'
-poses = '/media/jochen/2FCA69D53AB1BFF41/dataset/Multipose/poses/'
+Singleposes = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
+multipose = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/fotos/'
+poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/poses/'
+data = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/json/'
+poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/poses/'
 
 galabal = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/poses/'
 galabaljson = '/media/jochen/2FCA69D53AB1BFF41/dataset/galabal2018/json/'
