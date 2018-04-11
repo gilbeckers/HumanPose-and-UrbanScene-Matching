@@ -22,6 +22,7 @@ logger = logging.getLogger("common")
 import os
 import itertools as it
 from contextlib import contextmanager
+import thresholds
 
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
@@ -81,6 +82,7 @@ def find_transformation(model_features, input_features):
     # Solve the least squares problem X * A = Y
     # to find our transformation matrix A and then we can display the input on the model = Y'
     A, res, rank, s = np.linalg.lstsq(X, Y)
+    #logger.debug("Res: %s  rank %d  sing: %s", str(res), rank, str(s))
     transform = lambda x: unpad(np.dot(pad(x), A))
     input_transform = transform(input_features)
 
@@ -135,10 +137,8 @@ Description parse_JSON_single_person(filename)
 Parse the openpose json output and returns an numpy array of 18 rows (body -joint points / keypoints)
 so undetected body parts (openpose errors, labeled by openpose as (0,0) )
 -> stay (0,0) and can be identified in this way
-
 Parameters:
 @:param filename
-
 Returns:
 @:returns a numpy array containg 18 2D features
 '''
@@ -223,8 +223,9 @@ def parse_JSON_multi_person(filename):
         # 18 3D coordinatenkoppels (joint-points)
         array = np.zeros((18, 2))
         arrayIndex = 0
+
         for i in range(0, len(person_keypoints), 3):
-            if person_keypoints[i+2]> 0.18:  # was 0.25 was 0.4
+            if person_keypoints[i+2]> thresholds.CP_ACCURACY:
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
@@ -295,16 +296,16 @@ def handle_undetected_points(input_features, model_features):
     # is a danger for our current normalisation
     # These particular origin points should not influence the normalisation
     # (which they do if we neglect them, xmin and ymin you know ... )
-    if np.any(input_features[:] == [0, 0]):
-        counter = 0
-        for feature in input_features:
-            if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
-                model_features_copy[counter][0] = 0
-                model_features_copy[counter][1] = 0
-                # input_features[counter][0] = 0#np.nan
-                # input_features[counter][1] = 0#np.nan
-            counter = counter + 1
+    # if np.any(input_features[:] == [0, 0]):
+    #     counter = 0
+    #     for feature in input_features:
+    #         if feature[0] == 0 and feature[1] == 0:  # (0,0)
+    #             #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
+    #             model_features_copy[counter][0] = 0
+    #             model_features_copy[counter][1] = 0
+    #             # input_features[counter][0] = 0#np.nan
+    #             # input_features[counter][1] = 0#np.nan
+    #         counter = counter + 1
 
     # In this second version, the model is allowed to have undetected features
     if np.any(model_features[:] == [0, 0]):
@@ -640,7 +641,6 @@ def grouper(n, iterable, fillvalue=None):
 
 def mosaic(w, imgs):
     '''Make a grid from images.
-
     w    -- number of grid columns
     imgs -- images (must have same size and format)
     '''
@@ -666,6 +666,19 @@ def draw_keypoints(vis, keypoints, color = (0, 255, 255)):
         x, y = kp.pt
         cv.circle(vis, (int(x), int(y)), 2, color)
 
+
+def scene_feature_scaling(input, xmax, ymax):
+
+    xmin = 0
+    ymin = 0
+
+    sec_x = (input[:, 0] - xmin) / (xmax - xmin)
+    sec_y = (input[:, 1] - ymin) / (ymax - ymin)
+
+    output = np.vstack([sec_x, sec_y]).T
+    #output[output < 0] = 0
+    #logger.info("out: %s", str(output))
+    return output
 
 #Cut pose out of image
 def feature_scaling(input):
