@@ -229,7 +229,6 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
             continue
         error = 0
-        print(len(permutation))
         for model_index in range(0,len(permutation)-1):
             input_index = permutation[model_index]
             next_input_index = permutation[model_index+1]
@@ -242,18 +241,19 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
 
 
             model_x_max = max(model_pose[:, 0])
-            next_model_x_min = np.min(next_model_pose[np.nonzero(next_model_pose[:,0])])
+            next_model_x_min = np.min(next_model_pose[np.nonzero(next_model_pose[:,1])][:, 1])
             model_x_difference = model_x_max - next_model_x_min
 
             input_x_max = max(input_pose[:, 0])
-            next_input_x_min = np.min(next_input_pose[np.nonzero(next_input_pose[:,0])])
+            next_input_x_min = np.min(next_input_pose[np.nonzero(next_input_pose[:,1])][:, 1])
             input_x_difference = input_x_max - next_input_x_min
 
             error = error + abs(model_x_difference-input_x_difference)
-            print("model difference: "+str(model_x_difference))
-            print("input_difference: "+str(input_x_difference))
-            print("error: "+str(error))
+            logger.warning("model difference: "+str(model_x_difference))
+            logger.warning("input_difference: "+str(input_x_difference))
+            logger.warning("error: "+str(error)+" (with tresh: "+str(thresholds.MP_ERROR_DISTANCE)+")")
 
+        error = error/ (len(permutation)-1)
         if error < min_error:
             min_error= error
 

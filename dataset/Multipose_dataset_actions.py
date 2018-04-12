@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
 schijfnaam = '/media/jochen/2FCA69D53AB1BFF42'
-multipose = schijfnaam+'dataset/Multipose/fotos/'
-poses = schijfnaam+'/dataset/Multipose/poses/'
-data = schijfnaam+'/dataset/Multipose/json/'
-poses = schijfnaam+'/dataset/Multipose/poses/'
+
+multipose = schijfnaam+'/dataset/Multipose/poses/'
+multipose_json = schijfnaam+'/dataset/Multipose/json/'
+multipose_fotos = schijfnaam+'/dataset/Multipose/fotos/'
 
 galabal_18 = schijfnaam+'/dataset/galabal2018/poses/'
 galabal_18_json = schijfnaam+'/dataset/galabal2018/json/'
@@ -42,31 +42,45 @@ heart = schijfnaam+'/dataset/heart/poses/'
 heart_json = schijfnaam+'/dataset/heart/json/'
 heart_fotos = schijfnaam+'/dataset/heart/fotos/'
 
+def test_script():
+    pose = "00100"
+    galabal = multipose
+    galabaljson = multipose_json
+
+    model = galabaljson+pose+"_keypoints.json"
+    model_features = common.parse_JSON_multi_person(model)
+
+    input = galabaljson+"03750_keypoints.json"
+    input_features = common.parse_JSON_multi_person(input)
+
+    (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
+    print (result)
+    print (error_score)
+
 #pose should look like 00100
 def find_matches_with(pose):
 
     if len(pose) == 5 and pose.isdigit():
-        model = data+pose+"_keypoints.json"
+        model = multipose_json+pose+"_keypoints.json"
         model_features = common.parse_JSON_multi_person(model)
         count = 0
-        os.system("mkdir -p "+poses+pose)
-        os.system("mkdir -p "+poses+pose+"/json")
-        os.system("mkdir -p "+poses+pose+"/jsonfout")
-        os.system("mkdir -p "+poses+pose+"/fotos")
-        os.system("mkdir -p "+poses+pose+"/fotosfout")
-        for json in glob.iglob(data+"*_keypoints.json"):
-            logger.info(json)
+        os.system("mkdir -p "+multipose+pose)
+        os.system("mkdir -p "+multipose+pose+"/json2")
+        os.system("mkdir -p "+multipose+pose+"/jsonfout")
+        os.system("mkdir -p "+multipose+pose+"/fotos2")
+        os.system("mkdir -p "+multipose+pose+"/fotosfout")
+        for json in glob.iglob(multipose_json+"*_keypoints.json"):
             input_features = common.parse_JSON_multi_person(json)
-            (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+            (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
             if result == True:
                 place = json.split("_keypoints")[0]
                 place = place.split("json/")[1]
                 place = place+".json"
-                os.system("cp "+json+" "+poses+pose+"/json/"+place)
+                os.system("cp "+json+" "+multipose+pose+"/json2/"+place)
                 foto = json.split("_keypoints")[0];
                 foto = foto.replace("json","fotos")
                 foto = foto +".jpg"
-                os.system("cp "+foto+" "+poses+pose+"/fotos/")
+                os.system("cp "+foto+" "+multipose+pose+"/fotos2/")
                 count = count+1
                 logger.info("true")
         print ("there are "+str(count)+" matches found")
@@ -78,7 +92,7 @@ def find_matches_with(pose):
 
 def check_matches(pose):
 
-    path = poses+pose
+    path = multipose+pose
     model = path+"/json/"+pose+".json"
 
     model_features = common.parse_JSON_multi_person(model)
@@ -91,7 +105,7 @@ def check_matches(pose):
     for json in glob.iglob(path+"/json/*.json"):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
         if result == True:
             true_positive = true_positive +1
         else:
@@ -101,7 +115,7 @@ def check_matches(pose):
     for json in glob.iglob(path+"/jsonfout/*.json"):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
         if result == True:
             false_positive = false_positive +1
             print ("error at: "+json)
@@ -140,8 +154,8 @@ def rename_files():
         os.system("mv "+foto+" "+foto_path+str(i)+".jpg")
 
 def replace_json_files():
-    pose = "14"
-    galabal = galabal_18
+    pose = "15"
+    galabal = galabal_economica
     path = galabal+pose
     for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
@@ -151,7 +165,7 @@ def replace_json_files():
 
 #***********************************galabal dataset_actions*********************************
 def find_galabal_matches():
-    pose = "15"
+    pose = "126"
     galabal = galabal_economica
     galabaljson = galabal_economica_json
 
@@ -190,25 +204,30 @@ def check_galabal_matches():
 
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
         if result == False:
             count = count +1
+            # foto = json.split(".json")[0];
+            # foto = foto.replace("json","fotos")
+            # foto = foto +".jpg"
+            # os.system("mv "+foto+" "+galabal+pose+"/fotos/")
             print ("error at: "+json)
     print (str(count)+" false negatives")
     count = 0
     for json in glob.iglob(galabal+pose+"/jsonfout/*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
         if result == True:
             count = count +1
             #print ("error at: "+json)
+    #replace_json_files()
     print (str(count)+" false positves")
 
 
 
 #****************************************test_script**********************
-def test_script():
+def test_script_galabal():
     pose = "15"
     galabal = galabal_economica
     galabaljson = galabal_economica_json
@@ -216,7 +235,7 @@ def test_script():
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"126.json"
+    input = galabaljson+"567.json"
     input_features = common.parse_JSON_multi_person(input)
 
     (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
