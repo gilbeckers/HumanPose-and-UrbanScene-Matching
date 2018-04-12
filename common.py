@@ -279,6 +279,28 @@ def unsplit(face, torso, legs):
 
     return whole
 
+def handle_undetected_points_model(input_features, model_features):
+    # Because np.array is a mutable type => passed by reference
+    #   -> dus als model wordt veranderd wordt er met gewijzigde array
+    #       verder gewerkt na callen van single_person()
+    # model_features_copy = np.array(model_features)
+    model_features_copy = model_features.copy()
+    input_features_copy = input_features.copy()
+
+
+    # In this second version, the model is allowed to have undetected features
+    if np.any(model_features[:] == [0, 0]):
+        counter = 0
+        for feature in model_features:
+            if feature[0] == 0 and feature[1] == 0:  # (0,0)
+                #logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,get_bodypart(counter))
+                input_features_copy[counter][0] = 0
+                input_features_copy[counter][1] = 0
+            counter = counter + 1
+
+    assert len(model_features_copy) == len(input_features_copy)
+    return (input_features_copy, model_features_copy)
+
 def handle_undetected_points(input_features, model_features):
     # Because np.array is a mutable type => passed by reference
     #   -> dus als model wordt veranderd wordt er met gewijzigde array
@@ -298,16 +320,16 @@ def handle_undetected_points(input_features, model_features):
     # is a danger for our current normalisation
     # These particular origin points should not influence the normalisation
     # (which they do if we neglect them, xmin and ymin you know ... )
-    # if np.any(input_features[:] == [0, 0]):
-    #     counter = 0
-    #     for feature in input_features:
-    #         if feature[0] == 0 and feature[1] == 0:  # (0,0)
-    #             #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
-    #             model_features_copy[counter][0] = 0
-    #             model_features_copy[counter][1] = 0
-    #             # input_features[counter][0] = 0#np.nan
-    #             # input_features[counter][1] = 0#np.nan
-    #         counter = counter + 1
+    if np.any(input_features[:] == [0, 0]):
+        counter = 0
+        for feature in input_features:
+            if feature[0] == 0 and feature[1] == 0:  # (0,0)
+                #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
+                model_features_copy[counter][0] = 0
+                model_features_copy[counter][1] = 0
+                # input_features[counter][0] = 0#np.nan
+                # input_features[counter][1] = 0#np.nan
+            counter = counter + 1
 
     # In this second version, the model is allowed to have undetected features
     if np.any(model_features[:] == [0, 0]):
@@ -706,9 +728,37 @@ def feature_scaling(input):
     #logger.info("out: %s", str(output))
     return output
 
-def feature_scaling_multi_person():
+def feature_scaling_multi_person(input):
+    normalized = []
+    xmax = max(input[0][:, 0])
+    ymax = max(input[0][:, 1])
+    xmin =np.min(input[0][np.nonzero(input[0][:,0])][:, 0])
+    ymin = np.min(input[0][np.nonzero(input[0][:,1])][:, 1])
+    for pose in input:
+        xmax_pose = max(pose[:, 0])
+        ymax_pose = max(pose[:, 1])
+        xmin_pose = np.min(pose[np.nonzero(pose[:,0])][:, 0])
+        ymin_pose = np.min(pose[np.nonzero(pose[:,1])][:, 1])
+        #print (pose[np.nonzero(pose[:,1])][:, 0])
 
-    return
+        if xmax_pose > xmax:
+            xmax =xmax_pose
+        if ymax_pose > ymax:
+            ymax =ymax_pose
+        if xmin_pose < xmin:
+            xmin =xmin_pose
+        if ymin_pose < ymin:
+            ymin =ymin_pose
+
+    for pose in input:
+        sec_x = (pose[:, 0]-xmin)/(xmax-xmin)
+        sec_y = (pose[:, 1]-ymin)/(ymax-ymin)
+
+        normalized.append(np.vstack([sec_x, sec_y]).T)
+
+    normalized = np.array(normalized)
+    #print("xmax: "+str(xmax)+" ymax: "+str(ymax)+" xmin: "+str(xmin)+" ymin: "+str(ymin))
+    return normalized
 
 
 def divide_by_max(input):

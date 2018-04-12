@@ -38,20 +38,13 @@ galabal_psycho = schijfnaam+'/dataset/galabal_psycho/poses/'
 galabal_psycho_json = schijfnaam+'/dataset/galabal_psycho/json/'
 galabal_psycho_fotos = schijfnaam+'/dataset/galabal_psycho/fotos/'
 
+heart = schijfnaam+'/dataset/heart/poses/'
+heart_json = schijfnaam+'/dataset/heart/json/'
+heart_fotos = schijfnaam+'/dataset/heart/fotos/'
+
 #pose should look like 00100
 def find_matches_with(pose):
 
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
-
-    eucl_dis_tresh_torso= 0.18
-    rotation_tresh_torso= 19
-    eucl_dis_tresh_legs= 0.058
-    rotation_tresh_legs= 24
-    eucld_dis_shoulders_tresh= 0.125
     if len(pose) == 5 and pose.isdigit():
         model = data+pose+"_keypoints.json"
         model_features = common.parse_JSON_multi_person(model)
@@ -84,17 +77,7 @@ def find_matches_with(pose):
 
 
 def check_matches(pose):
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
 
-    eucl_dis_tresh_torso= 0.18
-    rotation_tresh_torso= 19
-    eucl_dis_tresh_legs= 0.058
-    rotation_tresh_legs= 24
-    eucld_dis_shoulders_tresh= 0.125
     path = poses+pose
     model = path+"/json/"+pose+".json"
 
@@ -146,8 +129,8 @@ def check_matches(pose):
 #*****************************************logic*********************************************
 def rename_files():
     i=0
-    foto_path = galabal_17_fotos
-    json_path = galabal_17_json
+    foto_path = heart_fotos
+    json_path = heart_json
     for json in glob.iglob(json_path+"*_keypoints.json"):
         i = i+1
         os.system("mv "+json+" "+json_path+str(i)+".json")
@@ -168,9 +151,9 @@ def replace_json_files():
 
 #***********************************galabal dataset_actions*********************************
 def find_galabal_matches():
-    pose = "7"
-    galabal = galabal_medica
-    galabaljson = galabal_medica_json
+    pose = "15"
+    galabal = galabal_economica
+    galabaljson = galabal_economica_json
 
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
@@ -197,8 +180,9 @@ def find_galabal_matches():
             logger.info("true")
     print ("there are "+str(count)+" matches found")
 
-def check_galabal_matches(pose):
-    galabal = galabal_18
+def check_galabal_matches():
+    pose = "15"
+    galabal = galabal_economica
     model = galabal+pose+"/json/"+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
     count =0
@@ -225,17 +209,17 @@ def check_galabal_matches(pose):
 
 #****************************************test_script**********************
 def test_script():
-    pose = "14"
-    galabal = galabal_18
-    galabaljson = galabal_18_json
+    pose = "15"
+    galabal = galabal_economica
+    galabaljson = galabal_economica_json
 
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"16.json"
+    input = galabaljson+"126.json"
     input_features = common.parse_JSON_multi_person(input)
 
-    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+    (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
     print (result)
     print (error_score)
 
@@ -297,7 +281,7 @@ def make_pr_curve(pose):
     recalls = []
     error_tresh_start = 0
     for i in range(0,100):
-        error_tresh = error_tresh_start + 0.05*i
+        error_tresh = error_tresh_start + 0.01*i
         (precision,recall) = calculate_pr(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
@@ -305,7 +289,8 @@ def make_pr_curve(pose):
     return (precisions,recalls)
 
 
-def draw_pr_curve(pose):
+def draw_pr_curve():
+    pose = "00100"
     (precisions,recalls) = make_pr_curve(pose)
     plt.plot(recalls,precisions)
     plt.ylabel('precision')
