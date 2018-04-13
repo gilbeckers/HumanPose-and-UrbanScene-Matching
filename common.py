@@ -299,7 +299,7 @@ def handle_undetected_points_model(input_features, model_features):
             counter = counter + 1
 
     assert len(model_features_copy) == len(input_features_copy)
-    return (input_features_copy, model_features_copy)
+    return (input_features_copy, model_features_copy,counter)
 
 def handle_undetected_points(input_features, model_features):
     # Because np.array is a mutable type => passed by reference
@@ -730,11 +730,18 @@ def feature_scaling(input):
 
 def feature_scaling_multi_person(input):
     normalized = []
-    xmax = max(input[0][:, 0])
-    ymax = max(input[0][:, 1])
-    xmin =np.min(input[0][np.nonzero(input[0][:,0])][:, 0])
-    ymin = np.min(input[0][np.nonzero(input[0][:,1])][:, 1])
+    xmax = 0
+    ymax = 0
+    i = 0
+    while np.min(input[i][np.nonzero(input[i][:,0])][:, 0]) ==0:
+        i = i+1
+    xmin =np.min(input[i][np.nonzero(input[i][:,0])][:, 0])
+    i =0
+    while np.min(input[i][np.nonzero(input[i][:,1])][:, 1]) ==0:
+        i= i+1
+    ymin = np.min(input[i][np.nonzero(input[i][:,1])][:, 1])
     for pose in input:
+
         xmax_pose = max(pose[:, 0])
         ymax_pose = max(pose[:, 1])
         xmin_pose = np.min(pose[np.nonzero(pose[:,0])][:, 0])

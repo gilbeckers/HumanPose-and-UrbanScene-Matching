@@ -7,6 +7,7 @@ from common import feature_scaling, handle_undetected_points_model, \
     split_in_face_legs_torso, find_transformation, unsplit, split_in_face_legs_torso_v2
 #from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
 import thresholds
+from dataset import Multipose_dataset_actions as dataset
 import posematching.pose_comparison as pose_comparison
 logger = logging.getLogger("single_person")
 
@@ -79,26 +80,18 @@ Returns:
 
 def match_single(model_features, input_features, normalise=True):
     # Filter the undetected features and mirror them in the other pose
-    (input_features_copy, model_features_copy) = handle_undetected_points_model(input_features, model_features)
 
-    non_zero_rows = np.count_nonzero((input_features_copy != 0).sum(1))
-    zero_rows = len(input_features_copy) - non_zero_rows
-    if zero_rows > 4:
-        logger.debug("Model has more feature then input therefore not matched")
-        result = MatchResult(False,
-                             error_score=0,
-                             input_transformation=None)
         #return result
 
-    assert len(model_features_copy) == len(input_features_copy)
+    assert len(model_features) == len(input_features)
 
     if (normalise):
-        model_features_copy = feature_scaling(model_features_copy)
-        input_features_copy = feature_scaling(input_features_copy)
+        model_features = feature_scaling(model_features)
+        input_features = feature_scaling(input_features)
 
     # Split features in three parts
-    (model_face, model_torso, model_legs) = split_in_face_legs_torso_v2(model_features_copy)
-    (input_face, input_torso, input_legs) = split_in_face_legs_torso_v2(input_features_copy)
+    (model_face, model_torso, model_legs) = split_in_face_legs_torso_v2(model_features)
+    (input_face, input_torso, input_legs) = split_in_face_legs_torso_v2(input_features)
 
     # In case of no normalisation, return here (ex; plotting)
     # Without normalisation the thresholds don't say anything
@@ -146,7 +139,7 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso,
                                                                                      input_transformed_torso)
     if (np.count_nonzero(model_torso) > 10):
-        if (np.count_nonzero(model_torso) - np.count_nonzero(input_torso)) < 2:
+        if (abs(np.count_nonzero(model_torso) - np.count_nonzero(input_torso))) < 2:
             (result_torso,rotation_torso) = pose_comparison.decide_torso_shoulders_incl(max_euclidean_error_torso,
                                                                        transformation_matrix_torso,
                                                                        eucl_dis_tresh_torso, rotation_tresh_torso,
@@ -168,7 +161,7 @@ def match_single(model_features, input_features, normalise=True):
     max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
 
     if (np.count_nonzero(model_legs) > 10):
-        if (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) < 5:
+        if (abs(np.count_nonzero(model_legs) - np.count_nonzero(input_legs))) < 5:
 
             (result_legs,rotation_legs) = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,eucl_dis_tresh_legs, rotation_tresh_legs)
             logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
@@ -187,10 +180,11 @@ def match_single(model_features, input_features, normalise=True):
 
     # TODO: construct a solid score algorithm
     error_score = ((max_euclidean_error_torso/eucl_dis_tresh_torso) + (max_euclidean_error_legs/eucl_dis_tresh_legs) + (max_euclidean_error_shoulders/eucld_dis_shoulders_tresh)+(rotation_legs/rotation_tresh_legs)+(rotation_torso/rotation_tresh_torso))/5
-
-    result = MatchResult((result_torso and result_legs and result_face),
-                         error_score=error_score,
-                         input_transformation=input_transformation)
+    #if error_score < dataset.error_tresh:
+    result = MatchResult(True,error_score=error_score,input_transformation=input_transformation)
+    #result = MatchResult((result_torso and result_legs and result_face),
+                        # error_score=error_score,
+                         #input_transformation=input_transformation)
     return result
 
 

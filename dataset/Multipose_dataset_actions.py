@@ -50,7 +50,7 @@ def test_script():
     model = galabaljson+pose+"_keypoints.json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"03750_keypoints.json"
+    input = galabaljson+"00031_keypoints.json"
     input_features = common.parse_JSON_multi_person(input)
 
     (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
@@ -103,14 +103,14 @@ def check_matches(pose):
     false_negative =0
 
     for json in glob.iglob(path+"/json/*.json"):
-        #print (json)
+        print (json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
         if result == True:
             true_positive = true_positive +1
         else:
             false_negative = false_negative +1
-            print ("error at: "+json)
+            #print ("error at: "+json)
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
         #print (json)
@@ -118,7 +118,7 @@ def check_matches(pose):
         (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
         if result == True:
             false_positive = false_positive +1
-            print ("error at: "+json)
+            #print ("error at: "+json)
         else:
             true_negative = true_negative +1
 
@@ -154,8 +154,8 @@ def rename_files():
         os.system("mv "+foto+" "+foto_path+str(i)+".jpg")
 
 def replace_json_files():
-    pose = "15"
-    galabal = galabal_economica
+    pose = "00100"
+    galabal = multipose
     path = galabal+pose
     for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
@@ -165,9 +165,9 @@ def replace_json_files():
 
 #***********************************galabal dataset_actions*********************************
 def find_galabal_matches():
-    pose = "126"
-    galabal = galabal_economica
-    galabaljson = galabal_economica_json
+    pose = "7"
+    galabal = galabal_medica2
+    galabaljson = galabal_medica2_json
 
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
@@ -180,7 +180,7 @@ def find_galabal_matches():
     for json in glob.iglob(galabaljson+"*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
         if result == True:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
@@ -228,14 +228,14 @@ def check_galabal_matches():
 
 #****************************************test_script**********************
 def test_script_galabal():
-    pose = "15"
-    galabal = galabal_economica
-    galabaljson = galabal_economica_json
+    pose = "7"
+    galabal = galabal_medica2
+    galabaljson = galabal_medica2_json
 
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"567.json"
+    input = galabaljson+"105.json"
     input_features = common.parse_JSON_multi_person(input)
 
     (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
@@ -245,7 +245,7 @@ def test_script_galabal():
 #**************************************precision recall********************************************
 def calculate_pr(pose,error_score_tresh):
 
-    path = poses+pose
+    path = multipose+pose
     model = path+"/json/"+pose+".json"
 
     model_features = common.parse_JSON_multi_person(model)
@@ -298,9 +298,11 @@ def make_pr_curve(pose):
 
     precisions = [];
     recalls = []
-    error_tresh_start = 0
+    error_tresh_start = 0.3
+    global error_tresh
+
     for i in range(0,100):
-        error_tresh = error_tresh_start + 0.01*i
+        error_tresh = error_tresh_start + 0.03*i
         (precision,recall) = calculate_pr(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
