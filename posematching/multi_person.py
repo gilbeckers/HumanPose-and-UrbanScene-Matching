@@ -86,6 +86,9 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
             continue
 
+        if not sorted(permutation) == list(permutation):
+            logger.warning("--> Matching permutation %s : FAIL: INPUT POSES NOT GOING FROM LEFT TO RIGHT", permutation)
+            continue
         pose_error = sum(error_scores[index])/(len(error_scores[index])-1)
         input_transformed_combined = []
         updated_models_combined = []
@@ -95,8 +98,8 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         for model_index, input_index_val in enumerate(permutation):
             logger.debug("Superimposing for model %d  and input %d", model_index, input_index_val)
             (input_pose, model_pose) = handle_undetected_points(input_poses[input_index_val], model_poses[model_index])
-            (input_transformed, model) = superimpose(input_pose, model_pose, plot=False, input_image= None, model_image=None)
-            #(input_transformed, model) = (input_pose,model_pose)#
+            #(input_transformed, model) = superimpose(input_pose, model_pose, plot=False, input_image= None, model_image=None)
+            (input_transformed, model) = (input_pose,model_pose)#
             input_transformed_combined.append(np.array(input_transformed))
             updated_models_combined.append(np.array(model))
 
@@ -134,7 +137,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
-                "score" : max_eucl_distance ,
+                "score" : (max_eucl_distance+pose_error) ,
                 "model" : unchanged_model,
                 #"model":updated_models_combined_nonorm,
                 "input" : unchanged_input
@@ -233,6 +236,9 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
             continue
+        if not sorted(permutation) == list(permutation):
+            logger.warning("--> Matching permutation %s : FAIL: INPUT POSES NOT GOING FROM LEFT TO RIGHT", permutation)
+            continue
         pose_error = sum(error_scores[index])/(len(error_scores[index])-1)
         interaction_error = 0
         for model_index in range(0,len(permutation)-1):
@@ -273,13 +279,33 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
             logger.warning("interaction_error: "+str(interaction_error)+" (with tresh: "+str(thresholds.MP_ERROR_DISTANCE)+")")
             logger.warning("pose_error: "+str(pose_error)+" (with tresh: "+str(thresholds.MP_ERROR_DISTANCE)+")")
         interaction_error = interaction_error/ (len(permutation)-1)
-        if (interaction_error+pose_error) < min_error:
-            min_error= (interaction_error+pose_error)
+        tot_error = interaction_error+pose_error
+        if tot_error < min_error:
+            min_error= tot_error
 
-    if min_error<=thresholds.MP_ERROR_DISTANCE:
-        return MatchResultMulti(True, error_score=min_error, input_transformation=None, matching_permutations=None)
+        if tot_error <=thresholds.MP_ERROR_DISTANCE:
+            result_permuations[permutation] = {
+                "score" : tot_error ,
+                "model" : model_poses,
+                #"model":updated_models_combined_nonorm,
+                "input" : input_poses
+                #"input": input_transformed_combined_nonorm
+            }
+            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
+                        tot_error,thresholds.MP_ERROR_DISTANCE )
+        else:
+            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
+                        tot_error, thresholds.MP_ERROR_DISTANCE)
+    # TODO: nog max nemen van resultaat.
+    #logger.debug("result scores: " , result_permuations)
 
-    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=None)
+    # If result_permutations is still empty, no match was found so return false
+
+
+    if result_permuations:
+        return MatchResultMulti(True, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
+
+    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
 
 

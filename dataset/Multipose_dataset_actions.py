@@ -154,8 +154,8 @@ def rename_files():
         os.system("mv "+foto+" "+foto_path+str(i)+".jpg")
 
 def replace_json_files():
-    pose = "00100"
-    galabal = multipose
+    pose = "14"
+    galabal = galabal_18
     path = galabal+pose
     for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
@@ -195,8 +195,8 @@ def find_galabal_matches():
     print ("there are "+str(count)+" matches found")
 
 def check_galabal_matches():
-    pose = "15"
-    galabal = galabal_economica
+    pose = "14"
+    galabal = galabal_18
     model = galabal+pose+"/json/"+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
     count =0
@@ -204,7 +204,7 @@ def check_galabal_matches():
 
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
         if result == False:
             count = count +1
             # foto = json.split(".json")[0];
@@ -217,10 +217,10 @@ def check_galabal_matches():
     for json in glob.iglob(galabal+pose+"/jsonfout/*.json"):
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
-        if result == True:
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
+        if error_score < 0.2:
             count = count +1
-            #print ("error at: "+json)
+            print ("error at: "+json)
     #replace_json_files()
     print (str(count)+" false positves")
 
@@ -228,14 +228,14 @@ def check_galabal_matches():
 
 #****************************************test_script**********************
 def test_script_galabal():
-    pose = "7"
-    galabal = galabal_medica2
-    galabaljson = galabal_medica2_json
+    pose = "14"
+    galabal = galabal_18
+    galabaljson = galabal_18_json
 
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"105.json"
+    input = galabaljson+"422.json"
     input_features = common.parse_JSON_multi_person(input)
 
     (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
@@ -245,7 +245,7 @@ def test_script_galabal():
 #**************************************precision recall********************************************
 def calculate_pr(pose,error_score_tresh):
 
-    path = multipose+pose
+    path = galabal_18+pose  #multipose+pose
     model = path+"/json/"+pose+".json"
 
     model_features = common.parse_JSON_multi_person(model)
@@ -298,7 +298,7 @@ def make_pr_curve(pose):
 
     precisions = [];
     recalls = []
-    error_tresh_start = 0.3
+    error_tresh_start = 0
     global error_tresh
 
     for i in range(0,100):
@@ -311,7 +311,7 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    pose = "00100"
+    pose = "14"
     (precisions,recalls) = make_pr_curve(pose)
     plt.plot(recalls,precisions)
     plt.ylabel('precision')
