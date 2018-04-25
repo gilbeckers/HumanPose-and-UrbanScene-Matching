@@ -205,7 +205,7 @@ def check_galabal_matches():
         logger.info(json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
-        if result == False:
+        if error_score > 0.8:
             count = count +1
             # foto = json.split(".json")[0];
             # foto = foto.replace("json","fotos")
@@ -235,17 +235,17 @@ def test_script_galabal():
     model = galabaljson+pose+".json"
     model_features = common.parse_JSON_multi_person(model)
 
-    input = galabaljson+"422.json"
+    input = galabaljson+"229.json"
     input_features = common.parse_JSON_multi_person(input)
 
-    (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, normalise=True)
+    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
     print (result)
     print (error_score)
 
 #**************************************precision recall********************************************
-def calculate_pr(pose,error_score_tresh):
+def calculate_pr(pose,path,error_score_tresh):
 
-    path = galabal_18+pose  #multipose+pose
+
     model = path+"/json/"+pose+".json"
 
     model_features = common.parse_JSON_multi_person(model)
@@ -294,16 +294,16 @@ def calculate_pr(pose,error_score_tresh):
     print ("error_score_tresh: "+str(error_score_tresh))
     return (precision,recall)
 
-def make_pr_curve(pose):
+def make_pr_curve(pose, path):
 
     precisions = [];
     recalls = []
     error_tresh_start = 0
     global error_tresh
 
-    for i in range(0,100):
-        error_tresh = error_tresh_start + 0.03*i
-        (precision,recall) = calculate_pr(pose,error_tresh)
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.005*i
+        (precision,recall) = calculate_pr(pose,path,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
 
@@ -311,8 +311,10 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    pose = "14"
-    (precisions,recalls) = make_pr_curve(pose)
+    pose = "15"
+    path = galabal_economica+pose #multipose+pose #galabal_18+pose  #
+
+    (precisions,recalls) = make_pr_curve(pose,path)
     plt.plot(recalls,precisions)
     plt.ylabel('precision')
     plt.xlabel('recall')

@@ -16,7 +16,7 @@ SP_DISTANCE_SHOULDER = 0.2
 
 
 '''------- MULTIPLE POSE PARAMETERS -----------'''
-MP_DISCTANCE = 0.15
+MP_DISCTANCE = 0.5
 MP_ERROR_DISTANCE = 2.6
 
 '''-------- FEATURE MATCHING ------------------'''

@@ -31,10 +31,10 @@ dataset.test_script()
 '''
 dataset.rename_files()
 '''
-
+'''
 logging.basicConfig(level=logging.DEBUG)
 dataset.test_script_galabal()
-
+'''
 '''
 logging.basicConfig(level=logging.ERROR)
 dataset.find_galabal_matches()
@@ -43,8 +43,7 @@ dataset.find_galabal_matches()
 logging.basicConfig(level=logging.ERROR)
 dataset.check_galabal_matches()
 '''
-#**************************pr curves*********************
-'''
+#*******************''******pr curves*********************
+
 logging.basicConfig(level=logging.ERROR)
 dataset.draw_pr_curve()
-'''

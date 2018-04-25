@@ -180,12 +180,11 @@ def match_single(model_features, input_features, normalise=True):
 
     # TODO: construct a solid score algorithm
     error_score = ((max_euclidean_error_torso/eucl_dis_tresh_torso) + (max_euclidean_error_legs/eucl_dis_tresh_legs) + (max_euclidean_error_shoulders/eucld_dis_shoulders_tresh)+(rotation_legs/rotation_tresh_legs)+(rotation_torso/rotation_tresh_torso))/5
-    #if error_score < dataset.error_tresh:
-    result = MatchResult(True,error_score=error_score,input_transformation=input_transformation)
-    #result = MatchResult((result_torso and result_legs and result_face),
-                        # error_score=error_score,
-                         #input_transformation=input_transformation)
-    return result
+
+    if not (result_torso and result_legs and result_face):
+        error_score = error_score +0.2 #penalty for bad matching_inputs features
+    return MatchResult(True,error_score=error_score,input_transformation=input_transformation)
+    #return MatchResult((result_torso and result_legs and result_face),error_score=error_score,input_transformation=input_transformation)
 
 
 #Plot the calculated transformation on the model image

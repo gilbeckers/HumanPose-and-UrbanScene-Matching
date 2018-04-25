@@ -89,7 +89,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         if not sorted(permutation) == list(permutation):
             logger.warning("--> Matching permutation %s : FAIL: INPUT POSES NOT GOING FROM LEFT TO RIGHT", permutation)
             continue
-        pose_error = sum(error_scores[index])/(len(error_scores[index])-1)
+        pose_error = sum(error_scores[index])/(len(error_scores[index]))
         input_transformed_combined = []
         updated_models_combined = []
 
@@ -132,22 +132,26 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
 
-        if (max_eucl_distance+pose_error) < min_error:
-            min_error= (max_eucl_distance+pose_error)
+        tot_error = (max_eucl_distance*4) + (pose_error)
+        if tot_error < min_error:
+            logger.info("min_error was %0.4f and will become %0.4f",min_error,tot_error)
+            min_error= tot_error
 
-        if max_eucl_distance<=thresholds.MP_DISCTANCE:
+        if tot_error<=thresholds.MP_DISCTANCE:
             result_permuations[permutation] = {
-                "score" : (max_eucl_distance+pose_error) ,
+                "score" : tot_error ,
                 "model" : unchanged_model,
                 #"model":updated_models_combined_nonorm,
                 "input" : unchanged_input
                 #"input": input_transformed_combined_nonorm
             }
-            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
-                        max_eucl_distance,thresholds.MP_DISCTANCE )
+            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f (thresh %0.4f)", permutation,
+                        max_eucl_distance,pose_error,thresholds.MP_DISCTANCE )
+
+
         else:
-            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
-                        max_eucl_distance, thresholds.MP_DISCTANCE)
+            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f  (thresh %0.4f)", permutation,
+                        max_eucl_distance,pose_error, thresholds.MP_DISCTANCE)
     # TODO: nog max nemen van resultaat.
     #logger.debug("result scores: " , result_permuations)
 
@@ -279,7 +283,7 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
             logger.warning("interaction_error: "+str(interaction_error)+" (with tresh: "+str(thresholds.MP_ERROR_DISTANCE)+")")
             logger.warning("pose_error: "+str(pose_error)+" (with tresh: "+str(thresholds.MP_ERROR_DISTANCE)+")")
         interaction_error = interaction_error/ (len(permutation)-1)
-        tot_error = interaction_error+pose_error
+        tot_error = interaction_error + (pose_error)
         if tot_error < min_error:
             min_error= tot_error
 
@@ -291,11 +295,11 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
                 "input" : input_poses
                 #"input": input_transformed_combined_nonorm
             }
-            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
-                        tot_error,thresholds.MP_ERROR_DISTANCE )
+            logger.info("--> MATCH! permutation %s  |  interaction_error: %0.4f | Pose error %0.4f  (thresh %0.4f)", permutation,
+                        interaction_error,pose_error,thresholds.MP_ERROR_DISTANCE )
         else:
-            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
-                        tot_error, thresholds.MP_ERROR_DISTANCE)
+            logger.info("--> NO-MATCH! permutation %s  | interaction_error: %0.4f | Pose error %0.4f   (thresh %0.4f)", permutation,
+                        interaction_error,pose_error, thresholds.MP_ERROR_DISTANCE)
     # TODO: nog max nemen van resultaat.
     #logger.debug("result scores: " , result_permuations)
 
