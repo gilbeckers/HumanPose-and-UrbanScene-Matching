@@ -21,7 +21,7 @@ dataset.find_matches_with("00100")
 '''
 '''
 logging.basicConfig(level=logging.CRITICAL)
-dataset.check_matches("00100")
+dataset.check_matches("1")
 '''
 '''
 logging.basicConfig(level=logging.DEBUG)
@@ -47,4 +47,4 @@ dataset.check_galabal_matches("4")
 #**************************pr curves*********************
 
 logging.basicConfig(level=logging.ERROR)
-dataset. draw_pr_curve()
+dataset.draw_pr_curve()

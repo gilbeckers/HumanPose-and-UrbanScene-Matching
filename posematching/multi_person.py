@@ -52,6 +52,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
                 "input": input_poses[0]
                 # "input": input_transformed_combined_nonorm
             }
+
             return MatchResultMulti(match_result_single.match_bool,
                                     error_score=match_result_single.error_score,
                                     input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??

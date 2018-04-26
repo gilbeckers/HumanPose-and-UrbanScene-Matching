@@ -59,6 +59,7 @@ def decide_legs(max_error, transformation_matrix, eucld_tresh, rotation_tresh):
     return (False,rot_max)
 
 
+
 def max_euclidean_distance_shoulders(model_torso, input_transformed_torso):
     maxError_torso = np.abs(model_torso - input_transformed_torso)
 

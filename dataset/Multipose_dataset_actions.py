@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
 
-Singleposes = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
+Singleposes = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
 multipose = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/fotos/'
 poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/poses/'
 data = '/media/jochen/2FCA69D53AB1BFF42/dataset/Multipose/json/'
@@ -65,28 +65,61 @@ def find_matches_with(pose):
         print ("find_matches_with has wrong input")
 
 def test_script():
-
-    model = data+"00100_keypoints.json"
-    model_features = common.parse_JSON_multi_person(model)
-
-    input = data+"00100_keypoints.json"
-    input_features = common.parse_JSON_multi_person(input)
+    #
+    # model = data+"00100_keypoints.json"
+    # model_features = common.parse_JSON_multi_person(model)
+    #
+    # input = data+"00100_keypoints.json"
+    # input_features = common.parse_JSON_multi_person(input)
     global eucl_dis_tresh_torso
     global rotation_tresh_torso
     global eucl_dis_tresh_legs
     global rotation_tresh_legs
     global eucld_dis_shoulders_tresh
+    global eucl_dis_tresh
+    global rotation_tresh
+    global use_match2
+    use_match2 = False
 
-    eucl_dis_tresh_torso= 0.18
-    rotation_tresh_torso= 19
-    eucl_dis_tresh_legs= 0.058
-    rotation_tresh_legs= 24
-    eucld_dis_shoulders_tresh= 0.125
+    eucl_dis_tresh_torso= 0.098
+    rotation_tresh_torso= 10.847
+    eucl_dis_tresh_legs= 0.1
+    rotation_tresh_legs= 20
+    eucld_dis_shoulders_tresh= 0.085
 
+    eucl_dis_tresh= 0.1
+    rotation_tresh= 10
+
+    poses = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
+    pose = "1"
+    path = poses+pose
+    model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
+
+    input = path+"/json/9206.json"
     input_features = common.parse_JSON_multi_person(input)
-    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, normalise=True)
-    print (result)
+
+    (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
     print (error_score)
+    # true_positive =0
+    # false_positive =0
+    # true_negative =0
+    # false_negative =0
+    #
+    # for json in glob.iglob(path+"/json/*.json"):
+    #     #print (json)
+    #     input_features = common.parse_JSON_multi_person(json)
+    #     (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+    #     if error_score < 0.94:
+    #         true_positive = true_positive +1
+    #         #print ("score is: "+str(error_score))
+    #     else:
+    #         false_negative = false_negative +1
+    #         print ("error at: "+json)
+    #         print (error_score)
+    #
+    # print(false_negative)
+
 
 def check_matches(pose):
     global eucl_dis_tresh_torso
@@ -94,14 +127,22 @@ def check_matches(pose):
     global eucl_dis_tresh_legs
     global rotation_tresh_legs
     global eucld_dis_shoulders_tresh
+    global eucl_dis_tresh
+    global rotation_tresh
+    global use_match2
+    use_match2 = False
 
-    eucl_dis_tresh_torso= 0.18
-    rotation_tresh_torso= 19
-    eucl_dis_tresh_legs= 0.058
-    rotation_tresh_legs= 24
-    eucld_dis_shoulders_tresh= 0.125
-    path = poses+pose
-    model = path+"/json/"+pose+".json"
+    eucl_dis_tresh_torso= 0.098
+    rotation_tresh_torso= 10.847
+    eucl_dis_tresh_legs= 0.1
+    rotation_tresh_legs= 20
+    eucld_dis_shoulders_tresh= 0.085
+
+    eucl_dis_tresh= 0.1
+    rotation_tresh= 10
+
+    path = Singleposes+pose
+    model = path+"/json/0.json"
 
     model_features = common.parse_JSON_multi_person(model)
 
@@ -114,7 +155,7 @@ def check_matches(pose):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
         (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
-        if result == True:
+        if error_score < 59.4:
             true_positive = true_positive +1
         else:
             false_negative = false_negative +1
@@ -215,7 +256,7 @@ def calculate_pr(pose,error_score_tresh):
     path = poses+pose
     model = path+"/json/"+pose+".json"
     '''
-    poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
+    poses = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
     pose = "1"
     path = poses+pose
     model = path+"/json/0.json"
@@ -366,6 +407,7 @@ def calculate_pr(pose,error_score_tresh):
             true_negative = true_negative +1
 
 
+
     precision = 0
     recall =0
     if (true_positive+false_positive) !=0:
@@ -387,17 +429,6 @@ def calculate_pr(pose,error_score_tresh):
     return (precision,recall)
 
 def make_pr_curve(pose):
-    global eucl_dis_tresh_torso
-    global rotation_tresh_torso
-    global eucl_dis_tresh_legs
-    global rotation_tresh_legs
-    global eucld_dis_shoulders_tresh
-
-    eucl_dis_tresh_torso= 0.098
-    rotation_tresh_torso= 10.847
-    eucl_dis_tresh_legs= 0.05
-    rotation_tresh_legs= 14.527
-    eucld_dis_shoulders_tresh= 0.085
 
     precisions = [];
     recalls = []
@@ -412,15 +443,53 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    (precission,recall) = make_pr_curve("1")
-    (angle_precission,angle_recall) = make_pr_curve_angle("1")
-    plt.plot(recall,precission)
-    plt.plot(angle_recall, angle_precission)
+    global eucl_dis_tresh_torso
+    global rotation_tresh_torso
+    global eucl_dis_tresh_legs
+    global rotation_tresh_legs
+    global eucld_dis_shoulders_tresh
+    global eucl_dis_tresh
+    global rotation_tresh
+    global use_match2
+    use_match2 = False
 
-    plt.legend(['Affine transformation', 'Angle script'], loc='center left')
+    eucl_dis_tresh_torso= 0.098
+    rotation_tresh_torso= 10.847
+    eucl_dis_tresh_legs= 0.1
+    rotation_tresh_legs= 20
+    eucld_dis_shoulders_tresh= 0.085
+
+    eucl_dis_tresh= 0.1
+    rotation_tresh= 10
+
+    (precission1,recall1) = make_pr_curve("1")
+    plt.plot(recall1,precission1, label="split in body parts")
+
+    use_match2 = True
+
+    (precission2,recall2) = make_pr_curve("1")
+
+    plt.plot(recall2,precission2, label="no split in body parts")
+
+
+    (precission3,recall3) = make_pr_curve_angle("1")
+
+    plt.plot(recall3,precission3, label="angles between body parts")
+#
+    # eucl_dis_tresh_torso= 0.098
+    # rotation_tresh_torso= 15
+    # eucl_dis_tresh_legs= 0.05
+    # rotation_tresh_legs= 20
+    # eucld_dis_shoulders_tresh= 0.085
+    #
+    # (precission3,recall3) = make_pr_curve("1")
+    #
+    # plt.plot(recall3,precission3)
+
+    plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.ylabel('precision')
     plt.xlabel('recall')
-    plt.title('Pr curve of pose : 1')
+    plt.title('PR-curve SinglePerson Algorithms')
     plt.axis([0,1,0,1])
     plt.legend()
 
@@ -452,7 +521,7 @@ def calculate_pr_angle(pose,error_score_tresh):
     path = poses+pose
     model = path+"/json/"+pose+".json"
     '''
-    poses = '/media/jochen/2FCA69D53AB1BFF42/dataset/poses/pose'
+    poses = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
     pose = "1"
     path = poses+pose
     model = path+"/json/0.json"
@@ -622,6 +691,7 @@ def calculate_pr_angle(pose,error_score_tresh):
             #print ("error at: "+json)
         else:
             true_negative = true_negative +1
+
     precision = 0
     recall =0
     if (true_positive+false_positive) !=0:
