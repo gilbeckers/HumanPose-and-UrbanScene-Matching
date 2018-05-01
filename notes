@@ -14,4 +14,9 @@ waarom niet 00025 en 00026 00037???
 
 
 
-#shrijven voor Timothy tegen vrijdag 20/04
+
+*************raport best accuray****************
+best_accuracy: 0.9543478260869566
+best_tresh: 1.71
+recall: 0.9949748743718593
+precision: 0.868421052631579

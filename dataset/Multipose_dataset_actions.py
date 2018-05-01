@@ -8,7 +8,7 @@ import posematching.multi_person
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 logger = logging.getLogger("Multipose dataset")
-schijfnaam = '/media/jochen/2FCA69D53AB1BFF42'
+schijfnaam = '/media/jochen/2FCA69D53AB1BFF43'
 
 multipose = schijfnaam+'/dataset/Multipose/poses/'
 multipose_json = schijfnaam+'/dataset/Multipose/json/'
@@ -243,7 +243,7 @@ def test_script_galabal():
     print (error_score)
 
 #**************************************precision recall********************************************
-def calculate_pr(pose,path,error_score_tresh):
+def calculate_pr(pose,path,error_score_tresh,superimp):
 
 
     model = path+"/json/"+pose+".json"
@@ -258,7 +258,7 @@ def calculate_pr(pose,path,error_score_tresh):
     for json in glob.iglob(path+"/json/*.json"):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True, superimp)
         if error_score < error_score_tresh:
             true_positive = true_positive +1
 
@@ -269,7 +269,7 @@ def calculate_pr(pose,path,error_score_tresh):
     for json in glob.iglob(path+"/jsonfout/*.json"):
         #print (json)
         input_features = common.parse_JSON_multi_person(json)
-        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True, superimp)
         if error_score < error_score_tresh:
             false_positive = false_positive +1
         else:
@@ -294,32 +294,177 @@ def calculate_pr(pose,path,error_score_tresh):
     print ("error_score_tresh: "+str(error_score_tresh))
     return (precision,recall)
 
+
+
+
+def calculate_pr_2(pose,path,error_score_tresh):
+
+
+    model = path+"/json/"+pose+".json"
+
+    model_features = common.parse_JSON_multi_person(model)
+
+    true_positive =0
+    false_positive =0
+    true_negative =0
+    false_negative =0
+
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            true_positive = true_positive +1
+
+        else:
+            false_negative = false_negative +1
+
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+        else:
+            true_negative = true_negative +1
+
+    precision = 0
+    recall =0
+    if (true_positive+false_positive) !=0:
+        precision = true_positive / (true_positive+false_positive)
+    if  (true_positive+false_negative) !=0:
+        recall = true_positive / (true_positive+false_negative)
+
+    #******** print small raport ******************
+
+    print ("*************raport of pose "+pose+" ****************")
+    print ("true_positive: " + str(true_positive))
+    print ("false_positive: "+ str(false_positive))
+    print ("true_negative: " + str(true_negative))
+    print ("false_negative: "+ str(false_negative))
+    print ("recall: "+ str(recall))
+    print ("precision: "+ str(precision))
+    print ("error_score_tresh: "+str(error_score_tresh))
+    return (precision,recall)
+
+
 def make_pr_curve(pose, path):
 
     precisions = [];
     recalls = []
+    precisions2 = [];
+    recalls2 = []
+    precisions3 = [];
+    recalls3 = []
     error_tresh_start = 0
     global error_tresh
 
     for i in range(0,400):
         error_tresh = error_tresh_start + 0.005*i
-        (precision,recall) = calculate_pr(pose,path,error_tresh)
+        (precision,recall) = calculate_pr(pose,path,error_tresh,False)
         precisions.append(precision)
         recalls.append(recall)
 
-    return (precisions,recalls)
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.005*i
+        (precision,recall) = calculate_pr(pose,path,error_tresh,True)
+        precisions2.append(precision)
+        recalls2.append(recall)
 
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.01*i
+        (precision,recall) = calculate_pr_2(pose,path,error_tresh)
+        precisions3.append(precision)
+        recalls3.append(recall)
+
+    return (precisions,recalls,precisions2,recalls2,precisions3,recalls3)
 
 def draw_pr_curve():
-    pose = "15"
-    path = galabal_economica+pose #multipose+pose #galabal_18+pose  #
+    pose = "00100"
+    path = multipose+pose # galabal_economica+pose #multipose+pose #galabal_18+pose  #
 
-    (precisions,recalls) = make_pr_curve(pose,path)
-    plt.plot(recalls,precisions)
+    (precisions,recalls,precisions2,recalls2,precisions3,recalls3) = make_pr_curve(pose,path)
+    plt.plot(recalls,precisions, label="Affine transformation without pose overlapping")
+    plt.plot(recalls2,precisions2, label="Affine transformation with pose overlapping")
+    plt.plot(recalls3,precisions3, label="describing poses")
+
+
+
+    plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.ylabel('precision')
     plt.xlabel('recall')
-    plt.title('Pr curve of pose : '+pose)
+    plt.title('Pr curves of Multipose algorithms')
     plt.axis([0,1,0,1])
     plt.legend()
 
     plt.show()
+
+
+
+#*************************************accuracy*************************************
+def calculate_accuracy(pose, path,error_score_tresh,superimp):
+
+    model = path+"/json/"+pose+".json"
+
+    model_features = common.parse_JSON_multi_person(model)
+
+    true_positive =0
+    false_positive =0
+    true_negative =0
+    false_negative =0
+
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True, superimp)
+        if error_score < error_score_tresh:
+            true_positive = true_positive +1
+
+        else:
+            false_negative = false_negative +1
+
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match(model_features, input_features, True, superimp)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+        else:
+            true_negative = true_negative +1
+
+
+    accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
+    precision = 0
+    recall = 0
+    if (true_positive+false_positive) !=0:
+        precision = true_positive / (true_positive+false_positive)
+    if  (true_positive+false_negative) !=0:
+        recall = true_positive / (true_positive+false_negative)
+    return accuracy, precision, recall
+
+def find_best_accuracy():
+    pose = "00100"
+    path = multipose+pose
+    error_tresh_start = 0
+    global error_tresh
+    superimp = False
+    best_accuracy = 0
+    best_tresh = 0
+    best_recall =0
+    best_precision =0
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.005*i
+        (accuracy, precision, recall)= calculate_accuracy(pose, path, error_tresh, superimp)
+        if best_accuracy < accuracy:
+            best_accuracy = accuracy
+            best_tresh = error_tresh
+            best_recall = recall
+            best_precision = precision
+
+    print ("*************raport best accuray****************")
+    print ("best_accuracy: " + str(best_accuracy))
+    print ("best_tresh: "+ str(best_tresh))
+    print ("recall: "+ str(recall))
+    print ("precision: "+ str(precision))

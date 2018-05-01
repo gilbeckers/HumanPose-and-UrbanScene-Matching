@@ -44,6 +44,10 @@ logging.basicConfig(level=logging.ERROR)
 dataset.check_galabal_matches()
 '''
 #*******************''******pr curves*********************
-
+'''
 logging.basicConfig(level=logging.ERROR)
 dataset.draw_pr_curve()
+'''
+
+logging.basicConfig(level=logging.ERROR)
+dataset.find_best_accuracy()

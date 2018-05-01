@@ -11,7 +11,7 @@ import thresholds
 logger = logging.getLogger("multi_person")
 
 
-def match(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
+def match(model_poses, input_poses, plot=False, superimp = False, input_image = None, model_image=None, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))
     logger.debug(" amount of inputs: %d", len(input_poses))
 
@@ -98,8 +98,10 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         for model_index, input_index_val in enumerate(permutation):
             logger.debug("Superimposing for model %d  and input %d", model_index, input_index_val)
             (input_pose, model_pose) = handle_undetected_points(input_poses[input_index_val], model_poses[model_index])
-            #(input_transformed, model) = superimpose(input_pose, model_pose, plot=False, input_image= None, model_image=None)
-            (input_transformed, model) = (input_pose,model_pose)#
+            if superimp:
+                (input_transformed, model) = superimpose(input_pose, model_pose, plot=False, input_image= None, model_image=None)
+            else:
+                (input_transformed, model) = (input_pose,model_pose)#
             input_transformed_combined.append(np.array(input_transformed))
             updated_models_combined.append(np.array(model))
 
