@@ -6,7 +6,7 @@ import logging
 import matching
 from matplotlib import pyplot as plt
 import timer
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 import plot_vars
 
@@ -16,8 +16,8 @@ feature_name = 'orb-flann'
 #path_json = '../img/galabal2018/json/' #'../json_data/'   #'posesGeoteam/json/'
 path_img = '../img/kever2/'  # 'posesGeoteam/fotos/'
 path_json = '../json_data/kever2/'  # 'posesGeoteam/json/'
-model_name = 'kever22.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'kever39.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'kever6.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'kever38.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -39,7 +39,7 @@ logger.debug(" using %s", feature_name)
 
 include_keypoints = True
 plot_us = True  # plot urban scene
-plot_mp = True # plot multi pose
+plot_mp = False # plot multi pose
 plot_vars.input_name = input_name
 plot_vars.model_name = model_name
 plot_vars.model_path = path_img + model_name

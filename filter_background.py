@@ -4,7 +4,7 @@ import common
 import numpy as np
 import json
 
-path = "json_data/kever2/"
+path = "json_data/kever/"
 
 def dist(x,y):
     return np.sqrt(np.sum((x-y)**2))

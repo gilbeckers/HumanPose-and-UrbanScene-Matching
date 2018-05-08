@@ -108,6 +108,13 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
                                         "test",
                                         model_image, persp_trans_input_img,input_pose_features,
                                          plot)
+    # (err) = transformation.affine_multi_important_posefeat(p_model_good, p_input_persp_only_buildings,
+    #                                     model_pose_features, input_pose_trans,
+    #                                     model_image_height, model_image_width,
+    #                                     input_image_h, input_image_w,
+    #                                     "test",
+    #                                     model_image, persp_trans_input_img, input_pose_features,
+    #                                     pose_feat=4, plot=plot)
     return err
 
 

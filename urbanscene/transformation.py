@@ -239,6 +239,174 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
 
 
 
+def affine_multi_important_posefeat(p_model_good, p_input_good, model_pose, input_pose, model_image_height, model_image_width,input_image_h, input_image_w, label, model_img, persp_input_img, input_pose_org,pose_feat=4, plot=False):
+
+    model_pose_org = np.copy(model_pose)
+    random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
+    model_pose = [np.array(model_pose)]
+    input_pose = [np.array(input_pose)]
+    #logging.debug("THE RANDOM FEATURES: %s", str(random_features))
+
+    # include some random features of background:
+    for i in random_features:
+        model_pose.append(np.array(p_model_good[i]))
+        input_pose.append(np.array(p_input_good[i]))
+
+    model_pose = np.vstack(model_pose)
+    input_pose = np.vstack(input_pose)
+
+    (input_transformed, M) = common.find_transformation(model_pose, input_pose)
+
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
+    unpad = lambda x: x[:, :-1]
+    input_transformed = unpad(np.dot(pad(np.vstack((p_input_good, input_pose))), M))
+
+    # Norm manier 2: image_resolution normaliseren
+    model_features_norm = common.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
+    #input_features_trans_norm = common.scene_feature_scaling(input_transformed, input_image_w, input_image_h)
+    input_features_trans_norm = common.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
+
+    euclidean_error_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    max_euclidean_error_norm = max(euclidean_error_norm)
+    logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
+
+    dis_model = distPoseAndBackgroundFeat(model_features_norm, pose_feat)
+    dis_trans_input = distPoseAndBackgroundFeat(input_features_trans_norm, pose_feat)
+
+    #logging.info("distance MODEL : %s"  , str(dis_model) )
+    #logging.info("distance INPUT : %s", str(dis_trans_input))
+
+    max_dis = np.max(np.abs(dis_model-dis_trans_input))
+    max_index = np.argmax(np.abs(dis_model-dis_trans_input))
+    logging.info("distance DIFF : %s  index: %s" ,str(max_dis), str(max_index))
+
+    max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
+
+    markersize = 3
+    fs= 8  #fontsize
+    if plot:
+        # --- First row plot ---
+        plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+        f = plt.figure(figsize=(10, 8))
+
+
+        f.suptitle("US matching | score="+ str(round(max_euclidean_error_norm,4)) + " (thresh=ca " + str(thresholds.AFFINE_TRANS_WHOLE_DISTANCE) +" )", fontsize=10)
+        plt.subplot(2, 2, 1)
+        plt.imshow(np.asarray(plain_input_img), cmap='gray')
+        plt.title("input: " + plot_vars.input_name, fontsize=fs)
+        plt.plot(*zip(*input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+        plain_model_img = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
+        plt.subplot(2, 2, 2)
+        plt.imshow(np.asarray(plain_model_img), cmap='gray')
+        plt.title("model: " + plot_vars.model_name, fontsize=fs)
+        plt.plot(*zip(*model_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+        # --- Second row plot ---
+        #f.set_figheight(20)
+        plt.subplot(2, 3, 4)
+        plt.imshow(np.asarray(persp_input_img), cmap='gray')
+        plt.axis('off')
+        plt.title("corrected input", fontsize=fs)
+        plt.plot(*zip(*p_input_good), marker='o', color='r', label='features', ls='', ms=markersize)
+        plt.plot(*zip(*input_pose), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
+        plt.legend(fontsize=fs - 1)
+        #plt.legend(handles=[mpatches.Patch(color='red', label='features'),mpatches.Patch(color='blue', label='pose')])
+
+
+        plt.subplot(2, 3, 5)
+        plt.imshow(np.asarray(plain_model_img), cmap='gray')
+        plt.title("model", fontsize=fs)
+        plt.axis('off')
+        plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
+        plt.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
+        #red_patch = mpatches.Patch(color='magenta', label='model')
+        #plt.legend(handles=[red_patch])
+        plt.legend(fontsize=fs - 1)
+
+        plt.subplot(2, 3, 6)
+        plt.imshow(np.asarray(model_img), cmap='gray')
+        plt.title("transform on model", fontsize=fs)
+        plt.axis('off')
+        plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+                 label='model',
+                 ms=markersize-1)  # ms = markersize
+        plt.plot(*zip(*input_transformed), marker='o', color='aqua', ls='', label='input',
+                 ms=markersize-1)  # ms = markersize
+
+        plt.plot(*model_pose[4,:], marker='x', color='gold', ls='', label='input',
+                 ms=7, linewidth=4.0)  # ms = markersize
+        plt.plot(*p_model_good[max_index-18, :], marker='x', color='gold', ls='', label='input',
+                 ms=7, linewidth=4.0)  # ms = markersize
+
+        plt.plot(*input_transformed[4, :],'bs', marker='x', ls='', label='input',ms=7, linewidth=4.0)  # ms = markersize
+        plt.plot(*input_transformed[max_index, :], marker='x', color='r', ls='', label='input',
+                 ms=7, linewidth=4.0)  # ms = markersize
+
+        #plt.plot(*input_transformed[max_index,:], marker='x', color='gold', ls='', label='input',ms=5)  # ms = markersize
+        #plt.legend(handles=[mpatches.Patch(color='green', label='trans-input'), mpatches.Patch(color='magenta', label='model')])
+        plt.legend(fontsize=fs-1)
+
+        if plot_vars.write_img:
+            plot_name= plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0]
+            plt.savefig('./plots/'+plot_name+'.png')
+
+        #f, axes = plt.subplots(2, )
+        #f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(16, 5))
+        # implot = ax1.imshow(np.asarray(model_img), cmap='gray')
+        # # ax1.set_title(model_image_name + ' (model)')
+        # ax1.set_title("model")
+        # ax1.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax1.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # red_patch = mpatches.Patch(color='magenta', label='model')
+        # ax1.legend(handles=[red_patch])
+        #
+        # # ax2.set_title(input_image_name + ' (input)')
+        # ax2.set_title("input")
+        # ax2.imshow(np.asarray(input_img), cmap='gray')
+        # ax2.plot(*zip(*p_input_good), marker='o', color='r', ls='', ms=markersize)
+        # ax2.plot(*zip(*input_pose), marker='o', color='blue', ls='', ms=markersize)
+        # ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+        #
+        # ax3.set_title("aff split() " + label)
+        # ax3.imshow(np.asarray(model_img), cmap='gray')
+        # ax3.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+        #          label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax3.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='model',
+        #          ms=markersize)  # ms = markersize
+        # ax3.legend(handles=[mpatches.Patch(color='green', label='trans-input'),
+        #                     mpatches.Patch(color='magenta', label='model')])
+        #
+        # # plt.tight_layout()
+        # #plt.show(block=False)
+
+    return max_euclidean_error_norm
+
+
+def dist(x,y):
+    return np.sqrt( np.sum((x-y)**2, axis=1))
+# Calc distance between most important pose-feature and all background features
+def distPoseAndBackgroundFeat(features, pose_feat):
+    lengt = features.shape[0]
+    # Make an array with as every row the pose_feature
+    pose_feat_arr = np.ones((features.shape[0],2))
+    pose_feat_arr[:,0] = pose_feat_arr[:,0]* features[pose_feat][0]
+    pose_feat_arr[:, 1] = pose_feat_arr[:, 1] * features[pose_feat][1]
+    dis = dist(pose_feat_arr, features)
+
+    return  dis
+
+
+
+
+
+
+
+
+
 
 
 
