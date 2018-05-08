@@ -14,10 +14,10 @@ import plot_vars
 feature_name = 'orb-flann'
 #path_img = '../img/galabal2018/fotos/'    #'../img/'  #'posesGeoteam/fotos/'
 #path_json = '../img/galabal2018/json/' #'../json_data/'   #'posesGeoteam/json/'
-path_img = '../img/'  # 'posesGeoteam/fotos/'
-path_json = '../json_data/'  # 'posesGeoteam/json/'
-model_name = '1094.png' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = '700.png' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+path_img = '../img/kever2/'  # 'posesGeoteam/fotos/'
+path_json = '../json_data/kever2/'  # 'posesGeoteam/json/'
+model_name = 'kever22.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
+input_name = 'kever39.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
@@ -37,7 +37,7 @@ if detector is None:
 
 logger.debug(" using %s", feature_name)
 
-include_keypoints = False
+include_keypoints = True
 plot_us = True  # plot urban scene
 plot_mp = True # plot multi pose
 plot_vars.input_name = input_name

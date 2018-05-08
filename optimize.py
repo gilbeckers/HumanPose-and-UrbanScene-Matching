@@ -2,12 +2,12 @@
 from os import walk
 from PIL import Image
 
-path = "img/comp/"
+path = "img/kever2/"
 img = "test_comp.jpg"
-path_destination = "img/comp/result/"
+path_destination = "img/kever2/result/"
 
-model_name = "duo"
-start_counter = 28
+model_name = "kever"
+start_counter = 22
 
 
 # origineel gsm gil: 3024x4032  3,17 MB

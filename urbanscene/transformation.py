@@ -56,34 +56,34 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     # input_persp_img_arr = np.asarray()
 
     if plot:
-        f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(14, 6))
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
         #ax1.imshow(model_img)
         ax1.imshow(np.asarray(model_img), cmap='gray')
         # ax1.set_title(model_image_name + ' (model)')
-        ax1.set_title("model")
-        ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
+        ax1.set_title("Model ") #kever17.jpg
+        #ax1.plot(*zip(*p_model), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
         ax1.plot(*zip(*model_pose_features), marker='o', color='red', ls='', label='pose', ms=markersize )  # ms = markersize
-        red_patch = mpatches.Patch(color='magenta', label='model')
-        ax1.legend(handles=[red_patch])
+        #red_patch = mpatches.Patch(color='magenta', label='model')
+        #ax1.legend(handles=[red_patch])
 
         # ax2.set_title(input_image_name + ' (input)')
-        ax2.set_title("input")
+        ax2.set_title("Input ") #kever10.jpg
         ax2.imshow(np.asarray(input_img), cmap='gray')
-        ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
+        #ax2.plot(*zip(*p_input), marker='o', color='r', ls='', ms=markersize)
         ax2.plot(*zip(*input_pose_features), marker='*', color='r', ls='', ms=markersize)
-        ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
+        #ax2.legend(handles=[mpatches.Patch(color='red', label='input')])
 
-        ax3.set_title("persp corr input (features+pose)")
+        ax3.set_title("Perspectief herstelde input")
         ax3.imshow(np.asarray(perspective_transform_input), cmap='gray')
         ax3.plot(*zip(*input_pose_trans), marker='o', color='b', ls='', ms=markersize)
-        ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+        #ax3.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
 
-        ax4.set_title("trans-input onto model")
-        ax4.imshow(np.asarray(model_img), cmap='gray')
-        ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
-        ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
-        ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
-        ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
+        # ax4.set_title("trans-input onto model")
+        # ax4.imshow(np.asarray(model_img), cmap='gray')
+        # ax4.plot(*zip(*p_input_persp_trans), marker='o', color='b', ls='', ms=markersize)
+        # ax4.plot(*zip(*p_model), marker='o', color='magenta', ls='', ms=markersize)
+        # ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
+        # ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
         # plt.tight_layout()
         plt.show(block=False)
 
@@ -169,7 +169,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         #f.set_figheight(20)
         plt.subplot(2, 3, 4)
         plt.imshow(np.asarray(persp_input_img), cmap='gray')
-        #plt.axis('off')
+        plt.axis('off')
         plt.title("corrected input", fontsize=fs)
         plt.plot(*zip(*p_input_good), marker='o', color='r', label='features', ls='', ms=markersize)
         plt.plot(*zip(*input_pose), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
@@ -180,7 +180,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         plt.subplot(2, 3, 5)
         plt.imshow(np.asarray(plain_model_img), cmap='gray')
         plt.title("model", fontsize=fs)
-        #plt.axis('off')
+        plt.axis('off')
         plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
         plt.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
         #red_patch = mpatches.Patch(color='magenta', label='model')
@@ -194,7 +194,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
                  label='model',
                  ms=markersize-1)  # ms = markersize
-        plt.plot(*zip(*input_transformed), marker='o', color='green', ls='', label='input',
+        plt.plot(*zip(*input_transformed), marker='o', color='aqua', ls='', label='input',
                  ms=markersize-1)  # ms = markersize
         #plt.legend(handles=[mpatches.Patch(color='green', label='trans-input'), mpatches.Patch(color='magenta', label='model')])
         plt.legend(fontsize=fs-1)
