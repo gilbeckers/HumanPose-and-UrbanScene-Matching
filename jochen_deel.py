@@ -57,18 +57,20 @@ dataset.check_galabal_matches("4")
 logging.basicConfig(level=logging.ERROR)
 dataset.draw_pr_curve()
 
+# logging.basicConfig(level=logging.ERROR)
+# dataset.findSpecials()
 
-#******************-*************quick tests******************
-
-logging.basicConfig(level=logging.ERROR)
-model = testdata+"angle/pose2.json"
-input = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose2/json/5.json'
-model_features = common.parse_JSON_multi_person(model)
-input_features = common.parse_JSON_multi_person(input)
-primary_angles = calcAngle.prepareangles(model_features)
-print(primary_angles)
-secondary_angles = calcAngle.prepareangles(input_features)
-print(secondary_angles)
-result, angles = calcAngle.succes(primary_angles, secondary_angles,15)
-print(result)
-print(angles)
+# #******************-*************quick tests******************
+#
+# logging.basicConfig(level=logging.ERROR)
+# model =  '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose1/json/0.json'
+# input = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose2/json/5.json'
+# model_features = common.parse_JSON_multi_person(model)
+# input_features = common.parse_JSON_multi_person(input)
+# primary_angles = calcAngle.prepareangles(model_features)
+# print(primary_angles)
+# secondary_angles = calcAngle.prepareangles(input_features)
+# print(secondary_angles)
+# result, angles = calcAngle.succes(primary_angles, secondary_angles,15)
+# print(result)
+# print(angles)
