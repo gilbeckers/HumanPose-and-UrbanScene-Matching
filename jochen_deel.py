@@ -52,13 +52,13 @@ dataset.check_galabal_matches("4")
 '''
 
 #**************************pr curves*********************
-
+#
+#
+# logging.basicConfig(level=logging.ERROR)
+# dataset.draw_pr_curve()
 
 logging.basicConfig(level=logging.ERROR)
-dataset.draw_pr_curve()
-
-# logging.basicConfig(level=logging.ERROR)
-# dataset.findSpecials()
+dataset.findSpecials()
 
 # #******************-*************quick tests******************
 #

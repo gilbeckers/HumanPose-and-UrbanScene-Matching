@@ -533,7 +533,7 @@ def draw_pr_curve():
     eucl_dis_tresh_legs= 0.2
     rotation_tresh_legs= 25
     eucld_dis_shoulders_tresh= 0.1
-    
+
     (precission3,recall3) = make_pr_curve("1")
 
     plt.plot(recall3,precission3, label="different variables in split")
@@ -773,7 +773,7 @@ def findSpecials():
     global eucl_dis_tresh
     global rotation_tresh
     global use_match2
-    use_match2 = False
+    use_match2 = True
 
     eucl_dis_tresh_torso= 0.098
     rotation_tresh_torso= 10.847
@@ -786,16 +786,16 @@ def findSpecials():
     prev_pres = 1
     prev_rec = 0
     start_error_tresh = 0.46
-    for i in range(0,20):
+    for i in range(0,40):
         error_tresh = start_error_tresh + 0.02*i
-        if prev_pres < 0.87 and prev_pres > 0.78:
+        if prev_pres < 0.9 and prev_pres > 0.78:
             (precision,recall) = findSpecialPaths(True,True,error_tresh)
             prev_rec = recall
             prev_pres = precision
-        elif (prev_rec > 0.3 and prev_rec<0.5):
-            (precision,recall) = findSpecialPaths(True,False,error_tresh)
-            prev_rec = recall
-            prev_pres = precision
+        # elif (prev_rec > 0.3 and prev_rec<0.5):
+        #     (precision,recall) = findSpecialPaths(True,False,error_tresh)
+        #     prev_rec = recall
+        #     prev_pres = precision
         else:
             (precision,recall) = findSpecialPaths(False,False,error_tresh)
             prev_rec = recall
