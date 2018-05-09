@@ -360,17 +360,17 @@ def make_pr_curve(pose, path):
     error_tresh_start = 0
     global error_tresh
 
-    for i in range(0,400):
-        error_tresh = error_tresh_start + 0.005*i
-        (precision,recall) = calculate_pr(pose,path,error_tresh,False)
-        precisions.append(precision)
-        recalls.append(recall)
-
-    for i in range(0,400):
-        error_tresh = error_tresh_start + 0.005*i
-        (precision,recall) = calculate_pr(pose,path,error_tresh,True)
-        precisions2.append(precision)
-        recalls2.append(recall)
+    # for i in range(0,400):
+    #     error_tresh = error_tresh_start + 0.005*i
+    #     (precision,recall) = calculate_pr(pose,path,error_tresh,False)
+    #     precisions.append(precision)
+    #     recalls.append(recall)
+    #
+    # for i in range(0,400):
+    #     error_tresh = error_tresh_start + 0.005*i
+    #     (precision,recall) = calculate_pr(pose,path,error_tresh,True)
+    #     precisions2.append(precision)
+    #     recalls2.append(recall)
 
     for i in range(0,400):
         error_tresh = error_tresh_start + 0.01*i
@@ -468,3 +468,92 @@ def find_best_accuracy():
     print ("best_tresh: "+ str(best_tresh))
     print ("recall: "+ str(recall))
     print ("precision: "+ str(precision))
+
+
+#************************************find special in pr******************************
+def find_specials():
+    pose = "00100"
+    path = multipose+pose # galabal_economica+pose #multipose+pose #galabal_18+pose  #
+    error_tresh_start = 1
+    global error_tresh
+    prev_pres =1
+    prev_rec =0
+
+    # for i in range(0,400):
+    #     error_tresh = error_tresh_start + 0.005*i
+    #     (precision,recall) = calculate_pr(pose,path,error_tresh,False)
+    #     precisions.append(precision)
+    #     recalls.append(recall)
+    #
+    # for i in range(0,400):
+    #     error_tresh = error_tresh_start + 0.005*i
+    #     (precision,recall) = calculate_pr(pose,path,error_tresh,True)
+    #     precisions2.append(precision)
+    #     recalls2.append(recall)
+
+    for i in range(0,5):
+        error_tresh = error_tresh_start + 0.1*i
+        if prev_rec >0.58 and prev_rec <0.65:
+            (precision,recall) = find_specials_loop(pose,path,error_tresh,True, True)
+            prev_rec = recall
+            prev_pres = precision
+        else:
+            (precision,recall) = find_specials_loop(pose,path,error_tresh,False, False)
+            prev_rec = recall
+            prev_pres = precision
+
+
+
+def find_specials_loop(pose,path,error_score_tresh, print_false_pos, print_false_neg):
+
+
+    model = path+"/json/"+pose+".json"
+
+    model_features = common.parse_JSON_multi_person(model)
+    true_positive =0
+    false_positive =0
+    true_negative =0
+    false_negative =0
+
+    for json in glob.iglob(path+"/json/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            true_positive = true_positive +1
+
+        else:
+            false_negative = false_negative +1
+            if print_false_neg:
+                print("false pos at: "+json)
+
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        #print (json)
+        input_features = common.parse_JSON_multi_person(json)
+        (result, error_score, input_transform,something) = multiperson.match2(model_features, input_features, True)
+        if error_score < error_score_tresh:
+            false_positive = false_positive +1
+            if print_false_pos:
+                print("false pos at: "+json)
+        else:
+            true_negative = true_negative +1
+
+    precision = 0
+    recall =0
+    if (true_positive+false_positive) !=0:
+        precision = true_positive / (true_positive+false_positive)
+    if  (true_positive+false_negative) !=0:
+        recall = true_positive / (true_positive+false_negative)
+
+    #******** print small raport ******************
+
+    print ("*************raport of pose "+pose+" ****************")
+    print ("true_positive: " + str(true_positive))
+    print ("false_positive: "+ str(false_positive))
+    print ("true_negative: " + str(true_negative))
+    print ("false_negative: "+ str(false_negative))
+    print ("recall: "+ str(recall))
+    print ("precision: "+ str(precision))
+    print ("error_score_tresh: "+str(error_score_tresh))
+    return (precision,recall)

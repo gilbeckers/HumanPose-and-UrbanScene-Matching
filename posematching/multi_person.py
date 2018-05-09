@@ -267,13 +267,13 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
             input_x_difference = input_x_max - next_input_x_min
 
 
-            model_y_max = max(model_pose[:, 1])
+            model_y_min = np.min(model_pose[np.nonzero(model_pose[:,1])][:, 1])
             next_model_y_min = np.min(next_model_pose[np.nonzero(next_model_pose[:,1])][:, 1])
-            model_y_difference = model_y_max - next_model_y_min
+            model_y_difference = model_y_min - next_model_y_min
 
-            input_y_max = max(input_pose[:, 1])
+            input_y_min = np.min(input_pose[np.nonzero(input_pose[:,1])][:, 1])
             next_input_y_min = np.min(next_input_pose[np.nonzero(next_input_pose[:,1])][:, 1])
-            input_y_difference = input_y_max - next_input_y_min
+            input_y_difference = input_y_min - next_input_y_min
 
             interaction_error = interaction_error + abs(model_x_difference-input_x_difference) +abs(model_y_difference-input_y_difference)
             logger.warning("model x difference: "+str(model_x_difference))
