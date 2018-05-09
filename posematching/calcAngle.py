@@ -58,15 +58,15 @@ def compare(prim,second):
     return max_error
 
 def succes(prim,second,angle_tresh):
-    angles = 0
+    angles = []
     for i in range(0, prim.size):
-            angles = np.append(angles,abs(prim[i]-second[i]))
+        angles.append(abs(prim[i]-second[i]))
+        if abs(prim[i]-second[i]) > angle_tresh:
 
-    succes = True
-    for angle in angles:
-        if angle > angle_tresh:
-            succes = False
-    return succes
+            return False, angles
+    return True, angles
+
+
 
 def find_treshhold(prim,second,tresh):
         angles = 0

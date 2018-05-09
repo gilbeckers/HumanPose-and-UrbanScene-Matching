@@ -190,6 +190,57 @@ def check_matches(pose):
 
 
 
+def finderror():
+    poses = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
+    pose = "2"
+    path = poses+pose
+    model = path+"/json/0.json"
+    model_features = common.parse_JSON_multi_person(model)
+    primary_angles = calcAngle.prepareangles(model_features)
+
+
+    for i in range(0,10):
+        pose = "2"
+        path = poses+pose
+        error_score_tresh = 19 + i
+        true_positive =0
+        false_positive =0
+        true_negative =0
+        false_negative =0
+        for json in glob.iglob(path+"/json/*.json"):
+            #print (json)
+            input_features = common.parse_JSON_multi_person(json)
+            model_features = common.parse_JSON_multi_person(model)
+            primary_angles = calcAngle.prepareangles(model_features)
+            secondary_angles = calcAngle.prepareangles(input_features)
+            result,angles = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+            if result == True:
+                true_positive = true_positive +1
+                #print ("score is: "+json)
+            else:
+                #print(angles)
+                false_negative = false_negative +1
+                #print ("error at: "+json)
+        pose = "5"
+        path = poses+pose
+        for json in glob.iglob(path+"/json/*.json"):
+            #print (json)
+            input_features = common.parse_JSON_multi_person(json)
+            model_features = common.parse_JSON_multi_person(model)
+            primary_angles = calcAngle.prepareangles(model_features)
+            secondary_angles = calcAngle.prepareangles(input_features)
+            result,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+            if result == True:
+                false_positive = false_positive +1
+                #print ("error at: "+json)
+            else:
+                true_negative = true_negative +1
+        print ("*************raport of pose "+pose+" ****************")
+        print ("true_positive: " + str(true_positive))
+        print ("false_positive: "+ str(false_positive))
+        print ("true_negative: " + str(true_negative))
+        print ("false_negative: "+ str(false_negative))
+        print ("error_score_tresh: "+str(error_score_tresh))
 
 #***********************************galabal dataset_actions*********************************
 def find_galabal_matches(pose):
@@ -461,7 +512,7 @@ def draw_pr_curve():
 
     eucl_dis_tresh= 0.1
     rotation_tresh= 10
-
+    #
     (precission1,recall1) = make_pr_curve("1")
     plt.plot(recall1,precission1, label="split in body parts")
 
@@ -476,15 +527,15 @@ def draw_pr_curve():
 
     plt.plot(recall3,precission3, label="angles between body parts")
 #
-    # eucl_dis_tresh_torso= 0.098
-    # rotation_tresh_torso= 15
-    # eucl_dis_tresh_legs= 0.05
-    # rotation_tresh_legs= 20
-    # eucld_dis_shoulders_tresh= 0.085
-    #
-    # (precission3,recall3) = make_pr_curve("1")
-    #
-    # plt.plot(recall3,precission3)
+    eucl_dis_tresh_torso= 0.098
+    rotation_tresh_torso= 15
+    eucl_dis_tresh_legs= 0.05
+    rotation_tresh_legs= 20
+    eucld_dis_shoulders_tresh= 0.085
+
+    (precission3,recall3) = make_pr_curve("1")
+
+    plt.plot(recall3,precission3)
 
     plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.ylabel('precision')
@@ -501,7 +552,7 @@ def make_pr_curve_angle(pose):
     precisions = [];
     recalls = []
     start_error_tresh = 0
-    for i in range(0,100):
+    for i in range(0,20):
         '''
         eucl_dis_tresh_torso= start_eucl_dis_tresh_torso +(i*0.001)
         rotation_tresh_torso= start_rotation_tresh_torso +(i*0.2)
@@ -509,7 +560,7 @@ def make_pr_curve_angle(pose):
         rotation_tresh_legs= start_rotation_tresh_legs +(i*0.1)
         eucld_dis_shoulders_tresh= start_eucld_dis_shoulders_tresh +(i*0.001)
         '''
-        error_tresh = start_error_tresh + 0.6*i
+        error_tresh = start_error_tresh + 3*i
         (precision,recall) = calculate_pr_angle(pose,error_tresh)
         precisions.append(precision)
         recalls.append(recall)
@@ -517,10 +568,10 @@ def make_pr_curve_angle(pose):
     return (precisions,recalls)
 
 def calculate_pr_angle(pose,error_score_tresh):
-    '''
-    path = poses+pose
-    model = path+"/json/"+pose+".json"
-    '''
+    # '''
+    # path = poses+pose
+    # model = path+"/json/"+pose+".json"
+    # '''
     poses = '/media/jochen/2FCA69D53AB1BFF43/dataset/poses/pose'
     pose = "1"
     path = poses+pose
@@ -632,7 +683,7 @@ def calculate_pr_angle(pose,error_score_tresh):
         input_features = common.parse_JSON_multi_person(json)
         primary_angles = calcAngle.prepareangles(model_features)
         secondary_angles = calcAngle.prepareangles(input_features)
-        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        result,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
         if result:
             true_positive = true_positive +1
             #print ("score is: "+str(error_score))
@@ -645,7 +696,7 @@ def calculate_pr_angle(pose,error_score_tresh):
         input_features = common.parse_JSON_multi_person(json)
         primary_angles = calcAngle.prepareangles(model_features)
         secondary_angles = calcAngle.prepareangles(input_features)
-        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        resul,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
         if result:
             false_positive = false_positive +1
             #print ("error at: "+json)
@@ -658,7 +709,7 @@ def calculate_pr_angle(pose,error_score_tresh):
         input_features = common.parse_JSON_multi_person(json)
         primary_angles = calcAngle.prepareangles(model_features)
         secondary_angles = calcAngle.prepareangles(input_features)
-        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        result,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
         if result:
             false_positive = false_positive +1
             #print ("error at: "+json)
@@ -672,7 +723,7 @@ def calculate_pr_angle(pose,error_score_tresh):
         input_features = common.parse_JSON_multi_person(json)
         primary_angles = calcAngle.prepareangles(model_features)
         secondary_angles = calcAngle.prepareangles(input_features)
-        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        result,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
         if result:
             false_positive = false_positive +1
             #print ("error at: "+json)
@@ -685,7 +736,7 @@ def calculate_pr_angle(pose,error_score_tresh):
         input_features = common.parse_JSON_multi_person(json)
         primary_angles = calcAngle.prepareangles(model_features)
         secondary_angles = calcAngle.prepareangles(input_features)
-        result = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
+        result,angle = calcAngle.succes(primary_angles, secondary_angles,error_score_tresh)
         if result:
             false_positive = false_positive +1
             #print ("error at: "+json)
