@@ -360,17 +360,17 @@ def make_pr_curve(pose, path):
     error_tresh_start = 0
     global error_tresh
 
-    # for i in range(0,400):
-    #     error_tresh = error_tresh_start + 0.005*i
-    #     (precision,recall) = calculate_pr(pose,path,error_tresh,False)
-    #     precisions.append(precision)
-    #     recalls.append(recall)
-    #
-    # for i in range(0,400):
-    #     error_tresh = error_tresh_start + 0.005*i
-    #     (precision,recall) = calculate_pr(pose,path,error_tresh,True)
-    #     precisions2.append(precision)
-    #     recalls2.append(recall)
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.005*i
+        (precision,recall) = calculate_pr(pose,path,error_tresh,False)
+        precisions.append(precision)
+        recalls.append(recall)
+
+    for i in range(0,400):
+        error_tresh = error_tresh_start + 0.005*i
+        (precision,recall) = calculate_pr(pose,path,error_tresh,True)
+        precisions2.append(precision)
+        recalls2.append(recall)
 
     for i in range(0,400):
         error_tresh = error_tresh_start + 0.01*i
