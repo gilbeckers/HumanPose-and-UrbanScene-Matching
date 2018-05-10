@@ -42,11 +42,12 @@ def rename_files():
 #**************************************precision recall********************************************
 def calculate_pr(pose,tresh):
     path = poses+pose
-    model = path+"/json/"+pose+".json"
+    model = path+"/model.json" #take filtered model for keypoints
     #pose = "1"
     #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
     #model = path+"/json/0.json"
     model_pose_features = common.parse_JSON_multi_person(model)
+    model = path+"/json/"+pose+".json"
     feature_name = 'orb-flann'
     detector, matcher = features.init_feature(feature_name)
     model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
@@ -57,16 +58,17 @@ def calculate_pr(pose,tresh):
     false_negative =0
 
     for json in glob.iglob(path+"/json/*.json"):
+        print(json)
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
         if result_whole < tresh:
             true_positive = true_positive +1
-
         else:
             false_negative = false_negative +1
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
+        print(json)
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)

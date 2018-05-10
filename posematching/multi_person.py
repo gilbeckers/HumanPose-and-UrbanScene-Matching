@@ -43,16 +43,13 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
         match_result_single = match_single(model_poses[0], input_poses[0], True)
 
-        # !!! BELANGRIJK!!  wordt ook gedaan in match_single(), maar maakt copy, dus hier opnieuw doen!!
-        (model_pose, input_pose) = handle_undetected_points(model_poses[0], input_poses[0])
-
         if match_result_single.match_bool:
             result_single = {}
             result_single[0] = {
                 "score": match_result_single.error_score,
-                "model": model_pose, #model_poses[0],
+                "model": model_poses[0],
                 # "model":updated_models_combined_nonorm,
-                "input": input_pose, #input_poses[0]
+                "input": input_poses[0]
                 # "input": input_transformed_combined_nonorm
             }
             return MatchResultMulti(match_result_single.match_bool,
@@ -137,26 +134,26 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
 
-        tot_error = (max_eucl_distance*4) + (pose_error)
+        tot_error = (max_eucl_distance) + (pose_error)
         if tot_error < min_error:
             logger.info("min_error was %0.4f and will become %0.4f",min_error,tot_error)
             min_error= tot_error
 
-        if tot_error<=thresholds.MP_DISCTANCE:
-            result_permuations[permutation] = {
-                "score" : tot_error ,
-                "model" : unchanged_model,
-                #"model":updated_models_combined_nonorm,
-                "input" : unchanged_input
-                #"input": input_transformed_combined_nonorm
-            }
-            logger.info("--> MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f (thresh %0.4f)", permutation,
-                        max_eucl_distance,pose_error,thresholds.MP_DISCTANCE )
+        # if tot_error<=thresholds.MP_DISCTANCE:
+        result_permuations[permutation] = {
+            "score" : tot_error ,
+            "model" : unchanged_model,
+            #"model":updated_models_combined_nonorm,
+            "input" : unchanged_input
+            #"input": input_transformed_combined_nonorm
+        }
+        logger.info("--> MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f (thresh %0.4f)", permutation,
+                    max_eucl_distance,pose_error,thresholds.MP_DISCTANCE )
 
 
-        else:
-            logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f  (thresh %0.4f)", permutation,
-                        max_eucl_distance,pose_error, thresholds.MP_DISCTANCE)
+        # else:
+        #     logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f  (thresh %0.4f)", permutation,
+        #                 max_eucl_distance,pose_error, thresholds.MP_DISCTANCE)
     # TODO: nog max nemen van resultaat.
     #logger.debug("result scores: " , result_permuations)
 
@@ -166,7 +163,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
     if result_permuations:
         return MatchResultMulti(True, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
-    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
+    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=combinations)
 
 def match2(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))

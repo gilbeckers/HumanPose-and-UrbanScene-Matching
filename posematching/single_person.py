@@ -30,46 +30,33 @@ class MatchCombo(object):
 '''
 Description single_person(model_features, input_features):
 GOAL: Decides if the inputpose matches with the modelpose.
-
 Both valid and unvalid modelposes are allowed, that is, modelposes with no undetected body parts are also allowed.
 If a unvalid model pose is used, the inputpose is adjusted and the matching continues.
-
 The inputpose is also allowed to contain a number of undetected body-parts.
 These undetected features are marked as (0,0). The algorithm is designed to handle these incomplete situations as follow:
-
 In order to proceed the matching with these undetected points, a copy is made of the model pose
 where the corresponding undetected points of the input pose are also set to (0,0).
 -- So, the inputpose and modelpose_copy still have the same length of features (18) and also the same
 amount of undetected features. --
-
 Later, before the affine transformation is found, the undetected features are temporarily filtered out.
 In this way these origin points don't influence the least-squares algorithm.
-
-
-
 In case of undetected features in the inputpose, one should care of the following:
 NOTE 1: The (0,0) points can't just be deleted because
 without them the feature-arrays would become ambigu. (the correspondence between model and input)
-
 NOTE 2: In order to disregard the undetected feauters of the inputpose, the corresponding modelpose features
 are also altered to (0,0). Because we don't want the loose the original information of the complete modelpose,
 first a local copy is made of the modelpose before the altering. The rest of the function (the actual matching)
 uses this copy. At the end, the original (the unaltered version) model is returned, so the next step in the pipeline
 still has all the original data.
-
 NOTE 3: the acceptation and introduction of (0,0) points is a danger for our current normalisation
 These particular origin points should not influence the normalisation
 (which they do if we neglect them, xmin and ymin you know ... )
-
-
-
 Parameters:
 Takes two parameters, model name and input name.
 Both have a .json file in json_data and a .jpg or .png in image_data
 @:param model_features:
 @:param input_features:
 @:param normalise:
-
 Returns:
 @:returns result matching
 @:returns error_score
@@ -180,7 +167,6 @@ def match_single(model_features, input_features, normalise=True):
 
     # TODO: construct a solid score algorithm
     error_score = ((max_euclidean_error_torso/eucl_dis_tresh_torso) + (max_euclidean_error_legs/eucl_dis_tresh_legs) + (max_euclidean_error_shoulders/eucld_dis_shoulders_tresh)+(rotation_legs/rotation_tresh_legs)+(rotation_torso/rotation_tresh_torso))/5
-
     if not (result_torso and result_legs and result_face):
         error_score = error_score +0.2 #penalty for bad matching_inputs features
     return MatchResult(True,error_score=error_score,input_transformation=input_transformation)
