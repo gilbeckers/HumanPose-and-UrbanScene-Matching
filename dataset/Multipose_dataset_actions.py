@@ -16,13 +16,44 @@ logger = logging.getLogger("Multipose dataset")
 
 schijfnaam = "/media/jochen/2FCA69D53AB1BFF43/"
 poses = schijfnaam+'dataset/kever/poses/'
-json = schijfnaam+'dataset/kever/json/'
-fotos = schijfnaam+'dataset/kever/fotos/'
+urban_json = schijfnaam+'dataset/kever/json/'
+urban_fotos = schijfnaam+'dataset/kever/fotos/'
 
+def find_matches_with(pose):
+
+
+    model = urban_json+pose+".json"
+    model_pose_features = common.parse_JSON_multi_person(model)
+    feature_name = 'orb-flann'
+    detector, matcher = features.init_feature(feature_name)
+
+    model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+    print(model.split(".")[0].replace("json","fotos")+".jpg")
+    count = 0
+    os.system("mkdir -p "+poses+pose)
+    os.system("mkdir -p "+poses+pose+"/json")
+    os.system("mkdir -p "+poses+pose+"/jsonfout")
+    os.system("mkdir -p "+poses+pose+"/fotos")
+    os.system("mkdir -p "+poses+pose+"/fotosfout")
+    for json in glob.iglob(urban_json+"*.json"):
+        input_pose_features= common.parse_JSON_multi_person(json)
+        input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+        result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+        if result_whole < 0.1:
+            place = json.split(".json")[0]
+            place = place.split("json/")[1]
+            place = place+".json"
+            os.system("cp "+json+" "+poses+pose+"/json/"+place)
+            foto = json.split(".json")[0];
+            foto = foto.replace("json","fotos")
+            foto = foto +".jpg"
+            os.system("cp "+foto+" "+poses+pose+"/fotos/")
+            count = count+1
+    print ("there are "+str(count)+" matches found")
 #*****************************************logic*********************************************
 def replace_json_files():
-    pose = "14"
-    galabal = galabal_18
+    pose = "11"
+    galabal =poses
     path = galabal+pose
     for foto in glob.iglob(path+"/fotosfout/*"):
         foto = foto.split(".")[0];
@@ -34,6 +65,20 @@ def replace_json_files():
 
 #*****************************************logic*********************************************
 def rename_files():
+
+    # path = urban_json
+    # for json in glob.iglob(path+"*.json"):
+    #     #foto = foto.split("_keypoints")[0];
+    #     new = json.replace("json/kever","json/")
+    #
+    #     os.system("mv "+json+" "+new)
+
+    path = urban_fotos
+    for json in glob.iglob(path+"*.jpg"):
+        #foto = foto.split("_keypoints")[0];
+        new = json.replace("fotos/kever","fotos/")
+
+        os.system("mv "+json+" "+new)
     print("not implemented")
 
 
@@ -42,7 +87,7 @@ def rename_files():
 #**************************************precision recall********************************************
 def calculate_pr(pose,tresh):
     path = poses+pose
-    model = path+"/model.json" #take filtered model for keypoints
+    model = path+"/json/"+pose+".json" #take filtered model for keypoints
     #pose = "1"
     #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
     #model = path+"/json/0.json"
@@ -50,6 +95,7 @@ def calculate_pr(pose,tresh):
     model = path+"/json/"+pose+".json"
     feature_name = 'orb-flann'
     detector, matcher = features.init_feature(feature_name)
+
     model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
     print(model.split(".")[0].replace("json","fotos")+".jpg")
     true_positive =0
@@ -66,6 +112,8 @@ def calculate_pr(pose,tresh):
             true_positive = true_positive +1
         else:
             false_negative = false_negative +1
+            print("false neg at: "+json.split("/json/")[1])
+            print(result_whole)
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
         print(json)
@@ -73,6 +121,8 @@ def calculate_pr(pose,tresh):
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
         if result_whole < tresh:
+            print("false pos at: "+json.split("/jsonfout/")[1])
+            print(result_whole)
             false_positive = false_positive +1
         else:
             true_negative = true_negative +1
@@ -93,16 +143,20 @@ def calculate_pr(pose,tresh):
     print ("false_negative: "+ str(false_negative))
     print ("recall: "+ str(recall))
     print ("precision: "+ str(precision))
-    print ("error_score_tresh: "+str(error_score_tresh))
+    print ("error_score_tresh: "+str(tresh))
     return (precision,recall)
 
 
 def make_pr_curve(pose):
     precisions = []
     recalls = []
-    start_tresh = 0
+    start_tresh = 0.1
+    # (precision,recall) = calculate_pr(pose,0.55)
+    # print(str(precision))
+    # print(str(recall))
+
     for i in range(0,10):
-        tresh = start_tresh + i*0.1
+        tresh = start_tresh + i*0.01
         (precision,recall) = calculate_pr(pose,tresh)
         precisions.append(precision)
         recalls.append(recall)
@@ -111,10 +165,10 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    pose = "29"
+    pose = "11"
     precisions, recalls = make_pr_curve(pose)
 
-    plt.plot(recalls,precisions, label="describing poses")
+    plt.plot(recalls,precisions, label="urban scene")
 
     plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.ylabel('precision')

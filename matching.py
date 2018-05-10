@@ -10,21 +10,21 @@ logger = logging.getLogger("match_whole")
 
 import time
 
-def timing(f):
-    def wrap(*args):
-        time1 = time.time()
-        ret = f(*args)
-        time2 = time.time()
-        logger.critical('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
-        return ret
-    return wrap
+# def timing(f):
+#     def wrap(*args):
+#         time1 = time.time()
+#         ret = f(*args)
+#         time2 = time.time()
+#         logger.critical('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
+#         return ret
+#     return wrap
 
 # Performs the whole matching
 # First multi pose matching, followed by urbanscene matching
-@timing
+#@timing
 def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot_us=False, plot_mp=False):
+    (result, MP_error_score, input_transform,permutations) = multi_person.match(model_pose_features, input_pose_features)
 
-    result_pose_matching = multi_person.match(model_pose_features, input_pose_features, plot=plot_mp, input_image = input_image, model_image=model_image)
 
     #logger.debug("---Result pose matching: --")
     #logger.debug(result_pose_matching)
@@ -61,7 +61,9 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
     # Loop over all found matching comnbinations
     # And order input poses according to matching model poses
     min_error = 1000
-    for matching_permuations, result in result_pose_matching.matching_permutations.items():
+    if permutations == None:
+        return np.inf
+    for result in permutations:
         model_poses = result['model']
         input_poses = result['input']
         #logger.debug(model_poses)
@@ -78,7 +80,7 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
 
         if (error+result['score'])/2 < min_error:
             logger.debug("new min error %d",min_error)
-            min_error = (error+result['score'])/2
+            min_error = error #+result['score']/2
         # if error <= thresholds.AFFINE_TRANS_WHOLE_DISTANCE:
         #     logger.info("===> MATCH! permutation %s  score:%0.4f (thresh ca %0.4f)",
         #                 matching_permuations, round(error, 4), thresholds.AFFINE_TRANS_WHOLE_DISTANCE)

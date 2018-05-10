@@ -43,21 +43,22 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
         match_result_single = match_single(model_poses[0], input_poses[0], True)
 
-        if match_result_single.match_bool:
-            result_single = {}
-            result_single[0] = {
-                "score": match_result_single.error_score,
-                "model": model_poses[0],
-                # "model":updated_models_combined_nonorm,
-                "input": input_poses[0]
-                # "input": input_transformed_combined_nonorm
-            }
-            return MatchResultMulti(match_result_single.match_bool,
-                                    error_score=match_result_single.error_score,
-                                    input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??
-                                    matching_permutations=result_single)
-        else:
-            return MatchResultMulti(False, error_score=100, input_transformation=None, matching_permutations=None )
+
+        result_single = []
+        result_single_per = {
+            "score": match_result_single.error_score,
+            "permutation" : (0,0),
+            "model": model_poses[0],
+            # "model":updated_models_combined_nonorm,
+            "input": input_poses[0]
+            # "input": input_transformed_combined_nonorm
+        }
+        result_single.append(result_single_per)
+        return MatchResultMulti(match_result_single.match_bool,
+                                error_score=match_result_single.error_score,
+                                input_transformation=match_result_single.input_transformation, #TODO niet meer gebruikt??
+                                matching_permutations=result_single)
+
 
     (matches_dict,  ordered_model_poses, ordered_input_poses,error_scores_dict) = find_ordered_matches(model_poses,input_poses)
 
@@ -79,7 +80,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
     allInputs = sorted(matches_dict)
     combinations = list(itertools.product(*(matches_dict[Name] for Name in allInputs)))
     error_scores =  list(itertools.product(*(error_scores_dict[Name] for Name in allInputs)))
-    result_permuations = {}
+    result_permuations = []
     min_error = 10
     for index,permutation in enumerate(combinations):
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
@@ -134,19 +135,20 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
         max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
 
-        tot_error = (max_eucl_distance) + (pose_error)
+        tot_error = (max_eucl_distance*4) + (pose_error)
         if tot_error < min_error:
             logger.info("min_error was %0.4f and will become %0.4f",min_error,tot_error)
             min_error= tot_error
 
         # if tot_error<=thresholds.MP_DISCTANCE:
-        result_permuations[permutation] = {
+        result_permuations.append( {
             "score" : tot_error ,
+            "permutation" : permutation,
             "model" : unchanged_model,
             #"model":updated_models_combined_nonorm,
             "input" : unchanged_input
             #"input": input_transformed_combined_nonorm
-        }
+        })
         logger.info("--> MATCH! permutation %s  | Max distance: %0.4f | Pose error %0.4f (thresh %0.4f)", permutation,
                     max_eucl_distance,pose_error,thresholds.MP_DISCTANCE )
 
@@ -163,7 +165,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
     if result_permuations:
         return MatchResultMulti(True, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
-    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=combinations)
+    return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=None)
 
 def match2(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))
@@ -314,6 +316,8 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
     return MatchResultMulti(False, error_score=min_error, input_transformation=None, matching_permutations=result_permuations)
 
 
+
+
 def find_ordered_matches(model_poses,input_poses):
 
     model_poses = order_poses(model_poses)
@@ -395,23 +399,13 @@ def order_poses(poses):
                     placed = True
     return ordered
 
-
-
-
-
-
-
 def plot_match(model_features, input_features, input_transform_features, model_image_name, input_image_name):
     # plot vars
     markersize = 2
 
-    # Load images , if model_image_name is of type string => it's a path, so read the image in mem
-    if isinstance(model_image_name, str):
-        model_image = plt.imread(model_image_name)
-        input_image = plt.imread(input_image_name)
-    else:
-        model_image = model_image_name  # plt.imread(model_image_name)
-        input_image = input_image_name  # plt.imread(input_image_name)
+    # Load images
+    model_image = plt.imread(model_image_name)
+    input_image = plt.imread(input_image_name)
 
     f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(14, 6))
     implot = ax1.imshow(model_image)
@@ -428,7 +422,7 @@ def plot_match(model_features, input_features, input_transform_features, model_i
     ax3.plot(*zip(*model_features), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transform_features), marker='o', color='blue', ls='', ms=markersize)
     ax3.legend(handles=[mpatches.Patch(color='magenta', label='Model'), mpatches.Patch(color='blue', label='Input transformed')])
-    #plt.draw()
-    #plt.show(block=True)
+    plt.draw()
+    #plt.show()
 
     return

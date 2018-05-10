@@ -23,6 +23,9 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
 
+    if len(p_model_good) < 15:
+        logging.critical("p_model_good too small, %d",len(p_model_good))
+        return np.inf
     #cv2.waitKey()
     #cv2.destroyAllWindows()
 
@@ -43,22 +46,22 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
     # How to check if obtained homography matrix is good?  https://stackoverflow.com/questions/14954220/how-to-check-if-obtained-homography-matrix-is-good
-    1. Homography should preserve the direction of polygonal points. 
-    Design a simple test. points (0,0), (imwidth,0), (width,height), (0,height) represent a 
-    quadrilateral with clockwise arranged points. Apply homography on those points and see if 
-    they are still clockwise arranged if they become counter clockwise your homography is flipping (mirroring) 
+    1. Homography should preserve the direction of polygonal points.
+    Design a simple test. points (0,0), (imwidth,0), (width,height), (0,height) represent a
+    quadrilateral with clockwise arranged points. Apply homography on those points and see if
+    they are still clockwise arranged if they become counter clockwise your homography is flipping (mirroring)
     the image which is sometimes still ok. But if your points are out of order than you have a "bad homography"
 
-    2. The homography doesn't change the scale of the object too much. For example if you expect it to shrink or 
-    enlarge the image by a factor of up to X, just check this rule. 
-    Transform the 4 points (0,0), (imwidth,0), (width-1,height), (0,height) with homography and 
-    calculate the area of the quadrilateral (opencv method of calculating area of polygon) if 
+    2. The homography doesn't change the scale of the object too much. For example if you expect it to shrink or
+    enlarge the image by a factor of up to X, just check this rule.
+    Transform the 4 points (0,0), (imwidth,0), (width-1,height), (0,height) with homography and
+    calculate the area of the quadrilateral (opencv method of calculating area of polygon) if
     the ratio of areas is too big (or too small), you probably have an error.
 
-    3. Good homography is usually uses low values of perspectivity. Typically if the size of 
-    the image is ~1000x1000 pixels those values should be ~0.005-0.001. High perspectivity 
-    will cause enormous distortions which are probably an error. If you don't know where those values 
-    are located read my post: trying to understand the Affine Transform . 
+    3. Good homography is usually uses low values of perspectivity. Typically if the size of
+    the image is ~1000x1000 pixels those values should be ~0.005-0.001. High perspectivity
+    will cause enormous distortions which are probably an error. If you don't know where those values
+    are located read my post: trying to understand the Affine Transform .
     It explains the affine transform math and the other 2 values are perspective parameters.
     '''
 
@@ -127,10 +130,8 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
 
     ''' --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  ------------------------- '''
-    (mask, p_model_good, p_input_good, H, H2) = features.match_and_draw("multipips", matcher, desc_model,
-                                                                        desc_input, kp_model, kp_input,
-                                                                        model_image, input_image, False)
 
+    logging.critical("p_model_good is %d",p_model_good)
     cv2.waitKey()
     cv2.destroyAllWindows()
 
@@ -147,22 +148,22 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     # understand affine transfromation: https://stackoverflow.com/questions/10667834/trying-to-understand-the-affine-transform/
 
     # How to check if obtained homography matrix is good?  https://stackoverflow.com/questions/14954220/how-to-check-if-obtained-homography-matrix-is-good
-    1. Homography should preserve the direction of polygonal points. 
-    Design a simple test. points (0,0), (imwidth,0), (width,height), (0,height) represent a 
-    quadrilateral with clockwise arranged points. Apply homography on those points and see if 
-    they are still clockwise arranged if they become counter clockwise your homography is flipping (mirroring) 
+    1. Homography should preserve the direction of polygonal points.
+    Design a simple test. points (0,0), (imwidth,0), (width,height), (0,height) represent a
+    quadrilateral with clockwise arranged points. Apply homography on those points and see if
+    they are still clockwise arranged if they become counter clockwise your homography is flipping (mirroring)
     the image which is sometimes still ok. But if your points are out of order than you have a "bad homography"
 
-    2. The homography doesn't change the scale of the object too much. For example if you expect it to shrink or 
-    enlarge the image by a factor of up to X, just check this rule. 
-    Transform the 4 points (0,0), (imwidth,0), (width-1,height), (0,height) with homography and 
-    calculate the area of the quadrilateral (opencv method of calculating area of polygon) if 
+    2. The homography doesn't change the scale of the object too much. For example if you expect it to shrink or
+    enlarge the image by a factor of up to X, just check this rule.
+    Transform the 4 points (0,0), (imwidth,0), (width-1,height), (0,height) with homography and
+    calculate the area of the quadrilateral (opencv method of calculating area of polygon) if
     the ratio of areas is too big (or too small), you probably have an error.
 
-    3. Good homography is usually uses low values of perspectivity. Typically if the size of 
-    the image is ~1000x1000 pixels those values should be ~0.005-0.001. High perspectivity 
-    will cause enormous distortions which are probably an error. If you don't know where those values 
-    are located read my post: trying to understand the Affine Transform . 
+    3. Good homography is usually uses low values of perspectivity. Typically if the size of
+    the image is ~1000x1000 pixels those values should be ~0.005-0.001. High perspectivity
+    will cause enormous distortions which are probably an error. If you don't know where those values
+    are located read my post: trying to understand the Affine Transform .
     It explains the affine transform math and the other 2 values are perspective parameters.
     '''
 
