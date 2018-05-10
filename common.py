@@ -23,6 +23,7 @@ logger = logging.getLogger("common")
 import os
 import itertools as it
 from contextlib import contextmanager
+import thresholds
 
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
@@ -225,12 +226,13 @@ def parse_JSON_multi_person(filename):
         # 18 3D coordinatenkoppels (joint-points)
         array = np.zeros((18, 2))
         arrayIndex = 0
+
         for i in range(0, len(person_keypoints), 3):
             if person_keypoints[i+2]> thresholds.OPENPOSE_ZEKERHEID:  # 0.18 was 0.25 was 0.4
                 array[arrayIndex][0] = person_keypoints[i]
                 array[arrayIndex][1] = person_keypoints[i+1]
             else:
-                logger.debug("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
+                #logger.warning("openpose certainty(%f) to low index: %d  posefile: %s", person_keypoints[i+2], arrayIndex, filename )
                 array[arrayIndex][0] = 0
                 array[arrayIndex][1] = 0
             arrayIndex+=1
@@ -278,6 +280,28 @@ def unsplit(face, torso, legs):
 
     return whole
 
+def handle_undetected_points_model(input_features, model_features):
+    # Because np.array is a mutable type => passed by reference
+    #   -> dus als model wordt veranderd wordt er met gewijzigde array
+    #       verder gewerkt na callen van single_person()
+    # model_features_copy = np.array(model_features)
+    model_features_copy = model_features.copy()
+    input_features_copy = input_features.copy()
+
+
+    # In this second version, the model is allowed to have undetected features
+    if np.any(model_features[:] == [0, 0]):
+        counter = 0
+        for feature in model_features:
+            if feature[0] == 0 and feature[1] == 0:  # (0,0)
+                #logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,get_bodypart(counter))
+                input_features_copy[counter][0] = 0
+                input_features_copy[counter][1] = 0
+            counter = counter + 1
+
+    assert len(model_features_copy) == len(input_features_copy)
+    return (input_features_copy, model_features_copy,counter)
+
 def handle_undetected_points(input_features, model_features):
     # Because np.array is a mutable type => passed by reference
     #   -> dus als model wordt veranderd wordt er met gewijzigde array
@@ -301,8 +325,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in input_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logger.debug(" Undetected body part in input: index(%d) %s", counter,
-                               get_bodypart(counter))
+                #logger.debug(" Undetected body part in input: index(%d) %s", counter,get_bodypart(counter))
                 model_features_copy[counter][0] = 0
                 model_features_copy[counter][1] = 0
                 # input_features[counter][0] = 0#np.nan
@@ -314,8 +337,7 @@ def handle_undetected_points(input_features, model_features):
         counter = 0
         for feature in model_features:
             if feature[0] == 0 and feature[1] == 0:  # (0,0)
-                logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,
-                               get_bodypart(counter))
+                #logging.debug(" Undetected body part in MODEL: index(%d) %s", counter,get_bodypart(counter))
                 input_features_copy[counter][0] = 0
                 input_features_copy[counter][1] = 0
             counter = counter + 1
@@ -707,9 +729,44 @@ def feature_scaling(input):
     #logger.info("out: %s", str(output))
     return output
 
-def feature_scaling_multi_person():
+def feature_scaling_multi_person(input):
+    normalized = []
+    xmax = 0
+    ymax = 0
+    i = 0
+    while np.min(input[i][np.nonzero(input[i][:,0])][:, 0]) ==0:
+        i = i+1
+    xmin =np.min(input[i][np.nonzero(input[i][:,0])][:, 0])
+    i =0
+    while np.min(input[i][np.nonzero(input[i][:,1])][:, 1]) ==0:
+        i= i+1
+    ymin = np.min(input[i][np.nonzero(input[i][:,1])][:, 1])
+    for pose in input:
 
-    return
+        xmax_pose = max(pose[:, 0])
+        ymax_pose = max(pose[:, 1])
+        xmin_pose = np.min(pose[np.nonzero(pose[:,0])][:, 0])
+        ymin_pose = np.min(pose[np.nonzero(pose[:,1])][:, 1])
+        #print (pose[np.nonzero(pose[:,1])][:, 0])
+
+        if xmax_pose > xmax:
+            xmax =xmax_pose
+        if ymax_pose > ymax:
+            ymax =ymax_pose
+        if xmin_pose < xmin:
+            xmin =xmin_pose
+        if ymin_pose < ymin:
+            ymin =ymin_pose
+
+    for pose in input:
+        sec_x = (pose[:, 0]-xmin)/(xmax-xmin)
+        sec_y = (pose[:, 1]-ymin)/(ymax-ymin)
+
+        normalized.append(np.vstack([sec_x, sec_y]).T)
+
+    normalized = np.array(normalized)
+    #print("xmax: "+str(xmax)+" ymax: "+str(ymax)+" xmin: "+str(xmin)+" ymin: "+str(ymin))
+    return normalized
 
 
 def divide_by_max(input):
