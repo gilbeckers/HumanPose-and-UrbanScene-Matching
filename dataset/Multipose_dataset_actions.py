@@ -39,7 +39,8 @@ def find_matches_with(pose):
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, True)
-        if result_whole < 0.1:
+        print(result_whole)
+        if result_whole < 0.15:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
             place = place+".json"

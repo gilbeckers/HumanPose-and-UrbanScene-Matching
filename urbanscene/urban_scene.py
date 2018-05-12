@@ -19,7 +19,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     Ymin = zone[2]
     Ymax = zone[3]
 
-    model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+    # model_image = model_image[Ymin:Ymax, Xmin:Xmax]
 
 
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
@@ -77,7 +77,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
     '''--------- STEP 3.1 Rescale FEATURE OF CROPPED IMAGE TO ORIGINAL IMAGE----------------------------------'''
 
-    p_model_good = p_model_good +[Xmin,Ymin]
+    # p_model_good = p_model_good +[Xmin,Ymin]
 
     '''--------- STEP 3.2 APPEND HUMAN POSE FEATURES ----------------------------------'''
     # append pose features   => GEBEURT NU IN FUNCTIES ZELF
