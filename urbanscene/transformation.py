@@ -94,6 +94,10 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     # include some random features of background:
     #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
     #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))
+
+    if len(p_model_good) < thresholds.AMOUNT_BACKGROUND_FEATURES:
+        return 1   # hoge euclidische score
+
     model_pose_org = np.copy(model_pose)
     random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
     model_pose = [np.array(model_pose)]

@@ -74,7 +74,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
     if input_pose_solo_multiple_times(matches_dict, len(input_poses)):
         logger.debug("FAIL: An inputpose is linked to multiple modelpose as only possible match => global fail (injection remember)")
-        return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
+        #return MatchResultMulti(False, error_score=0, input_transformation=None, matching_permutations=None)
 
 
 
@@ -102,6 +102,9 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
 
             unchanged_input.append(np.array(input_pose))
             unchanged_model.append(np.array(model_pose))
+
+        # logger.debug("model: %s" , str(updated_models_combined))
+        # logger.debug("input: %s" , str(input_transformed_combined))
 
         assert len(input_transformed_combined) == len(updated_models_combined)
 
@@ -132,6 +135,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         if plot:
             (full_transformation_nonorm, A_matrix) = find_transformation(updated_models_combined_nonorm, input_transformed_combined_nonorm)
             plot_match(updated_models_combined_nonorm, input_transformed_combined_nonorm, full_transformation_nonorm, model_image, input_image)
+            #plot_match(unchanged_model,unchanged_input, unchanged_model)
 
 
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
@@ -148,7 +152,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
             logger.info("--> NO-MATCH! permutation %s  | Max distance: %0.4f  (thresh %0.4f)", permutation,
                         max_eucl_distance, thresholds.MP_DISCTANCE)
     # TODO: nog max nemen van resultaat.
-    #logger.debug("result scores: " , result_permuations)
+    #logger.debug("result scores: %s" , result_permuations)
 
     # If result_permutations is still empty, no match was found so return false
     if result_permuations:
@@ -269,8 +273,37 @@ def plot_match(model_features, input_features, input_transform_features, model_i
     ax3.imshow(model_image)
     ax3.plot(*zip(*model_features), marker='o', color='magenta', ls='', label='model', ms=markersize)  # ms = markersize
     ax3.plot(*zip(*input_transform_features), marker='o', color='blue', ls='', ms=markersize)
+    ax3.plot(*input_transform_features[17], marker='x', color='red', ls='', ms=4)
     ax3.legend(handles=[mpatches.Patch(color='magenta', label='Model'), mpatches.Patch(color='blue', label='Input transformed')])
     #plt.draw()
     #plt.show(block=True)
 
     return
+
+def plot_poses(model_features, input_features, model_image_name, input_image_name):
+    # plot vars
+    markersize = 2
+
+    # Load images , if model_image_name is of type string => it's a path, so read the image in mem
+    if isinstance(model_image_name, str):
+        model_image = plt.imread(model_image_name)
+        input_image = plt.imread(input_image_name)
+    else:
+        model_image = model_image_name  # plt.imread(model_image_name)
+        input_image = input_image_name  # plt.imread(input_image_name)
+
+    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(14, 6))
+    implot = ax1.imshow(model_image)
+    ax1.set_title('(model)')
+    ax1.plot(*zip(*model_features), marker='o', color='magenta', ls='', label='model',
+             ms=markersize)  # ms = markersize
+    red_patch = mpatches.Patch(color='magenta', label='model')
+
+    ax2.set_title('(input)')
+    ax2.imshow(input_image)
+    ax2.plot(*zip(*input_features), marker='o', color='red', ls='', ms=markersize)
+
+
+
+    return
+

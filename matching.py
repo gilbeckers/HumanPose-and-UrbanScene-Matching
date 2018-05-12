@@ -24,7 +24,7 @@ def timing(f):
 @timing
 def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot_us=False, plot_mp=False):
 
-    result_pose_matching = multi_person.match(model_pose_features, input_pose_features, plot=plot_mp, input_image = input_image, model_image=model_image)
+    result_pose_matching = multi_person.match(model_pose_features, input_pose_features,normalise=True, plot=plot_mp, input_image = input_image, model_image=model_image)
     #logger.debug("---Result pose matching: --")
     #logger.debug(result_pose_matching)
 

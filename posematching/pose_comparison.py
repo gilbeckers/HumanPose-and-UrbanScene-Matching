@@ -74,5 +74,8 @@ def max_euclidean_distance(model, transformed_input):
     manhattan_distance = np.abs(model - transformed_input)
 
     euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
+    # logger.debug("leng: %d", len(euclidean_distance) )
+    # logger.debug("max index %d" , np.argmax(euclidean_distance))
+    # logger.debug("Eucl dis: %s", str(euclidean_distance) )
 
     return max(euclidean_distance)

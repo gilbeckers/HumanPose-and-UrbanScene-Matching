@@ -707,9 +707,18 @@ def feature_scaling(input):
     #logger.info("out: %s", str(output))
     return output
 
-def feature_scaling_multi_person():
+def feature_scaling_multi_person(input):
+    input = feature_scaling(input)
 
-    return
+    # Restore deelposes
+    amount_of_poses = len(input)/thresholds.OPENPOSE_AMOUNT_KEYPOINTS
+    logger.debug("aantal posesss:  %f  ", amount_of_poses)
+
+    input = np.split(input, amount_of_poses)
+
+    logger.debug("split again: %s" , str(input) )
+
+    return input
 
 
 def divide_by_max(input):

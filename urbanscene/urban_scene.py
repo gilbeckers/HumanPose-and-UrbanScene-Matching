@@ -12,6 +12,16 @@ MIN_MATCH_COUNT     = 4
 def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features, plot=False):
     assert model_pose_features.shape == input_pose_features.shape
 
+    ''' ---------- STEP 0: Crop Image to important region -------------------- '''
+    zone = [0, 720, 100, 530]
+    zone = [250, 340, 100, 400]
+    Xmin = zone[0]
+    Xmax = zone[1]
+    Ymin = zone[2]
+    Ymax = zone[3]
+
+    #model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
@@ -66,6 +76,9 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     # append pose features   => GEBEURT NU IN FUNCTIES ZELF
     p_input_good_incl_pose = np.vstack((p_input_good, input_pose_features))
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
+
+    #TODO: terug transformeren jochen
+    #p_model_good = p_model_good + [Xmin, Ymin]
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
     (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,

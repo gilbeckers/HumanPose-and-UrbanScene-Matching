@@ -6,7 +6,7 @@ import logging
 import matching
 from matplotlib import pyplot as plt
 import timer
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("main")
 import plot_vars
 
@@ -14,10 +14,20 @@ import plot_vars
 feature_name = 'orb-flann'
 #path_img = '../img/galabal2018/fotos/'    #'../img/'  #'posesGeoteam/fotos/'
 #path_json = '../img/galabal2018/json/' #'../json_data/'   #'posesGeoteam/json/'
+
+
 path_img = '../img/kever2/'  # 'posesGeoteam/fotos/'
 path_json = '../json_data/kever2/'  # 'posesGeoteam/json/'
+
+#path_img = "../img/"
+#path_json = '../json_data/'  # 'posesGeoteam/json/'
+
 model_name = 'kever6.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'kever38.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+input_name = 'kever39.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+
+#model_name="duo21.jpg"
+#input_name="duo39.jpg"
+
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
