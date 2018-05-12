@@ -143,7 +143,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
     logging.debug("#### AFFINE RAND NORM Sum TOTAL/#matches: %f", sum(euclidean_error_norm)/len(p_model_good))
     max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
-    logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
+    logging.info("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
 
     max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
 
