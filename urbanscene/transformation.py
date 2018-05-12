@@ -90,7 +90,8 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
 def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image_height, model_image_width,input_image_h, input_image_w, label, model_img, persp_input_img, input_pose_org, plot=False):
-
+    if len(p_model_good) < thresholds.AMOUNT_BACKGROUND_FEATURES:
+        return np.inf  # hoge euclidische score
     # include some random features of background:
     #model_pose = np.vstack((model_pose, p_model_good[0], p_model_good[1],p_model_good[2], p_model_good[3],p_model_good[4], p_model_good[5]))
     #input_pose = np.vstack((input_pose, p_input_good[0], p_input_good[1],p_input_good[2], p_input_good[3],p_input_good[4], p_input_good[5]))

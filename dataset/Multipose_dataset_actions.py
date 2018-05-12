@@ -40,7 +40,7 @@ def find_matches_with(pose):
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, True)
         print(result_whole)
-        if result_whole < 0.15:
+        if result_whole < 0.11:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
             place = place+".json"
@@ -62,7 +62,15 @@ def replace_json_files():
         foto = foto +".json"
         os.system("mv "+foto+" "+path+"/jsonfout/ ")
 
-
+def replace_pictures_files():
+    pose = "17"
+    galabal =poses
+    path = galabal+pose
+    for json in glob.iglob(path+"/jsonfout/*"):
+        foto = json.split(".")[0];
+        foto = foto.replace("jsonfout","fotos")
+        foto = foto +".jpg"
+        os.system("mv "+foto+" "+path+"/fotosfout/ ")
 
 #*****************************************logic*********************************************
 def rename_files():
@@ -103,7 +111,6 @@ def calculate_pr(pose,tresh):
     false_positive =0
     true_negative =0
     false_negative =0
-
     for json in glob.iglob(path+"/json/*.json"):
 
         input_pose_features= common.parse_JSON_multi_person(json)
@@ -115,9 +122,9 @@ def calculate_pr(pose,tresh):
             false_negative = false_negative +1
             print("false neg at: "+json.split("/json/")[1])
             print(result_whole)
-
+    print("error false")
     for json in glob.iglob(path+"/jsonfout/*.json"):
-
+        print(json)
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
@@ -156,7 +163,7 @@ def make_pr_curve(pose):
     # print(str(precision))
     # print(str(recall))
 
-    for i in range(0,60):
+    for i in range(0,30):
         tresh = start_tresh + i*0.01
         (precision,recall) = calculate_pr(pose,tresh)
         precisions.append(precision)
@@ -166,7 +173,7 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    pose = "127"
+    pose = "17"
     precisions, recalls = make_pr_curve(pose)
 
     plt.plot(recalls,precisions, label="urban scene")
