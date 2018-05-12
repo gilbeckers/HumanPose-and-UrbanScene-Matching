@@ -233,7 +233,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         #                     mpatches.Patch(color='magenta', label='model')])
         #
         # # plt.tight_layout()
-        # #plt.show(block=False)
+        plt.show()
 
     return max_euclidean_error_norm
 
@@ -655,6 +655,3 @@ def affine_trans_interaction_pose_rand_scene(p_model_good, p_input_good, model_p
         # plt.tight_layout()
         plt.show(block=False)
     return (max_euclidean_error_torso_norm, max_euclidean_error_legs_norm, sum(euclidean_error_torso_norm), sum(euclidean_error_legs_norm))
-
-
-

@@ -34,26 +34,26 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
     #     logger.info("===> Pose matching succes!")
     #
     # else:
-    #     logger.info("No matching poses found, so quit URBAN SCENE MATCHING")
-    #     if plot_us or plot_mp:
-    #         f = plt.figure(figsize=(10, 8))
-    #         fs = 10 #fontsize
-    #         markersize = 3
-    #         f.suptitle("No matching poses found, so quit URBAN SCENE MATCHING", fontsize=10)
-    #         plt.subplot(1, 2, 1)
-    #         plt.imshow(np.asarray(input_image), cmap='gray')
-    #         for i in range(0, len(input_pose_features)):
-    #             plt.plot(*zip(*input_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-    #         plt.title("input: " + plot_vars.input_name, fontsize=fs)
-    #
-    #         plt.subplot(1, 2, 2)
-    #         plt.imshow(np.asarray(model_image), cmap='gray')
-    #         for i in range(0, len(model_pose_features)):
-    #             plt.plot(*zip(*model_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-    #         plt.title("model: " + plot_vars.model_name, fontsize=fs)
-    #
-    #         plot_name = plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0] + "_FALSE"
-    #         plt.savefig('./plots/' + plot_name + '.png')
+        # logger.info("No matching poses found, so quit URBAN SCENE MATCHING")
+        # if plot_us or plot_mp:
+        #     f = plt.figure(figsize=(10, 8))
+        #     fs = 10 #fontsize
+        #     markersize = 3
+        #     f.suptitle("No matching poses found, so quit URBAN SCENE MATCHING", fontsize=10)
+        #     plt.subplot(1, 2, 1)
+        #     plt.imshow(np.asarray(input_image), cmap='gray')
+        #     for i in range(0, len(input_pose_features)):
+        #         plt.plot(*zip(*input_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
+        #     plt.title("input: " + plot_vars.input_name, fontsize=fs)
+        #
+        #     plt.subplot(1, 2, 2)
+        #     plt.imshow(np.asarray(model_image), cmap='gray')
+        #     for i in range(0, len(model_pose_features)):
+        #         plt.plot(*zip(*model_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
+        #     plt.title("model: " + plot_vars.model_name, fontsize=fs)
+        #
+        #     plot_name = plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0] + "_FALSE"
+        #     plt.savefig('./plots/' + plot_name + '.png')
     #     return (False,False)
         #exit()
 
@@ -89,4 +89,5 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
         #     logger.info("===> NO-MATCH! permutation %s  score:%0.4f (thresh ca %0.4f)",
         #                 matching_permuations, round(error, 4), thresholds.AFFINE_TRANS_WHOLE_DISTANCE)
         #     return (True,False)
+    plt.show()
     return min_error

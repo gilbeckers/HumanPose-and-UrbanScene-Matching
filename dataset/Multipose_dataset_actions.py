@@ -28,26 +28,26 @@ def find_matches_with(pose):
     detector, matcher = features.init_feature(feature_name)
 
     model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
-    print(model.split(".")[0].replace("json","fotos")+".jpg")
     count = 0
     os.system("mkdir -p "+poses+pose)
-    os.system("mkdir -p "+poses+pose+"/json")
+    os.system("mkdir -p "+poses+pose+"/json2")
     os.system("mkdir -p "+poses+pose+"/jsonfout")
-    os.system("mkdir -p "+poses+pose+"/fotos")
+    os.system("mkdir -p "+poses+pose+"/fotos2")
     os.system("mkdir -p "+poses+pose+"/fotosfout")
     for json in glob.iglob(urban_json+"*.json"):
+        print(json)
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
-        result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+        result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, True)
         if result_whole < 0.1:
             place = json.split(".json")[0]
             place = place.split("json/")[1]
             place = place+".json"
-            os.system("cp "+json+" "+poses+pose+"/json/"+place)
+            os.system("cp "+json+" "+poses+pose+"/json2/"+place)
             foto = json.split(".json")[0];
             foto = foto.replace("json","fotos")
             foto = foto +".jpg"
-            os.system("cp "+foto+" "+poses+pose+"/fotos/")
+            os.system("cp "+foto+" "+poses+pose+"/fotos2/")
             count = count+1
     print ("there are "+str(count)+" matches found")
 #*****************************************logic*********************************************
@@ -104,7 +104,7 @@ def calculate_pr(pose,tresh):
     false_negative =0
 
     for json in glob.iglob(path+"/json/*.json"):
-        print(json)
+
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
@@ -116,7 +116,7 @@ def calculate_pr(pose,tresh):
             print(result_whole)
 
     for json in glob.iglob(path+"/jsonfout/*.json"):
-        print(json)
+
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
@@ -150,12 +150,12 @@ def calculate_pr(pose,tresh):
 def make_pr_curve(pose):
     precisions = []
     recalls = []
-    start_tresh = 0.1
+    start_tresh = 0.05
     # (precision,recall) = calculate_pr(pose,0.55)
     # print(str(precision))
     # print(str(recall))
 
-    for i in range(0,10):
+    for i in range(0,60):
         tresh = start_tresh + i*0.01
         (precision,recall) = calculate_pr(pose,tresh)
         precisions.append(precision)
@@ -165,7 +165,7 @@ def make_pr_curve(pose):
 
 
 def draw_pr_curve():
-    pose = "11"
+    pose = "127"
     precisions, recalls = make_pr_curve(pose)
 
     plt.plot(recalls,precisions, label="urban scene")

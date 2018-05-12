@@ -12,6 +12,16 @@ MIN_MATCH_COUNT     = 4
 def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features, plot=False):
     assert model_pose_features.shape == input_pose_features.shape
 
+    ''' ---------- STEP 0: Crop Image to important region -------------------- '''
+    zone = [0,720,100,530]
+    Xmin = zone[0]
+    Xmax = zone[1]
+    Ymin = zone[2]
+    Ymax = zone[3]
+
+    model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+
+
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
     kp_input, desc_input = detector.detectAndCompute(input_image, None)
@@ -23,9 +33,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
                                                                         desc_input, kp_model, kp_input,
                                                                         model_image, input_image, False)
 
-    if len(p_model_good) < 15:
-        logging.critical("p_model_good too small, %d",len(p_model_good))
-        return np.inf
+
     #cv2.waitKey()
     #cv2.destroyAllWindows()
 
@@ -37,7 +45,9 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
         logging.debug("!!Valid HOMOGRAPHY!!")
         # else:
         # exit()
-
+    elif len(p_model_good) < 15:
+        logging.critical("p_model_good too small, %d",len(p_model_good))
+        return np.inf
     else:
         logging.info("!!!UNVALID HOMOGRAPHY!!!")
         #return (1,1,1000,1000)
@@ -65,7 +75,11 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     It explains the affine transform math and the other 2 values are perspective parameters.
     '''
 
-    '''--------- STEP 3.1 APPEND HUMAN POSE FEATURES ----------------------------------'''
+    '''--------- STEP 3.1 Rescale FEATURE OF CROPPED IMAGE TO ORIGINAL IMAGE----------------------------------'''
+
+    p_model_good = p_model_good +[Xmin,Ymin]
+
+    '''--------- STEP 3.2 APPEND HUMAN POSE FEATURES ----------------------------------'''
     # append pose features   => GEBEURT NU IN FUNCTIES ZELF
     p_input_good_incl_pose = np.vstack((p_input_good, input_pose_features))
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
