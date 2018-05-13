@@ -118,21 +118,20 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     # logging.debug("input  TRANS pose: ", input_pose_trans)
     # logging.debug("model pose: ", model_pose_features)
 
-    (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
-                                        model_pose_features, input_pose_trans,
-                                        model_image_height, model_image_width,
-                                        input_image_h, input_image_w,
-                                        "test",
-                                        model_image, persp_trans_input_img,input_pose_features,
-                                         plot)
-    # (err) = transformation.affine_multi_important_posefeat(p_model_good, p_input_persp_only_buildings,
-    #                                     model_pose_features, input_pose_trans,
-    #                                     model_image_height, model_image_width,
-    #                                     input_image_h, input_image_w,
-    #                                     "test",
-    #                                     model_image, persp_trans_input_img, input_pose_features,
-    #                                     pose_feat=4, plot=plot)
-    return err
+    sum_err = 0
+    its = 3
+    for i in range(0,its):
+        (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
+                                            model_pose_features, input_pose_trans,
+                                            model_image_height, model_image_width,
+                                            input_image_h, input_image_w,
+                                            "test",
+                                            model_image, persp_trans_input_img, input_pose_features,
+                                            plot)
+
+        if sum_err < err:
+            sum_err = err
+    return sum_err
 
 
 def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features):

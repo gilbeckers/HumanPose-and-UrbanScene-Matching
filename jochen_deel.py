@@ -8,5 +8,5 @@ logger = logging.getLogger(__name__)
 # dataset.find_matches_with("17")
 #**************************pr curves*********************
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.CRITICAL)
 dataset.draw_pr_curve()

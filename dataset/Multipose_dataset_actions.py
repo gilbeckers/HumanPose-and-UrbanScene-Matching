@@ -122,9 +122,8 @@ def calculate_pr(pose,tresh):
             false_negative = false_negative +1
             print("false neg at: "+json.split("/json/")[1])
             print(result_whole)
-    print("error false")
+
     for json in glob.iglob(path+"/jsonfout/*.json"):
-        print(json)
         input_pose_features= common.parse_JSON_multi_person(json)
         input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
         result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
@@ -163,11 +162,13 @@ def make_pr_curve(pose):
     # print(str(precision))
     # print(str(recall))
 
-    for i in range(0,30):
-        tresh = start_tresh + i*0.01
+    for i in range(0,15):
+        tresh = start_tresh + i*0.02
         (precision,recall) = calculate_pr(pose,tresh)
         precisions.append(precision)
         recalls.append(recall)
+        if recall == 1:
+            break
 
     return(precisions,recalls)
 
