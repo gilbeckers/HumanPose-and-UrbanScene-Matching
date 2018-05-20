@@ -153,7 +153,6 @@ def calculate_pr(pose,tresh):
     print ("error_score_tresh: "+str(tresh))
     return (precision,recall)
 
-
 def make_pr_curve(pose):
     precisions = []
     recalls = []
@@ -172,17 +171,106 @@ def make_pr_curve(pose):
 
     return(precisions,recalls)
 
+def get_all_scores(pose):
+    path = poses+pose
+    model = path+"/json/"+pose+".json" #take filtered model for keypoints
+    positives=[]
+    negatives=[]
+    #pose = "1"
+    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
+    #model = path+"/json/0.json"
+    model_pose_features = common.parse_JSON_multi_person(model)
+    model = path+"/json/"+pose+".json"
+    feature_name = 'orb-flann'
+    detector, matcher = features.init_feature(feature_name)
+
+    model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+    for json in glob.iglob(path+"/json/*.json"):
+
+        input_pose_features= common.parse_JSON_multi_person(json)
+        input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+        result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+        positives.append([result_whole, json.split(".")[0].split("json/")[1]])
+
+    for json in glob.iglob(path+"/jsonfout/*.json"):
+        input_pose_features= common.parse_JSON_multi_person(json)
+        input_image = cv2.imread(json.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+        result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+        negatives.append([result_whole, json.split(".")[0].split("jsonfout/")[1]])
+    return positives,negatives
+
+
+def make_pr_curve2(pose):
+    precisions = []
+    recalls = []
+
+    tresh = 0.01
+    steps = 0.01
+    positives,negatives = get_all_scores(pose)
+    precision = 0
+    recall =0
+    while recall < 1:
+        true_positive =0
+        false_positive =0
+        true_negative =0
+        false_negative =0
+        tresh = tresh + steps
+        print("********tresh = "+str(tresh)+" **************")
+        for positive in positives:
+            if positive[0] < tresh:
+                true_positive = true_positive +1
+            else:
+                false_negative = false_negative+1
+                print("False neg: "+positive[1]+" with score: "+str(positive[0]))
+        for negative in negatives:
+            if negative[0] < tresh:
+                print("false pos: "+negative[1]+" with score: "+str(negative[0]))
+                false_positive = false_positive +1
+            else:
+                true_negative = true_negative+1
+
+        if (true_positive+false_positive) !=0:
+            precision = true_positive / (true_positive+false_positive)
+        if  (true_positive+false_negative) !=0:
+            recall = true_positive / (true_positive+false_negative)
+        precisions.append(precision)
+        recalls.append(recall)
+        print("recall  = "+str(recall))
+        print("precision = "+str(precision))
+
+
+    return(precisions,recalls)
 
 def draw_pr_curve():
+
     pose = "17"
-    precisions, recalls = make_pr_curve(pose)
+    global crop
+    global correction
+    print("//////////////////start normal script /////////////////")
+    crop = True
+    correction = True
+    precisions, recalls = make_pr_curve2(pose)
+
+
+    print("//////////////////start script without correction /////////////////")
+    crop = True
+    correction = False
+    precisions2, recalls2 = make_pr_curve2(pose)
+
+
+    print("//////////////////start script without crop /////////////////")
+    crop = False
+    correction = True
+    precisions3, recalls3 = make_pr_curve2(pose)
 
     plt.plot(recalls,precisions, label="urban scene")
+    plt.plot(recalls2,precisions2, label="urban scene without scene correction")
+    plt.plot(recalls3,precisions3, label="urban scene without crop function")
 
     plt.legend(loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.ylabel('precision')
     plt.xlabel('recall')
-    plt.title('Pr curves of urban algorithm')
+    plt.title('Pr curves of urban scene algorithms')
     plt.axis([0,1,0,1])
     plt.legend()
 

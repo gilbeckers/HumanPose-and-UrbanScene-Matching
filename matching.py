@@ -60,7 +60,7 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
     logger.debug("--- Starting urbanscene matching ---")
     # Loop over all found matching comnbinations
     # And order input poses according to matching model poses
-    min_error = 1000
+    min_error = np.inf
     if permutations == None:
         return np.inf
     for result in permutations:
@@ -77,10 +77,11 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
                                             model_poses,input_poses,
                                             plot_us)
 
-
-        if (error+result['score'])/2 < min_error:
+        fin_score = ((error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) + (result['score']))/2
+        if  fin_score < min_error: #(error+result['score'])/2 < min_error:
             logger.debug("new min error %d",min_error)
-            min_error = error #+result['score']/2
+            #min_error =(error+result['score'])/2
+            min_error = fin_score
         # if error <= thresholds.AFFINE_TRANS_WHOLE_DISTANCE:
         #     logger.info("===> MATCH! permutation %s  score:%0.4f (thresh ca %0.4f)",
         #                 matching_permuations, round(error, 4), thresholds.AFFINE_TRANS_WHOLE_DISTANCE)
@@ -89,5 +90,5 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
         #     logger.info("===> NO-MATCH! permutation %s  score:%0.4f (thresh ca %0.4f)",
         #                 matching_permuations, round(error, 4), thresholds.AFFINE_TRANS_WHOLE_DISTANCE)
         #     return (True,False)
-    plt.show()
+    #plt.show()
     return min_error
