@@ -20,7 +20,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     Ymin = zone[2]
     Ymax = zone[3]
 
-    model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+    #model_image = model_image[Ymin:Ymax, Xmin:Xmax]
 
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
@@ -78,17 +78,25 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
 
     #TODO: terug transformeren jochen
-    p_model_good = p_model_good + [Xmin, Ymin]
+    #p_model_good = p_model_good + [Xmin, Ymin]
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
-    (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
-                                                                                                           p_model_good_incl_pose,
-                                                                                                           p_input_good_incl_pose,
-                                                                                                           model_pose_features,
-                                                                                                           input_pose_features,
-                                                                                                           model_image,
-                                                                                                           input_image,
-                                                                                                           False)
+
+    #Zonder correction
+    p_persp_trans_input = p_input_good_incl_pose
+    input_pose_trans = input_pose_features
+    persp_trans_input_img = input_image
+
+
+    # (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
+    #                                                                                                        p_model_good_incl_pose,
+    #                                                                                                        p_input_good_incl_pose,
+    #                                                                                                        model_pose_features,
+    #                                                                                                        input_pose_features,
+    #                                                                                                        model_image,
+    #                                                                                                        input_image,
+    #                                                                                                        False)
+
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE Without perspective correction------------------ '''
     # Calc affine trans between the wrest points and some random feature points of the building
