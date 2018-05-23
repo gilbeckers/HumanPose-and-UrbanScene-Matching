@@ -90,15 +90,15 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     input_pose_trans = input_pose_features
     persp_trans_input_img = input_image
 
-
-    # (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
-    #                                                                                                        p_model_good_incl_pose,
-    #                                                                                                        p_input_good_incl_pose,
-    #                                                                                                        model_pose_features,
-    #                                                                                                        input_pose_features,
-    #                                                                                                        model_image,
-    #                                                                                                        input_image,
-    #                                                                                                        False)
+    if thresholds.PERSPECTIVE_CORRECTION:
+        (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
+                                                                                                               p_model_good_incl_pose,
+                                                                                                               p_input_good_incl_pose,
+                                                                                                               model_pose_features,
+                                                                                                               input_pose_features,
+                                                                                                               model_image,
+                                                                                                               input_image,
+                                                                                                               False)
 
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE Without perspective correction------------------ '''

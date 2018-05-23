@@ -25,6 +25,7 @@ FILTER_RATIO        = 0.8 #lagere ratio geeft minder 'good' matches
 
 
 '''------- URBANSCENE MATCHING ---------------'''
+PERSPECTIVE_CORRECTION = True
 USI_AMOUNT_ITERATIONS = 1
 AFFINE_TRANS_WHOLE_DISTANCE = 0.084
 AMOUNT_BACKGROUND_FEATURES = 5  # note: moet kleiner zijn dan MIN_MATCH_COUNT!!

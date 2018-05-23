@@ -4,6 +4,8 @@ import cv2
 import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
+from sympy.functions.elementary.exponential import log
+
 from urbanscene.features import  max_euclidean_distance, euclidean_distance
 import common
 import thresholds
@@ -160,6 +162,13 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
 
     max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
 
+    x = round(max_euclidean_error_norm,4)
+    a = 2
+    b = 0
+    c = 7.2
+    d = 3.2
+    the_score_function = -49.3518266 * np.log(x) - 65.30055317
+    the_score = round(the_score_function,1)
     logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
 
     markersize = 3
@@ -225,9 +234,10 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         if plot_vars.plot_type == "compress":
             # --- First row plot ---
             plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
-            #f = plt.figure(figsize=(8, 2.9))
-            f = plt.figure()
+            f = plt.figure(figsize=(12, 5))
             f.subplots_adjust(hspace = 0.025, wspace=0.025)
+
+
 
             #f.suptitle("US matching | score=" + str(round(max_euclidean_error_norm, 4)), fontsize=10)
             plt.subplot(1, 3, 1)
@@ -261,7 +271,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
 
             plt.subplot(1, 3, 3)
             plt.imshow(np.asarray(model_img), cmap='gray')
-            plt.title("trans on model " + "(" + str(round(max_euclidean_error_norm, 4)) +")", fontsize=fs)
+            plt.title("trans on model " + "(" + str(the_score) + "%)", fontsize=fs)
             plt.axis('off')
             plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
                      label='model',
