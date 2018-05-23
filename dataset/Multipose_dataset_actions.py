@@ -205,11 +205,11 @@ def make_pr_curve2(pose):
     recalls = []
 
     tresh = 0.01
-    steps = 0.01
+    steps = 0.1
     positives,negatives = get_all_scores(pose)
     precision = 0
     recall =0
-    while recall < 1:
+    while (recall < 1 and tresh < 15):
         true_positive =0
         false_positive =0
         true_negative =0
@@ -276,7 +276,31 @@ def draw_pr_curve():
 
     plt.show()
 
+def test():
+    global crop
+    global correction
+    #print("//////////////////start normal script /////////////////")
+    crop = True
+    correction = False
+    pose = "17"
+    path = poses+pose
+    model = path+"/json/"+pose+".json" #take filtered model for keypoints
+    input = path+"/json/6.json" #take filtered model for keypoints
 
+    #pose = "1"
+    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
+    #model = path+"/json/0.json"
+    model_pose_features = common.parse_JSON_multi_person(model)
+    model = path+"/json/"+pose+".json"
+    feature_name = 'orb-flann'
+    detector, matcher = features.init_feature(feature_name)
+
+    model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+
+    input_pose_features= common.parse_JSON_multi_person(input)
+    input_image = cv2.imread(input.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
+    result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+    print(result_whole)
 
 #*************************************accuracy*************************************
 def calculate_accuracy(pose, path,error_score_tresh,superimp):

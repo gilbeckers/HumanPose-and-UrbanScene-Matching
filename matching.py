@@ -77,9 +77,9 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
                                             model_poses,input_poses,
                                             plot_us)
 
-        fin_score = ((error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) + (result['score']))/2
+        fin_score = (error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) #((error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) + (result['score']))/2
         if  fin_score < min_error: #(error+result['score'])/2 < min_error:
-            logger.debug("new min error %d",min_error)
+            logger.debug("new min error %0.4f",fin_score)
             #min_error =(error+result['score'])/2
             min_error = fin_score
         # if error <= thresholds.AFFINE_TRANS_WHOLE_DISTANCE:

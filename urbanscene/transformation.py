@@ -85,7 +85,8 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
         # ax4.plot(*zip(*model_pose_features), marker='o', color='green', ls='', ms=markersize)
         # ax4.legend(handles=[mpatches.Patch(color='blue', label='corrected input')])
         # plt.tight_layout()
-        plt.show(block=False)
+        plt.show()
+
 
     return (p_input_persp_trans, input_pose_trans,  perspective_transform_input)
 
@@ -106,6 +107,44 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
         model_pose.append(np.array(p_model_good[i]))
         input_pose.append(np.array(p_input_good[i]))
 
+    #voeg min en max toe
+    # model_pose.append(p_model_good[np.argmax(p_model_good[:, 0])])
+    # model_pose.append(p_model_good[np.argmin(p_model_good[:, 0])])
+    # model_pose.append(p_model_good[np.argmax(p_model_good[:, 1])])
+    # model_pose.append(p_model_good[np.argmin(p_model_good[:, 1])])
+    # #random de som van beide
+    # model_pose.append(p_model_good[np.argmax(sum(p_model_good))])
+    # model_pose.append(p_model_good[np.argmin(sum(p_model_good))])
+    # #voeg mediaan toe van x en y
+    # p_model_good = p_model_good[p_model_good[:,0].argsort()]
+    # model_pose.append(p_model_good[len(p_model_good)//2])
+    # model_pose.append(p_model_good[len(p_model_good)//4])
+    # model_pose.append(p_model_good[(len(p_model_good)//4)*3])
+    #
+    # p_model_good = p_model_good[p_model_good[:,1].argsort()]
+    # model_pose.append(p_model_good[len(p_model_good)//2])
+    # model_pose.append(p_model_good[len(p_model_good)//4])
+    # model_pose.append(p_model_good[(len(p_model_good)//4)*3])
+    #
+    #
+    #
+    # input_pose.append(p_input_good[np.argmax(p_input_good[:, 0])])
+    # input_pose.append(p_input_good[np.argmin(p_input_good[:, 0])])
+    # input_pose.append(p_input_good[np.argmax(p_input_good[:, 1])])
+    # input_pose.append(p_input_good[np.argmin(p_input_good[:, 1])])
+
+    # input_pose.append(p_input_good[np.argmax(sum(p_input_good))])
+    # input_pose.append(p_input_good[np.argmin(sum(p_input_good))])
+
+    # p_input_good = p_input_good[p_input_good[:,0].argsort()]
+    # input_pose.append(p_input_good[len(p_input_good)//2])
+    # input_pose.append(p_input_good[len(p_input_good)//4])
+    # input_pose.append(p_input_good[(len(p_input_good)//4)*3])
+    #
+    # p_input_good = p_input_good[p_input_good[:,1].argsort()]
+    # input_pose.append(p_input_good[len(p_input_good)//2])
+    # input_pose.append(p_input_good[len(p_input_good)//4])
+    # input_pose.append(p_input_good[(len(p_input_good)//4)*3])
     model_pose = np.vstack(model_pose)
     input_pose = np.vstack(input_pose)
 

@@ -30,4 +30,4 @@ FILTER_RATIO        = 0.8 #lagere ratio geeft minder 'good' matches
 
 '''------- URBANSCENE MATCHING ---------------'''
 AFFINE_TRANS_WHOLE_DISTANCE = 0.084
-AMOUNT_BACKGROUND_FEATURES = 15   # note: moet kleiner zijn dan MIN_MATCH_COUNT!!
+AMOUNT_BACKGROUND_FEATURES = 10   # note: moet kleiner zijn dan MIN_MATCH_COUNT!!
