@@ -8,12 +8,15 @@ import itertools
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import thresholds
+import plot_vars
 logger = logging.getLogger("multi_person")
 
 
 def match(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))
     logger.debug(" amount of inputs: %d", len(input_poses))
+    plot_vars.amount_input_persons = len(input_poses)
+    plot_vars.amount_model_persons = len(model_poses)
 
     model_poses = np.copy(model_poses)
     input_poses = np.copy(input_poses)

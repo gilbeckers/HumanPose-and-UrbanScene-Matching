@@ -1,6 +1,6 @@
 #lel
 
-OPENPOSE_ZEKERHEID = 0.30
+OPENPOSE_ZEKERHEID = 0.25
 OPENPOSE_AMOUNT_KEYPOINTS =2
 
 '''------- SINGLE POSE PARAMETERS -----------'''
@@ -15,7 +15,7 @@ SP_DISTANCE_SHOULDER = 0.125
 
 
 '''------- MULTIPLE POSE PARAMETERS -----------'''
-MP_DISCTANCE = 0.13
+MP_DISCTANCE = 0.38#0.13
 
 '''-------- FEATURE MATCHING ------------------'''
 MIN_MATCH_COUNT     = 16
@@ -25,5 +25,6 @@ FILTER_RATIO        = 0.8 #lagere ratio geeft minder 'good' matches
 
 
 '''------- URBANSCENE MATCHING ---------------'''
+USI_AMOUNT_ITERATIONS = 1
 AFFINE_TRANS_WHOLE_DISTANCE = 0.084
-AMOUNT_BACKGROUND_FEATURES = 14   # note: moet kleiner zijn dan MIN_MATCH_COUNT!!
+AMOUNT_BACKGROUND_FEATURES = 5  # note: moet kleiner zijn dan MIN_MATCH_COUNT!!

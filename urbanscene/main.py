@@ -6,6 +6,7 @@ import logging
 import matching
 from matplotlib import pyplot as plt
 import timer
+import numpy as np
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("main")
 import plot_vars
@@ -22,15 +23,17 @@ path_json = '../json_data/kever2/'  # 'posesGeoteam/json/'
 #path_img = "../img/"
 #path_json = '../json_data/'  # 'posesGeoteam/json/'
 
-model_name = 'kever17.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = 'kever70.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'kever98.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1   'kever197.jpg'
+input_name = 'kever98.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 
-#model_name="duo21.jpg"
-#input_name="duo39.jpg"
+#model_name="duo22.jpg"
+#input_name="duo24.jpg"
 
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
 
+
+include_keypoints = True
 detector, matcher = features.init_feature(feature_name)
 
 if model_image is None:
@@ -47,7 +50,6 @@ if detector is None:
 
 logger.debug(" using %s", feature_name)
 
-include_keypoints = True
 plot_us = True  # plot urban scene
 plot_mp = False # plot multi pose
 plot_vars.input_name = input_name
@@ -55,6 +57,7 @@ plot_vars.model_name = model_name
 plot_vars.model_path = path_img + model_name
 plot_vars.input_path = path_img + input_name
 plot_vars.write_img = True
+plot_vars.plot_type = "extreme"
 
 
 logger.debug("---Starting pose matching --")
@@ -66,6 +69,8 @@ else:
     input_pose_features = common.parse_JSON_multi_person(path_json + input_name.split('.')[0]  +'.json')
 
 
+plot_vars.input_pose_org = np.vstack(input_pose_features)
+plot_vars.model_pose_org = np.vstack(model_pose_features)
 
 result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,plot_us, plot_mp)
 
