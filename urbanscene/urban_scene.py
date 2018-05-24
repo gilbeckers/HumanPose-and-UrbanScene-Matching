@@ -21,7 +21,11 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     Ymin = zone[2]
     Ymax = zone[3]
 
-    #model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+    if thresholds.CROP:
+        model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+        plot_vars.cropped_xmin = Xmin
+        plot_vars.cropped_ymin = Ymin
+        plot_vars.cropped_model = model_image
 
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
@@ -78,8 +82,10 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     p_input_good_incl_pose = np.vstack((p_input_good, input_pose_features))
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
 
-    #TODO: terug transformeren jochen
-    #p_model_good = p_model_good + [Xmin, Ymin]
+
+    if thresholds.CROP:
+        p_model_good = p_model_good + [Xmin, Ymin]
+        plot_vars.cropped_model_feats = p_model_good
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
 

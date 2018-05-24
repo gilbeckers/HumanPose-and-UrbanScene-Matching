@@ -2,11 +2,11 @@
 from os import walk
 from PIL import Image
 
-path = "img/kleuter/"
+path = "img/resize/"
 img = "test_comp.jpg"
-path_destination = "img/kleuter/resize/"
+path_destination = "img/resize/"
 
-model_name = "kleuter"
+model_name = "foto_r"
 start_counter = 1
 
 

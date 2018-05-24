@@ -4,14 +4,20 @@ import cv2
 import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-from sympy.functions.elementary.exponential import log
+import matplotlib.image as mpimg
+import  draw
 
+
+import score
 from urbanscene.features import  max_euclidean_distance, euclidean_distance
 import common
 import thresholds
 import random
 import plot_vars
 import matplotlib.gridspec as gridspec
+
+def rgb2gray(rgb):
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
 def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose_features, model_img, input_img, plot=False):
     # we assume input_pose and model_pose contain same amount of features, as we would also expected in this stage of pipeline
@@ -105,15 +111,19 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     random_features = random.sample(range(0, len(p_model_good)), thresholds.AMOUNT_BACKGROUND_FEATURES)
     model_pose = [np.array(model_pose)]
     input_pose = [np.array(input_pose)]
+    input_us_randfeature_no_correction = []
     logging.debug("THE RANDOM FEATURES: %s", str(random_features))
 
     # include some random features of background:
     for i in random_features:
         model_pose.append(np.array(p_model_good[i]))
         input_pose.append(np.array(p_input_good[i]))
+        input_us_randfeature_no_correction.append(np.array(plot_vars.input_background_no_correction[i]))
 
+    #input_us_randfeature_no_correction = input_us_randfeature_no_correction[0:-2]
     model_pose = np.vstack(model_pose)
     input_pose = np.vstack(input_pose)
+    input_us_randfeature_no_correction = np.vstack(input_us_randfeature_no_correction)
 
 
     (input_transformed, M) = common.find_transformation(model_pose, input_pose)
@@ -153,72 +163,160 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     # 2e manier: enkel randfeatures en pose-features
     euclidean_error_norm = euclidean_distance(model_pose_and_randfeat_trans_norm, input_pose_and_randfeat_trans_norm)
 
-    #  index 2(rechts) en 5(links) zijn de polsen
-    #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
-    logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
-    logging.debug("#### AFFINE RAND NORM Sum TOTAL/#matches: %f", sum(euclidean_error_norm)/len(p_model_good))
+
     max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
     logging.info("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
 
-    max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
+
 
     x = round(max_euclidean_error_norm,4)
-    a = 2
-    b = 0
-    c = 7.2
-    d = 3.2
-    the_score_function = -49.3518266 * np.log(x) - 65.30055317
-    the_score = round(the_score_function,1)
-    logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
+    the_score = score.get(x)
 
     markersize = 3
     fs= 8  #fontsize
     if plot:
-        if plot_vars.plot_type == "extreme":
-            # --- First row plot ---
-            plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+        # read img as gray-scale
+        plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+        # convert gray-scale to RGB format
+        plain_input_img = cv2.cvtColor(plain_input_img, cv2.COLOR_GRAY2RGB)
+        plain_input_img = draw.draw_humans(plain_input_img, plot_vars.input_pose_org, True)
+
+
+
+        plain_model_img = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
+        plain_model_img = cv2.cvtColor(plain_model_img, cv2.COLOR_GRAY2RGB)
+        plain_model_img = draw.draw_humans(plain_model_img, plot_vars.model_pose_org, True)
+        model_us_feats = model_pose[-thresholds.AMOUNT_BACKGROUND_FEATURES-1:]
+
+
+        persp_input_pose = input_pose[0:-thresholds.AMOUNT_BACKGROUND_FEATURES]
+        persp_us_feats = input_pose[-thresholds.AMOUNT_BACKGROUND_FEATURES-1:]
+        persp_input_img = persp_input_img
+        # convert gray-scale to RGB format
+        persp_input_img = cv2.cvtColor(persp_input_img, cv2.COLOR_GRAY2RGB)
+        persp_input_img = draw.draw_humans(persp_input_img, persp_input_pose, True)
+
+
+        trans_input_pose = input_pose_and_randfeat_trans[0:-thresholds.AMOUNT_BACKGROUND_FEATURES]
+        trans_us_feats = input_pose_and_randfeat_trans[-thresholds.AMOUNT_BACKGROUND_FEATURES:]
+        trans_on_model = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
+        trans_on_model = cv2.cvtColor(trans_on_model, cv2.COLOR_GRAY2RGB)
+        trans_on_model = draw.draw_humans(trans_on_model, trans_input_pose, True)
+
+
+        if plot_vars.plot_type == "illustrate_crop":
+            plain_model_img = cv2.cvtColor(plot_vars.cropped_model, cv2.COLOR_GRAY2RGB)
+            plain_model_img = draw.draw_humans(plain_model_img, plot_vars.model_pose_org - [plot_vars.cropped_xmin, plot_vars.cropped_ymin], True)
+            model_us_feats = model_pose[-thresholds.AMOUNT_BACKGROUND_FEATURES - 1:]
+
+
             f = plt.figure(figsize=(10, 8))
-
-
-            f.suptitle("US matching | score="+ str(round(max_euclidean_error_norm,4)) + " (thresh=ca " + str(thresholds.AFFINE_TRANS_WHOLE_DISTANCE) +" )", fontsize=10)
+            # f.suptitle("US matching | score="+ str(round(max_euclidean_error_norm,4))
+            #            + " (thresh=ca " + str(thresholds.AFFINE_TRANS_WHOLE_DISTANCE) +" )", fontsize=10)
+            f.suptitle("US matching | score=" + str(the_score) + "%", fontsize=10)
+            plt.axis('off')
             plt.subplot(2, 2, 1)
-            plt.imshow(np.asarray(plain_input_img), cmap='gray')
+            #plt.imshow(np.asarray(plain_input_img), cmap='gray')
+            plt.imshow(plain_input_img)
             plt.title("input: " + plot_vars.input_name + " (" + str(plot_vars.amount_input_persons) + " pers)", fontsize=fs)
-            plt.plot(*zip(*plot_vars.input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+            #plt.plot(*zip(*plot_vars.input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
 
-            plain_model_img = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
+
             plt.subplot(2, 2, 2)
-            plt.imshow(np.asarray(plain_model_img), cmap='gray')
+            plt.imshow(plain_model_img)
+            plt.axis('off')
             plt.title("model: " + plot_vars.model_name + " (" + str(plot_vars.amount_model_persons) + " pers)", fontsize=fs)
-            plt.plot(*zip(*model_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+            #plt.plot(*zip(*model_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
 
             # --- Second row plot ---
             #f.set_figheight(20)
             plt.subplot(2, 3, 4)
-            plt.imshow(np.asarray(persp_input_img), cmap='gray')
+            #plt.imshow(np.asarray(persp_input_img), cmap='gray')
+            plt.imshow(persp_input_img)
             plt.axis('off')
             plt.title("corrected input", fontsize=fs)
             plt.plot(*zip(*p_input_good), marker='o', color='r', label='features', ls='', ms=markersize)
-            plt.plot(*zip(*input_pose), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
+            plt.plot(*zip(*persp_us_feats), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
             plt.legend(fontsize=fs - 1)
             #plt.legend(handles=[mpatches.Patch(color='red', label='features'),mpatches.Patch(color='blue', label='pose')])
 
 
             plt.subplot(2, 3, 5)
-            plt.imshow(np.asarray(plain_model_img), cmap='gray')
+            plt.imshow(plain_model_img)
             plt.title("model", fontsize=fs)
             plt.axis('off')
-            plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
-            plt.plot(*zip(*model_pose), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
+            plt.plot(*zip(*(p_model_good- [plot_vars.cropped_xmin, plot_vars.cropped_ymin])), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
+            plt.plot(*zip(*(model_us_feats - [plot_vars.cropped_xmin, plot_vars.cropped_ymin])), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
             #red_patch = mpatches.Patch(color='magenta', label='model')
             #plt.legend(handles=[red_patch])
             plt.legend(fontsize=fs - 1)
 
             plt.subplot(2, 3, 6)
-            plt.imshow(np.asarray(model_img), cmap='gray')
+            plt.imshow(trans_on_model)
             plt.title("transform on model", fontsize=fs)
             plt.axis('off')
-            plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+            plt.plot(*zip(* model_us_feats), marker='o', color='magenta', ls='',
+                     label='model',
+                     ms=markersize-1)  # ms = markersize
+            plt.plot(*zip(*trans_us_feats), marker='o', color='aqua', ls='', label="trans. input",
+                     ms=markersize - 1)  # ms = markersize
+            # plt.plot(*zip(*input_transformed), marker='o', color='aqua', ls='', label='input',
+            #          ms=markersize-1)  # ms = markersize
+            #plt.legend(handles=[mpatches.Patch(color='green', label='trans-input'), mpatches.Patch(color='magenta', label='model')])
+            plt.legend(fontsize=fs-1)
+
+            if plot_vars.write_img:
+                plot_name= plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0]
+                plt.savefig('./plots/'+plot_name+'.png', bbox_inches='tight')
+
+        if plot_vars.plot_type == "extreme":
+            # --- First row plot ---
+            #plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+
+            f = plt.figure(figsize=(10, 8))
+            # f.suptitle("US matching | score="+ str(round(max_euclidean_error_norm,4))
+            #            + " (thresh=ca " + str(thresholds.AFFINE_TRANS_WHOLE_DISTANCE) +" )", fontsize=10)
+            f.suptitle("US matching | score=" + str(the_score) + "%", fontsize=10)
+            plt.subplot(2, 2, 1)
+            #plt.imshow(np.asarray(plain_input_img), cmap='gray')
+            plt.imshow(plain_input_img)
+            plt.title("input: " + plot_vars.input_name + " (" + str(plot_vars.amount_input_persons) + " pers)", fontsize=fs)
+            #plt.plot(*zip(*plot_vars.input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+
+            plt.subplot(2, 2, 2)
+            plt.imshow(plain_model_img)
+            plt.title("model: " + plot_vars.model_name + " (" + str(plot_vars.amount_model_persons) + " pers)", fontsize=fs)
+            #plt.plot(*zip(*model_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize-1)
+
+            # --- Second row plot ---
+            #f.set_figheight(20)
+            plt.subplot(2, 3, 4)
+            #plt.imshow(np.asarray(persp_input_img), cmap='gray')
+            plt.imshow(persp_input_img)
+            plt.axis('off')
+            plt.title("corrected input", fontsize=fs)
+            plt.plot(*zip(*p_input_good), marker='o', color='r', label='features', ls='', ms=markersize)
+            plt.plot(*zip(*persp_us_feats), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
+            plt.legend(fontsize=fs - 1)
+            #plt.legend(handles=[mpatches.Patch(color='red', label='features'),mpatches.Patch(color='blue', label='pose')])
+
+
+            plt.subplot(2, 3, 5)
+            plt.imshow(plain_model_img)
+            plt.title("model", fontsize=fs)
+            plt.axis('off')
+            plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',ms=markersize)  # ms = markersize
+            plt.plot(*zip(*model_us_feats), marker='o', color='blue', ls='', label='pose+randfeat',ms=markersize)  # ms = markersize
+            #red_patch = mpatches.Patch(color='magenta', label='model')
+            #plt.legend(handles=[red_patch])
+            plt.legend(fontsize=fs - 1)
+
+            plt.subplot(2, 3, 6)
+            plt.imshow(plain_model_img)
+            plt.title("transform on model", fontsize=fs)
+            plt.axis('off')
+            plt.plot(*zip(*np.vstack((p_model_good, model_us_feats))), marker='o', color='magenta', ls='',
                      label='model',
                      ms=markersize-1)  # ms = markersize
             plt.plot(*zip(*input_transformed), marker='o', color='aqua', ls='', label='input',
@@ -232,51 +330,43 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
 
 
         if plot_vars.plot_type == "compress":
-            # --- First row plot ---
-            plain_input_img = cv2.imread(plot_vars.input_path, cv2.IMREAD_GRAYSCALE)
+
             f = plt.figure(figsize=(12, 5))
             f.subplots_adjust(hspace = 0.025, wspace=0.025)
-
-
-
             #f.suptitle("US matching | score=" + str(round(max_euclidean_error_norm, 4)), fontsize=10)
             plt.subplot(1, 3, 1)
             plt.axis('off')
             plt.title("input", fontsize=fs)
-            plt.imshow(np.asarray(plain_input_img), cmap='gray')
+            #plt.imshow(np.asarray(plain_input_img), cmap='gray')
+            plt.imshow(plain_input_img)
+            #plt.imshow(np.asarray(plain_input_img))
             plt.title("input: " + plot_vars.input_name + " (" + str(plot_vars.amount_input_persons) + " pers)",
                       fontsize=fs)
-            plt.plot(*zip(*plot_vars.input_background_no_correction), marker='o', color='r', label='features', ls='', ms=markersize- 1)
-            plt.plot(*zip(*plot_vars.input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-            # plt.legend('off')
-            # plt.legend(fontsize=fs - 1)
-
+            plt.plot(*zip(*input_us_randfeature_no_correction), marker='o', color='r', label='features', ls='', ms=markersize- 1)
             #plt.plot(*zip(*plot_vars.input_pose_org), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-            #plt.plot(*zip(*input_pose), marker='o', color='blue', label='pose+randfeat', ls='', ms=markersize)
-
+            # plt.legend(fontsize=fs - 1)
             # plt.legend(handles=[mpatches.Patch(color='red', label='features'),mpatches.Patch(color='blue', label='pose')])
 
             plt.subplot(1, 3, 2)
-            plain_model_img = cv2.imread(plot_vars.model_path, cv2.IMREAD_GRAYSCALE)
-            plt.imshow(np.asarray(plain_model_img), cmap='gray')
+            plt.imshow(plain_model_img)
             plt.title("model: " + plot_vars.model_name + " (" + str(plot_vars.amount_model_persons) + " pers)", fontsize=fs)
             plt.axis('off')
-            plt.plot(*zip(*p_model_good), marker='o', color='magenta', ls='', label='features',
+            plt.plot(*zip(*model_us_feats), marker='o', color='magenta', ls='', label='features',
                      ms=markersize- 1)  # ms = markersize
-            plt.plot(*zip(*plot_vars.model_pose_org), marker='o', color='blue', ls='', label='pose',
-                     ms=markersize- 1)  # ms = markersize
+            # plt.plot(*zip(*plot_vars.model_pose_org), marker='o', color='blue', ls='', label='pose',
+            #          ms=markersize- 1)  # ms = markersize
 
             # plt.legend(fontsize=fs - 1)
 
 
             plt.subplot(1, 3, 3)
-            plt.imshow(np.asarray(model_img), cmap='gray')
+            plt.imshow(trans_on_model)
             plt.title("trans on model " + "(" + str(the_score) + "%)", fontsize=fs)
             plt.axis('off')
-            plt.plot(*zip(*np.vstack((p_model_good, model_pose))), marker='o', color='magenta', ls='',
+            plt.plot(*zip(*model_us_feats), marker='o', color='magenta', ls='',
                      label='model',
                      ms=markersize - 1)  # ms = markersize
-            plt.plot(*zip(*input_transformed), marker='o', color='aqua', ls='', label="trans. input",
+            plt.plot(*zip(*trans_us_feats), marker='o', color='aqua', ls='', label="trans. input",
                      ms=markersize - 1)  # ms = markersize
             # plt.legend(fontsize=fs - 1)
 
