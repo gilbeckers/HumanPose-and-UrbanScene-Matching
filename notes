@@ -6,3 +6,52 @@ oplossing: zeker bij de benen kan men zeggen dat als ze er niet volledig op staa
 
 er gaat een hele hoop mis op dit moment. Volgens mij wordt er teveel data weggelaten om nog juist te kunnen besluiten.
 Werk voor woensdag.
+
+
+multipose interresante foto's bij 00100:
+foto 09958 met de kleine man die een hand geeft aan een grote.
+waarom niet 00025 en 00026 00037???
+
+
+
+*************raport best accuray****************
+best_accuracy: 0.9543478260869566
+best_tresh: 1.71
+recall: 0.9949748743718593
+precision: 0.868421052631579
+
+
+*************todo 'S ****************************
+- Appendix                                                                      v
+- hfst 2 te moeilijk
+- hfst 2  teveel subtitles
+- hfst 2 weg met buikgevoel
+- hfst 2 iets meer samenhang
+- hfst 2 (.1.2.3) schrijf iets over deepercut en densepose                      /
+- hfst 2 schrijf iets over android feature matching performantie
+
+- hfst 3 server deel                                                            v
+- hfst 3 dit is toe komst, duidelijker maken
+- 3.3.1 runtime analyse -> verwijzen naar hfst 5                                v
+- 3.4.4 gebruikte software ? firebase ? kijk comment Gil?                       v
+- 3.4.5.1 docker en combinatie met openpose verwijzing naar Appendix            v
+- 3.4.5.2 RestApi python server flask, werkzeug                                 v
+
+- hfst 4 Singlepose                                                             v
+- hfst 4 multipose                                                              v
+- hfst 4 urban                                                                  v
+- 4.1.2.7 figuur/schema                                                         geen figuur nodig (overkill)
+- 4.1.2.8 formule (immense formule ma bon)                                      v
+- 4.2.2.2 nt gedetect punten =>zelfde als bij Singlepose                        v
+- 4.2.4 Multipose score verduidelijken /schema/figuur                           v
+- 4.2.4 Crop image illustratie verwijzing naar future works                     gil ging deze proberen zoeken.
+
+- hfst 5 pr = precision/recall                                                  v
+- hfst 5 pr-curve urban scene                                                   v
+- hfst 5 situatie's aantonen met voorbeelden waar nodig.
+- hfst 5 tabel met performantie maken.
+- hfst 5 niet gedetecteerde punten.
+
+
+- opletten met plagiaat figuren
+- opletten met code snippets, liever schema

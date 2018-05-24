@@ -27,7 +27,7 @@ path_json = urban_json  # 'posesGeoteam/json/'
 #path_json = '../json_data/'  # 'posesGeoteam/json/'
 
 model_name = '17.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1
-input_name = '127.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+input_name = '70.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 
 #model_name="duo21.jpg"
 #input_name="duo39.jpg"
