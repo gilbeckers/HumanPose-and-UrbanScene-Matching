@@ -43,13 +43,13 @@ def match_whole(model_pose_features, input_pose_features, detector, matcher, mod
             plt.imshow(np.asarray(input_image), cmap='gray')
             for i in range(0, len(input_pose_features)):
                 plt.plot(*zip(*input_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-            plt.title("input: " + plot_vars.input_name, fontsize=fs)
+            plt.title("input: " + plot_vars.input_name + " (" + str(plot_vars.amount_input_persons) + " pers)", fontsize=fs)
 
             plt.subplot(1, 2, 2)
             plt.imshow(np.asarray(model_image), cmap='gray')
             for i in range(0, len(model_pose_features)):
                 plt.plot(*zip(*model_pose_features[i]), marker='o', color='blue', label='pose', ls='', ms=markersize - 1)
-            plt.title("model: " + plot_vars.model_name, fontsize=fs)
+            plt.title("model: " + plot_vars.model_name + " (" + str(plot_vars.amount_model_persons) + " pers)", fontsize=fs)
 
             plot_name = plot_vars.model_name.split(".")[0] + "_" + plot_vars.input_name.split(".")[0] + "_FALSE"
             plt.savefig('./plots/' + plot_name + '.png')

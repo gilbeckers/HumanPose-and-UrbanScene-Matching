@@ -8,12 +8,15 @@ import itertools
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import thresholds
+import plot_vars
 logger = logging.getLogger("multi_person")
 
 
 def match(model_poses, input_poses, plot=False, input_image = None, model_image=None, normalise=True):
     logger.debug(" amount of models: %d", len(model_poses))
     logger.debug(" amount of inputs: %d", len(input_poses))
+    plot_vars.amount_input_persons = len(input_poses)
+    plot_vars.amount_model_persons = len(model_poses)
 
     model_poses = np.copy(model_poses)
     input_poses = np.copy(input_poses)
@@ -43,6 +46,8 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
         match_result_single = match_single(model_poses[0], input_poses[0], True)
 
+        if plot:
+            plot_match(model_poses[0], input_poses[0], match_result_single.input_transformation, model_image, input_image)
         # !!! BELANGRIJK!!  wordt ook gedaan in match_single(), maar maakt copy, dus hier opnieuw doen!!
         (model_pose, input_pose) = handle_undetected_points(model_poses[0], input_poses[0])
 
@@ -135,7 +140,7 @@ def match(model_poses, input_poses, plot=False, input_image = None, model_image=
         if plot:
             (full_transformation_nonorm, A_matrix) = find_transformation(updated_models_combined_nonorm, input_transformed_combined_nonorm)
             plot_match(updated_models_combined_nonorm, input_transformed_combined_nonorm, full_transformation_nonorm, model_image, input_image)
-            #plot_match(unchanged_model,unchanged_input, unchanged_model)
+            plot_match(unchanged_model,unchanged_input, unchanged_model)
 
 
         if max_eucl_distance<=thresholds.MP_DISCTANCE:
@@ -249,6 +254,7 @@ def order_poses(poses):
 
 def plot_match(model_features, input_features, input_transform_features, model_image_name, input_image_name):
     # plot vars
+
     markersize = 2
 
     # Load images , if model_image_name is of type string => it's a path, so read the image in mem
@@ -276,7 +282,7 @@ def plot_match(model_features, input_features, input_transform_features, model_i
     ax3.plot(*input_transform_features[17], marker='x', color='red', ls='', ms=4)
     ax3.legend(handles=[mpatches.Patch(color='magenta', label='Model'), mpatches.Patch(color='blue', label='Input transformed')])
     #plt.draw()
-    #plt.show(block=True)
+    plt.show()
 
     return
 

@@ -137,7 +137,8 @@ def match_single(model_features, input_features, normalise=True):
             result_face = True
         else:
             logger.debug("Model has more face feature then input therefore not matched %d" , (np.count_nonzero(model_face) - np.count_nonzero(input_face)) )
-            result_face = False
+            #result_face = False
+            result_face = True
     else:
         logger.debug("too less points for face in model so face match")
         result_face = True

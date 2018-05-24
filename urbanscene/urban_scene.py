@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from urbanscene import features, transformation
 import thresholds
+import plot_vars
 logger = logging.getLogger("urban_scene")
 
 FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
@@ -14,13 +15,13 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
     ''' ---------- STEP 0: Crop Image to important region -------------------- '''
     zone = [0, 720, 100, 530]
-    #zone = [250, 340, 100, 400]
+    zone = [120, 700, 100, 750]
     Xmin = zone[0]
     Xmax = zone[1]
     Ymin = zone[2]
     Ymax = zone[3]
 
-    model_image = model_image[Ymin:Ymax, Xmin:Xmax]
+    #model_image = model_image[Ymin:Ymax, Xmin:Xmax]
 
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
     kp_model, desc_model = detector.detectAndCompute(model_image, None)
@@ -78,17 +79,27 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
 
     #TODO: terug transformeren jochen
-    p_model_good = p_model_good + [Xmin, Ymin]
+    #p_model_good = p_model_good + [Xmin, Ymin]
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
-    (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
-                                                                                                           p_model_good_incl_pose,
-                                                                                                           p_input_good_incl_pose,
-                                                                                                           model_pose_features,
-                                                                                                           input_pose_features,
-                                                                                                           model_image,
-                                                                                                           input_image,
-                                                                                                           False)
+
+
+    plot_vars.input_background_no_correction = p_input_good
+    #Zonder correction
+    p_persp_trans_input = p_input_good_incl_pose
+    input_pose_trans = input_pose_features
+    persp_trans_input_img = input_image
+
+    if thresholds.PERSPECTIVE_CORRECTION:
+        (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
+                                                                                                               p_model_good_incl_pose,
+                                                                                                               p_input_good_incl_pose,
+                                                                                                               model_pose_features,
+                                                                                                               input_pose_features,
+                                                                                                               model_image,
+                                                                                                               input_image,
+                                                                                                               False)
+
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE Without perspective correction------------------ '''
     # Calc affine trans between the wrest points and some random feature points of the building
@@ -114,7 +125,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     # logging.debug("input  TRANS pose: ", input_pose_trans)
     # logging.debug("model pose: ", model_pose_features)
     sum_err = 0
-    its = 3
+    its = thresholds.USI_AMOUNT_ITERATIONS
     for i in range(0,its):
         (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
                                             model_pose_features, input_pose_trans,
