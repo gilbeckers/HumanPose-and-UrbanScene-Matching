@@ -27,28 +27,30 @@ precision: 0.868421052631579
 - hfst 2  teveel subtitles
 - hfst 2 weg met buikgevoel
 - hfst 2 iets meer samenhang
-- hfst 2 (.1.2.3) schrijf iets over deepercut en densepose
+- hfst 2 (.1.2.3) schrijf iets over deepercut en densepose                      /
 
 - hfst 3 server deel                                                            v
 - hfst 3 dit is toekomst, duidelijker maken
-- 3.3.1 runtime analyse -> verwijzen naar hfst 5
-- 3.4.4 gebruikte software ? firebase ? kijk comment Gil?
-- 3.4.5.1 docker en combinatie met openpose verwijzing naar Appendix
-- 3.4.5.2 RestApi python server flask, werkzeug
+- 3.3.1 runtime analyse -> verwijzen naar hfst 5                                v
+- 3.4.4 gebruikte software ? firebase ? kijk comment Gil?                       v
+- 3.4.5.1 docker en combinatie met openpose verwijzing naar Appendix            v
+- 3.4.5.2 RestApi python server flask, werkzeug                                 v
 
 - hfst 4 Singlepose                                                             v
 - hfst 4 multipose                                                              v
 - hfst 4 urban                                                                  v
 - 4.1.2.7 figuur/schema
-- 4.1.2.8 formule (immense formule ma bon)
-- 4.2.2.2 nt gedetect punten =>zelfde als bij Singlepose
+- 4.1.2.8 formule (immense formule ma bon)                                      v
+- 4.2.2.2 nt gedetect punten =>zelfde als bij Singlepose                        v
 - 4.2.4 Multipose score verduidelijken /schema/figuur
 - 4.2.4 Crop image illustratie verwijzing naar future works
 
 - hfst 5 pr = precision/recall                                                  v
 - hfst 5 pr-curve urban scene                                                   v
 - hfst 5 situatie's aantonen met voorbeelden waar nodig.
-- hfst 5 tabel met performantie maken
+- hfst 5 tabel met performantie maken.
+- hfst 5 niet gedetecteerde punten.
+
 
 - opletten met plagiaat figuren
 - opletten met code snippets, liever schema
