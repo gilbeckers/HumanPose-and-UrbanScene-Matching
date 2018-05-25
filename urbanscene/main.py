@@ -20,14 +20,14 @@ feature_name = 'orb-flann'
 path_img = '../img/kever2/'  # 'posesGeoteam/fotos/'
 path_json = '../json_data/kever2/'  # 'posesGeoteam/json/'
 
-#path_img = "../img/"
-#path_json = '../json_data/'  # 'posesGeoteam/json/'
+# path_img = "../img/"
+# path_json = '../json_data/'  # 'posesGeoteam/json/'
 
-model_name = 'kever197.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1   'kever197.jpg'
-input_name = 'kever209.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
+model_name = 'kever17.jpg' #'bulb14.jpg'  # goeie : "pisa9"  taj3  # trap1     trap1   'kever197.jpg'
+input_name = 'kever70.jpg' #'bulb16.jpg' # goeie : "pisa10"  taj4  # trap2     trap3
 
-#model_name="duo22.jpg"
-#input_name="duo24.jpg"
+#model_name="duo43.jpg"
+#input_name="duo48.jpg"
 
 model_image = cv2.imread(path_img + model_name, cv2.IMREAD_GRAYSCALE)
 input_image = cv2.imread(path_img + input_name, cv2.IMREAD_GRAYSCALE)
@@ -57,7 +57,7 @@ plot_vars.model_name = model_name
 plot_vars.model_path = path_img + model_name
 plot_vars.input_path = path_img + input_name
 plot_vars.write_img = True
-plot_vars.plot_type = "compress"
+plot_vars.plot_type = "extreme"#"illustrate_crop"
 
 
 logger.debug("---Starting pose matching --")

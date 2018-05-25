@@ -211,6 +211,13 @@ def validate_homography(perspective_trans_matrix):
     return True
 
 def max_euclidean_distance(model, transformed_input):
+    # model_copy = np.copy(model)
+    # input_copy = np.copy(transformed_input)
+    #
+    # model_copy[model == [0, 0]] = np.nan
+    # input_copy[model == [0, 0]] = np.nan
+    #
+    # print(input_copy)
 
     manhattan_distance = np.abs(model - transformed_input)
 

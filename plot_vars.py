@@ -13,6 +13,11 @@ amount_model_persons = 0
 input_pose_org = []
 model_pose_org = []
 
+cropped_model = None
+cropped_model_feats = None
+cropped_xmin = None
+cropped_ymin = None
+
 input_background_no_correction = None
 
 plot_type = "extreme"   # of compress
