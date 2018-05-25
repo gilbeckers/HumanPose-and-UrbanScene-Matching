@@ -48,9 +48,9 @@ precision: 0.868421052631579
 
 - hfst 5 pr = precision/recall                                                  v
 - hfst 5 pr-curve urban scene                                                   v
-- hfst 5 situatie's aantonen met voorbeelden waar nodig.
-- hfst 5 tabel met performantie maken.
-- hfst 5 niet gedetecteerde punten.
+- hfst 5 situatie's aantonen met voorbeelden waar nodig.                        v
+- hfst 5 tabel met performantie maken.                                          v
+- hfst 5 niet gedetecteerde punten.                                             /
 
 
 - opletten met plagiaat figuren
