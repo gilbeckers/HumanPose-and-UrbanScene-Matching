@@ -3,7 +3,6 @@ import os
 import sys
 
 from flask import Flask, render_template, request, jsonify
-from redis import Redis
 from werkzeug.utils import secure_filename
 
 sys.path.insert(0,"/openpose-master/MultiPersonMatching")

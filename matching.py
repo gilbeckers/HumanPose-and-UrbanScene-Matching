@@ -1,7 +1,7 @@
 from urbanscene.urban_scene import match_scene_multi
 import posematching.multi_person as multi_person
 from handlers import json
-from urbanscene import features
+from handlers import features
 import logging
 import thresholds
 import plot_vars

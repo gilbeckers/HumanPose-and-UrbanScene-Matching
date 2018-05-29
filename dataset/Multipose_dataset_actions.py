@@ -2,8 +2,6 @@ import glob
 import logging
 import os
 import sys
-import cv2
-from urbanscene import features
 import matching
 
 import posematching.multi_person as multiperson
