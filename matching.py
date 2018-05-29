@@ -1,5 +1,7 @@
 from urbanscene.urban_scene import match_scene_multi
 import posematching.multi_person as multi_person
+import common
+from urbanscene import features
 import logging
 import thresholds
 import plot_vars
@@ -22,7 +24,16 @@ import time
 # Performs the whole matching
 # First multi pose matching, followed by urbanscene matching
 #@timing
-def match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image, plot_us=False, plot_mp=False):
+def match_whole(model_json, input_json, model_image_path, input_image_path, plot_us=False, plot_mp=False):
+    feature_name = 'orb-flann'
+    detector, matcher = features.init_feature(feature_name)
+
+    model_pose_features = common.parse_JSON_multi_person(model_json)
+    input_pose_features= common.parse_JSON_multi_person(input_json)
+
+    model_image = cv2.imread(model_image_path, cv2.IMREAD_GRAYSCALE)
+    input_image = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
+
     (result, MP_error_score, input_transform,permutations) = multi_person.match(model_pose_features, input_pose_features)
 
 

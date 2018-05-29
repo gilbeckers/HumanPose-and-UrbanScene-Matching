@@ -284,22 +284,12 @@ def test():
     correction = False
     pose = "17"
     path = poses+pose
-    model = path+"/json/"+pose+".json" #take filtered model for keypoints
-    input = path+"/json/6.json" #take filtered model for keypoints
+    model_json = path+"/json/"+pose+".json" #take filtered model for keypoints
+    input_json = path+"/json/"+pose+".json"
+    model_image = model_json.split(".")[0].replace("json","fotos")+".jpg"
+    input_image = input_json.split(".")[0].replace("json","fotos")+".jpg"
 
-    #pose = "1"
-    #path = '/media/jochen/2FCA69D53AB1BFF41/dataset/poses/pose'+pose
-    #model = path+"/json/0.json"
-    model_pose_features = common.parse_JSON_multi_person(model)
-    model = path+"/json/"+pose+".json"
-    feature_name = 'orb-flann'
-    detector, matcher = features.init_feature(feature_name)
-
-    model_image = cv2.imread(model.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
-
-    input_pose_features= common.parse_JSON_multi_person(input)
-    input_image = cv2.imread(input.split(".")[0].replace("json","fotos")+".jpg", cv2.IMREAD_GRAYSCALE)
-    result_whole = matching.match_whole(model_pose_features, input_pose_features, detector, matcher, model_image, input_image,False, False)
+    result_whole = matching.match_whole(model_json , input_json , model_image, input_image)
     print(result_whole)
 
 #*************************************accuracy*************************************
