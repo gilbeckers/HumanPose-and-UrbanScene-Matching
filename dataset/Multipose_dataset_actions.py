@@ -3,10 +3,9 @@ import logging
 import os
 import sys
 import cv2
-import common
 from urbanscene import features
 import matching
-import common
+
 import posematching.multi_person as multiperson
 import posematching.multi_person
 import matplotlib.pyplot as plt
@@ -285,11 +284,11 @@ def test():
     pose = "17"
     path = poses+pose
     model_json = path+"/json/"+pose+".json" #take filtered model for keypoints
-    input_json = path+"/json/"+pose+".json"
+    input_json = path+"/json/9.json"
     model_image = model_json.split(".")[0].replace("json","fotos")+".jpg"
     input_image = input_json.split(".")[0].replace("json","fotos")+".jpg"
 
-    result_whole = matching.match_whole(model_json , input_json , model_image, input_image)
+    result_whole = matching.match(model_json , input_json , model_image, input_image)
     print(result_whole)
 
 #*************************************accuracy*************************************

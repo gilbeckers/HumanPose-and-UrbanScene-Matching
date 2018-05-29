@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import logging
 import numpy as np
-from common import feature_scaling, handle_undetected_points_model, \
-    split_in_face_legs_torso, find_transformation, unsplit, split_in_face_legs_torso_v2
+
+from handlers import undetected_points
+from handlers import transformation
+from handlers import scaling
+from handlers import compare
+from handlers import split
 #from dataset import Multipose_dataset_actions as dataset #eucl_dis_tresh_torso, rotation_tresh_torso,eucl_dis_tresh_legs,rotation_tresh_legs,eucld_dis_shoulders_tresh
 import thresholds
 from dataset import Multipose_dataset_actions as dataset
@@ -73,12 +77,12 @@ def match_single(model_features, input_features, normalise=True):
     assert len(model_features) == len(input_features)
 
     if (normalise):
-        model_features = feature_scaling(model_features)
-        input_features = feature_scaling(input_features)
+        model_features = scaling.feature_scaling(model_features)
+        input_features = scaling.feature_scaling(input_features)
 
     # Split features in three parts
-    (model_face, model_torso, model_legs) = split_in_face_legs_torso_v2(model_features)
-    (input_face, input_torso, input_legs) = split_in_face_legs_torso_v2(input_features)
+    (model_face, model_torso, model_legs) = split.split_in_face_legs_torso_v2(model_features)
+    (input_face, input_torso, input_legs) = split.split_in_face_legs_torso_v2(input_features)
 
     # In case of no normalisation, return here (ex; plotting)
     # Without normalisation the thresholds don't say anything
@@ -104,8 +108,8 @@ def match_single(model_features, input_features, normalise=True):
 
 
     # TODO @j3 keer het zelfde!! -> bad code design :'(
-    (input_transformed_face, transformation_matrix_face) = find_transformation(model_face, input_face)
-    max_euclidean_error_face = pose_comparison.max_euclidean_distance(model_face, input_transformed_face)
+    (input_transformed_face, transformation_matrix_face) = transformation.find_transformation(model_face, input_face)
+    max_euclidean_error_face = compare.max_euclidean_distance(model_face, input_transformed_face)
 
     if np.count_nonzero(model_face) > 8:
         if (np.count_nonzero(model_face) - np.count_nonzero(input_face)) < 5:
@@ -121,13 +125,13 @@ def match_single(model_features, input_features, normalise=True):
         result_face = True
 
     rotation_torso=0
-    (input_transformed_torso, transformation_matrix_torso) = find_transformation(model_torso, input_torso)
-    max_euclidean_error_torso = pose_comparison.max_euclidean_distance(model_torso, input_transformed_torso)
-    max_euclidean_error_shoulders = pose_comparison.max_euclidean_distance_shoulders(model_torso,
+    (input_transformed_torso, transformation_matrix_torso) = transformation.find_transformation(model_torso, input_torso)
+    max_euclidean_error_torso = compare.max_euclidean_distance(model_torso, input_transformed_torso)
+    max_euclidean_error_shoulders = compare.max_euclidean_distance_shoulders(model_torso,
                                                                                      input_transformed_torso)
     if (np.count_nonzero(model_torso) > 10):
         if (abs(np.count_nonzero(model_torso) - np.count_nonzero(input_torso))) < 2:
-            (result_torso,rotation_torso) = pose_comparison.decide_torso_shoulders_incl(max_euclidean_error_torso,
+            (result_torso,rotation_torso) = compare.decide_torso_shoulders_incl(max_euclidean_error_torso,
                                                                        transformation_matrix_torso,
                                                                        eucl_dis_tresh_torso, rotation_tresh_torso,
                                                                        max_euclidean_error_shoulders,
@@ -144,13 +148,13 @@ def match_single(model_features, input_features, normalise=True):
 
     # handle legs
     rotation_legs =0
-    (input_transformed_legs, transformation_matrix_legs) = find_transformation(model_legs, input_legs)
-    max_euclidean_error_legs = pose_comparison.max_euclidean_distance(model_legs, input_transformed_legs)
+    (input_transformed_legs, transformation_matrix_legs) = transformation.find_transformation(model_legs, input_legs)
+    max_euclidean_error_legs = compare.max_euclidean_distance(model_legs, input_transformed_legs)
 
     if (np.count_nonzero(model_legs) > 10):
         if (abs(np.count_nonzero(model_legs) - np.count_nonzero(input_legs))) < 5:
 
-            (result_legs,rotation_legs) = pose_comparison.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,eucl_dis_tresh_legs, rotation_tresh_legs)
+            (result_legs,rotation_legs) = compare.decide_legs(max_euclidean_error_legs, transformation_matrix_legs,eucl_dis_tresh_legs, rotation_tresh_legs)
             logger.debug("Model legs zeros: %d",np.count_nonzero(model_legs))
         else:
             logger.debug("Model has more legs feature then input therefore not matched %d", (np.count_nonzero(model_legs) - np.count_nonzero(input_legs)) )
@@ -163,7 +167,7 @@ def match_single(model_features, input_features, normalise=True):
         result_legs = True
 
     # Wrapped the transformed input in one whole pose
-    input_transformation = unsplit(input_transformed_face, input_transformed_torso, input_transformed_legs)
+    input_transformation = split.unsplit(input_transformed_face, input_transformed_torso, input_transformed_legs)
 
     # TODO: construct a solid score algorithm
     error_score = ((max_euclidean_error_torso/eucl_dis_tresh_torso) + (max_euclidean_error_legs/eucl_dis_tresh_legs) + (max_euclidean_error_shoulders/eucld_dis_shoulders_tresh)+(rotation_legs/rotation_tresh_legs)+(rotation_torso/rotation_tresh_torso))/5

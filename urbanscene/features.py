@@ -2,7 +2,8 @@ import logging
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-from common import anorm
+
+from handlers import function
 import thresholds
 
 
@@ -156,7 +157,7 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None, show_win= 
         if flags & cv2.EVENT_FLAG_LBUTTON:
             cur_vis = vis0.copy()
             r = 8
-            m = (anorm(np.array(p1) - (x, y)) < r) | (anorm(np.array(p2) - (x, y)) < r)
+            m = (function.anorm(np.array(p1) - (x, y)) < r) | (function.anorm(np.array(p2) - (x, y)) < r)
             idxs = np.where(m)[0]
 
             kp1s, kp2s = [], []
@@ -209,19 +210,3 @@ def validate_homography(perspective_trans_matrix):
         # exit()
 
     return True
-
-def max_euclidean_distance(model, transformed_input):
-
-    manhattan_distance = np.abs(model - transformed_input)
-
-    euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
-
-    return max(euclidean_distance)
-
-def euclidean_distance(model, transformed_input):
-    manhattan_distance = np.abs(model - transformed_input)
-
-    euclidean_distance = ((manhattan_distance[:, 0]) ** 2 + manhattan_distance[:, 1] ** 2) ** 0.5
-
-    return euclidean_distance
-

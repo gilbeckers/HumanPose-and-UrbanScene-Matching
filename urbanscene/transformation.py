@@ -4,8 +4,11 @@ import cv2
 import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-from urbanscene.features import  max_euclidean_distance, euclidean_distance
-import common
+#import common
+from handlers import undetected_points
+from handlers import transformation
+from handlers import scaling
+from handlers import compare
 import thresholds
 import random
 import plot_vars
@@ -29,13 +32,13 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     p_input_persp_trans = cv2.perspectiveTransform(my_input_pts2, H2)  # transform(input_pts_2D)
     p_input_persp_trans = np.squeeze(p_input_persp_trans[:])  # strip 1 dimension
 
-    max_euclidean_error = max_euclidean_distance(p_model, p_input_persp_trans)
+    max_euclidean_error = compare.max_euclidean_distance(p_model, p_input_persp_trans)
     logging.debug('PERSSPECTIVE 1: max error: %d', max_euclidean_error)
 
     #TODO: wanneer normaliseren? VOOR of NA berekenen van homography  ????   --> rekenenen met kommagetallen?? afrodingsfouten?
     # 1E MANIER:  NORMALISEER ALLE FEATURES = POSE + BACKGROUND
-    model_features_norm = common.feature_scaling(p_model)
-    input_features_trans_norm = common.feature_scaling(p_input_persp_trans)
+    model_features_norm = scaling.feature_scaling(p_model)
+    input_features_trans_norm = scaling.feature_scaling(p_input_persp_trans)
 
     max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
     logging.debug('PERSSPECTIVE NORM 1: max error: %f', max_euclidean_error)
@@ -43,10 +46,10 @@ def perspective_correction(H2, p_model, p_input, model_pose_features, input_pose
     # -- 2E MANIERRR: normaliseren enkel de pose
     input_pose_trans = p_input_persp_trans[len(p_input_persp_trans) - len(input_pose_features): len(
         p_input_persp_trans)]  # niet perse perspective corrected, hangt af van input
-    model_pose_norm = common.feature_scaling(model_pose_features)
-    input_pose_trans_norm = common.feature_scaling(input_pose_trans)
+    model_pose_norm = scaling.feature_scaling(model_pose_features)
+    input_pose_trans_norm = scaling.feature_scaling(input_pose_trans)
 
-    max_euclidean_error = max_euclidean_distance(model_pose_norm, input_pose_trans_norm)
+    max_euclidean_error = compare.max_euclidean_distance(model_pose_norm, input_pose_trans_norm)
 
     logging.debug('PERSSPECTIVE NORM 2: max error: %f', max_euclidean_error)
 
@@ -149,7 +152,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     input_pose = np.vstack(input_pose)
 
 
-    (input_transformed, M) = common.find_transformation(model_pose, input_pose)
+    (input_transformed, M) = transformation.find_transformation(model_pose, input_pose)
 
     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
     unpad = lambda x: x[:, :-1]
@@ -162,9 +165,9 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     #input_features_trans_norm = common.feature_scaling(input_transformed)
 
     # Norm manier 2: image_resolution normaliseren
-    model_features_norm = common.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
-    #input_features_trans_norm = common.scene_feature_scaling(input_transformed, input_image_w, input_image_h)
-    input_features_trans_norm = common.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
+    model_features_norm = scaling.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
+    #input_features_trans_norm = scaling.scene_feature_scaling(input_transformed, input_image_w, input_image_h)
+    input_features_trans_norm = scaling.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
 
     # f, (ax1) = plt.subplots(1, 1, sharey=True, figsize=(14, 6))
     # # ax1.set_title(model_image_name + ' (model)')
@@ -173,7 +176,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     #          ms=3)
     # ax1.plot(*zip(*input_features_trans_norm), marker='o', color='r', ls='', ms=3)
 
-    euclidean_error_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    euclidean_error_norm = compare.euclidean_distance(model_features_norm, input_features_trans_norm)
     #  index 2(rechts) en 5(links) zijn de polsen
     #logging.warning("Distance polsen  links: %f   rechts: %f", round(euclidean_error_torso_norm[2], 3), round(euclidean_error_torso_norm[5], 3) )
     logging.debug("#### AFFINE RAND NORM Sum TOTAL: %f" , sum(euclidean_error_norm))
@@ -181,7 +184,7 @@ def affine_multi(p_model_good, p_input_good, model_pose, input_pose, model_image
     max_euclidean_error_norm = max(euclidean_error_norm)#max_euclidean_distance(model_features_norm, input_features_trans_norm)
     logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
 
-    max_euclidean_error = max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
+    max_euclidean_error = compare.max_euclidean_distance(np.vstack((p_model_good, model_pose)), input_transformed)
 
     logging.debug("#### AFFINE RAND " + label + "  error_torso: %f", max_euclidean_error)
 
@@ -295,18 +298,18 @@ def affine_multi_important_posefeat(p_model_good, p_input_good, model_pose, inpu
     model_pose = np.vstack(model_pose)
     input_pose = np.vstack(input_pose)
 
-    (input_transformed, M) = common.find_transformation(model_pose, input_pose)
+    (input_transformed, M) = transformation.find_transformation(model_pose, input_pose)
 
     pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])  # horizontaal stacken
     unpad = lambda x: x[:, :-1]
     input_transformed = unpad(np.dot(pad(np.vstack((p_input_good, input_pose))), M))
 
     # Norm manier 2: image_resolution normaliseren
-    model_features_norm = common.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
+    model_features_norm = scaling.scene_feature_scaling(np.vstack((p_model_good, model_pose)), model_image_width, model_image_height)
     #input_features_trans_norm = common.scene_feature_scaling(input_transformed, input_image_w, input_image_h)
-    input_features_trans_norm = common.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
+    input_features_trans_norm = scaling.scene_feature_scaling(input_transformed, model_image_width, model_image_height)
 
-    euclidean_error_norm = euclidean_distance(model_features_norm, input_features_trans_norm)
+    euclidean_error_norm = compare.euclidean_distance(model_features_norm, input_features_trans_norm)
     max_euclidean_error_norm = max(euclidean_error_norm)
     logging.debug("#### AFFINE RAND NORM " + label + "  error_total: %f", max_euclidean_error_norm)
 

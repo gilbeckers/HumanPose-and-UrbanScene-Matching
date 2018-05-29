@@ -1,5 +1,8 @@
 from posematching.single_person import MatchResult, MatchCombo, match_single, MatchResultMulti
-from common import handle_undetected_points, feature_scaling, find_transformation, feature_scaling_multi_person
+from handlers import undetected_points
+from handlers import transformation
+from handlers import scaling
+from handlers import compare
 from posematching.procrustes import superimpose, superimpose_old
 from posematching.pose_comparison import max_euclidean_distance
 import numpy as np
@@ -38,7 +41,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
     if (len(input_poses) > len(model_poses)):
         logger.warning(" !! WARNING !! Amount of input poses > model poses")
 
-    #
+    # perform single_pose match
     if len(model_poses)==1 and len(input_poses)==1:
         logger.debug("Modelpose and inputpose both contain only one pose, so performing simple single_pose matching")
         match_result_single = match_single(model_poses[0], input_poses[0], True)
@@ -98,7 +101,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         unchanged_model = []
         for model_index, input_index_val in enumerate(permutation):
             logger.debug("Superimposing for model %d  and input %d", model_index, input_index_val)
-            (input_pose, model_pose) = handle_undetected_points(input_poses[input_index_val], model_poses[model_index])
+            (input_pose, model_pose) = undetected_points.handle_all_policy(input_poses[input_index_val], model_poses[model_index])
             if superimp:
                 (input_transformed, model) = superimpose(input_pose, model_pose, plot=False, input_image= None, model_image=None)
             else:
@@ -128,12 +131,12 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         updated_models_combined_nonorm =updated_models_combined
 
         if (normalise):
-            input_transformed_combined = feature_scaling(input_transformed_combined)
-            updated_models_combined = feature_scaling(updated_models_combined)
+            input_transformed_combined = scaling.feature_scaling(input_transformed_combined)
+            updated_models_combined = scaling.feature_scaling(updated_models_combined)
 
         logger.debug("shape model_pose %s", str(updated_models_combined.shape))
-        (full_transformation, A_matrix) = find_transformation(updated_models_combined, input_transformed_combined)
-        max_eucl_distance = max_euclidean_distance(updated_models_combined, full_transformation)
+        (full_transformation, A_matrix) = transformation.find_transformation(updated_models_combined, input_transformed_combined)
+        max_eucl_distance = compare.max_euclidean_distance(updated_models_combined, full_transformation)
 
         tot_error = (max_eucl_distance*4) + (pose_error)
         if tot_error < min_error:
@@ -238,8 +241,8 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
     error_scores =  list(itertools.product(*(error_scores_dict[Name] for Name in allInputs)))
     result_permuations = {}
     min_error = 10
-    model_poses = feature_scaling_multi_person(model_poses)
-    input_poses = feature_scaling_multi_person(input_poses)
+    model_poses = scaling.feature_scaling_multi_person(model_poses)
+    input_poses = scaling.feature_scaling_multi_person(input_poses)
     for index,permutation in enumerate(combinations):
         if len(permutation) != len(set(permutation)):  # check for duplicate inputs bv (1,1,0) => inputpose 1 wordt gelinkt aan modelpose0 en modelpose1
             logger.warning("--> Matching permutation %s : FAIL: ONE INPUTPOSE MAPPED ON MULTIPLE MODELPOSES (no injection)", permutation)
@@ -255,8 +258,8 @@ def match2(model_poses, input_poses, plot=False, input_image = None, model_image
             logger.debug("calculate distance values for model index %d", model_index)
 
             #take the right input and model poses for difference calculations
-            (input_pose, model_pose) = handle_undetected_points(input_poses[input_index], model_poses[model_index])
-            (next_input_pose, next_model_pose) = handle_undetected_points(input_poses[next_input_index], model_poses[model_index+1])
+            (input_pose, model_pose) = undetected_point.handle_all_policy(input_poses[input_index], model_poses[model_index])
+            (next_input_pose, next_model_pose) = undetected_point.handle_all_policy(input_poses[next_input_index], model_poses[model_index+1])
 
 
 

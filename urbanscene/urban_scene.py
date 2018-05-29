@@ -2,7 +2,6 @@ import logging
 import cv2
 import numpy as np
 from dataset import Multipose_dataset_actions as dataset
-
 from urbanscene import features, transformation
 import thresholds
 logger = logging.getLogger("urban_scene")

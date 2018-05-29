@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-from common import normalise_rescaling
+
+from handlers import scaling
 import numpy as np
 
 
@@ -17,8 +18,8 @@ def superimpose(input, model, plot=False, input_image=None, model_image=None):
             new_input = np.vstack((new_input,input[feature_place]))
 
     # Note1: the input_transformed from single_pose() is not used!!!
-    model = normalise_rescaling(new_model)
-    input = normalise_rescaling(new_input)
+    model = scaling.normalise_rescaling(new_model)
+    input = scaling.normalise_rescaling(new_input)
     # First translation and rotation, NO SCALING
     (d, Z, m) = procrustes(input, model, False) #Scaling is false
 

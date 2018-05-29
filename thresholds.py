@@ -3,7 +3,7 @@
 CP_ACCURACY = 0.1  # was 0.18 <-- 0.25 <-- 0.4
 
 
-OPENPOSE_ZEKERHEID = 0.30
+OP_CERTAINTY= 0.30
 
 '''------- SINGLE POSE PARAMETERS -----------'''
 SP_DISTANCE_FACE = 1
