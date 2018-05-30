@@ -6,19 +6,18 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
 sys.path.insert(0,"/openpose-master/MultiPersonMatching")
-from common import parse_JSON_multi_person, parse_JSON_single_person, parse_JSON_multi_person_jochen
-import posematching.multi_person as multi_person
+import matching
 import glob
 import base64
 
-UPLOAD_FOLDER = '/home/jochen/fotos/processing'
-DOWNLOAD_FOLDER = '/home/jochen/fotos/json/'
+UPLOAD_FOLDER = '/home/jochen/server/processing'
+DOWNLOAD_FOLDER = '/home/jochen/server/json/'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
-redis = Redis(host='127.0.0.1 ', port=6379)
+os.system("cd ../")
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -78,9 +77,9 @@ def add_new_pose():
             filename = secure_filename(file.filename)
 
             id =0
-            for json in glob.iglob("/home/jochen/dataset/poses/*"):
+            for json in glob.iglob("/home/jochen/poses/*"):
                 id = id+1
-            filepath ="/home/jochen/dataset/poses/pose"+str(id)
+            filepath ="/home/jochen/poses/pose"+str(id)
             os.system("mkdir -p " +filepath)
             os.system("mkdir -p " +filepath+"/fotos")
             os.system("mkdir -p " +filepath+"/json")
@@ -88,6 +87,7 @@ def add_new_pose():
             filename = filename.rsplit('.')[1]
             filename = "0."+filename
             file.save(os.path.join(filepath+"/fotos", filename))
+            os.system("cd /openpose-master/")
             os.system("./build/examples/openpose/openpose.bin -write_keypoint_json "+filepath+"/json -image_dir "+filepath+"/fotos -write_images "+filepath+"/Processedfotos -no_display")
             os.system("mv "+filepath+"/json/1_keypoints.json " +filepath+"/json/0.json ")
             return "pose added at id : " +str(id)
@@ -101,7 +101,7 @@ def return_html_poses():
 def get_all_poses():
     data = []
     count = 0
-    for picture in glob.iglob("/home/jochen/dataset/poses/pose*/fotos/0.*"):
+    for picture in glob.iglob("/home/jochen/poses/pose*/fotos/0.*"):
         with open(picture, "rb") as image_file:
             dummy ={}
             dummy['naam'] = picture.rsplit('/fotos')[0].rsplit('/poses/')[1]
@@ -113,8 +113,9 @@ def get_all_poses():
 
 
 def processfile (filename):
-    os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/fotos/json -image_dir /home/jochen/fotos/processing -write_images /home/jochen/fotos/calculated_poses/ -no_display")
-    os.system("mv -v /home/jochen/fotos/processing/* /home/jochen/fotos/poses")
+    os.system("cd /openpose-master/")
+    os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/server/json -image_dir /home/jochen/server/processing -write_images /home/jochen/server/calculated_poses/ -no_display")
+    os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/poses")
     filename = filename.rsplit('.')[0]
     filename = filename +'_keypoints.json'
     json_file = open(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), "r")
@@ -122,16 +123,16 @@ def processfile (filename):
     return json_data #jsonify(json_data)
 
 def findmatch(filename, id):
-    os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/fotos/json -image_dir /home/jochen/fotos/processing -write_images /home/jochen/fotos/calculated_poses/ -no_display")
-    os.system("mv -v /home/jochen/fotos/processing/* /home/jochen/fotos/poses")
-    filename = filename.rsplit('.')[0]
-    inputadr = "/home/jochen/fotos/json/"+filename +'_keypoints.json'
-    modeladr = "/home/jochen/dataset/poses/pose"+id+"/json/0.json"
+    os.system("cd /openpose-master/")
+    os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/server/json -image_dir /home/jochen/server/processing -write_images /home/jochen/server/calculated_poses/ -no_display")
+    os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/fotos")
 
+    input_json = "/home/jochen/server/json/"+filename.rsplit('.')[0] +'_keypoints.json'
+    model_json = "/home/jochen/poses/pose"+id+"/json/0.json"
+    input_image_path = "/home/jochen/server/poses/"+filename
+    model_image_path = "/home/jochen/poses/pose"+id+"/fotos/0.*"
     #find matched
-    model_features = parse_JSON_single_person(modeladr)
-    input_features = parse_JSON_single_person(inputadr)
-    (result, error_score, input_transform) = multi_person.match(model_features, input_features, True)
+    result = matching.match(model_json, input_json, model_image_path, input_image_path)
 
     print("Match or not: ", result)
     with open(inputadr) as json_file:
