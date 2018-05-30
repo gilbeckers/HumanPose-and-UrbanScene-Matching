@@ -17,7 +17,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
-os.system("cd ../")
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -89,7 +89,7 @@ def add_new_pose():
             file.save(os.path.join(filepath+"/fotos", filename))
             os.system("cd /openpose-master/")
             os.system("./build/examples/openpose/openpose.bin -write_keypoint_json "+filepath+"/json -image_dir "+filepath+"/fotos -write_images "+filepath+"/Processedfotos -no_display")
-            os.system("mv "+filepath+"/json/1_keypoints.json " +filepath+"/json/0.json ")
+            os.system("mv "+filepath+"/json/0_keypoints.json " +filepath+"/json/0.json ")
             return "pose added at id : " +str(id)
     return
 
@@ -113,7 +113,6 @@ def get_all_poses():
 
 
 def processfile (filename):
-    os.system("cd /openpose-master/")
     os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/server/json -image_dir /home/jochen/server/processing -write_images /home/jochen/server/calculated_poses/ -no_display")
     os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/poses")
     filename = filename.rsplit('.')[0]
@@ -123,7 +122,6 @@ def processfile (filename):
     return json_data #jsonify(json_data)
 
 def findmatch(filename, id):
-    os.system("cd /openpose-master/")
     os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/server/json -image_dir /home/jochen/server/processing -write_images /home/jochen/server/calculated_poses/ -no_display")
     os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/fotos")
 
@@ -135,9 +133,10 @@ def findmatch(filename, id):
     result = matching.match(model_json, input_json, model_image_path, input_image_path)
 
     print("Match or not: ", result)
-    with open(inputadr) as json_file:
+    with open(input_json) as json_file:
         json_decoded = json.load(json_file)
-        json_decoded['match'] = bool(result)
+        json_decoded['match'] = (result>70 and result <= 100)
+        json_decoded['score'] = result
         return jsonify(json_decoded)
     return json_data#jsonify(json_data)
 
