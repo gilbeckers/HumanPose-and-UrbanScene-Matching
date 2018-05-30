@@ -23,8 +23,7 @@ def match(model_json, input_json, model_image_path, input_image_path, plot_us=Fa
     model_image = cv2.imread(model_image_path, cv2.IMREAD_GRAYSCALE)
     input_image = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
 
-    (result, MP_error_score, input_transform,permutations) = multi_person.match(model_pose_features, input_pose_features)
-
+    (result, score, input_transform,permutations) = multi_person.match(model_pose_features, input_pose_features)
     logger.debug("--- Starting urbanscene matching ---")
     # Loop over all found matching comnbinations
     # And order input poses according to matching model poses
@@ -34,18 +33,20 @@ def match(model_json, input_json, model_image_path, input_image_path, plot_us=Fa
     for result in permutations:
         model_poses = result['model']
         input_poses = result['input']
+        MP_error_score = result['score']
         #logger.debug(model_poses)
         #logger.debug(input_poses)
 
         model_image_copy = model_image  #TODO make hard copy ??
         input_image_copy = input_image
 
-        error = match_scene_multi(detector, matcher,
+        US_error_score = match_scene_multi(detector, matcher,
                                             model_image_copy, input_image_copy,
                                             model_poses,input_poses,
                                             plot_us)
-
-        fin_score = (error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) #((error/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) + (result['score']))/2
+        print(US_error_score)
+        fin_score = (US_error_score/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) #((US_error_score/thresholds.AFFINE_TRANS_WHOLE_DISTANCE) + (result['score']))/2
+        print(fin_score)
         if  fin_score < min_error: #(error+result['score'])/2 < min_error:
             logger.debug("new min error %0.4f",fin_score)
             #min_error =(error+result['score'])/2
@@ -59,4 +60,16 @@ def match(model_json, input_json, model_image_path, input_image_path, plot_us=Fa
         #                 matching_permuations, round(error, 4), thresholds.AFFINE_TRANS_WHOLE_DISTANCE)
         #     return (True,False)
     #plt.show()
-    return min_error
+
+    return make_percentage_score(min_error)
+
+def make_percentage_score(error):
+    if error == np.inf:
+        return 0
+    error = error - 0.7
+    if error < 0:
+        return 100
+    elif  (1 - error)*100 > 0:
+        return (1 - error)*100
+    else:
+        return 0
