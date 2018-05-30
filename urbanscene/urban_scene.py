@@ -27,14 +27,14 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
 
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
-    kp_model, desc_model = detector.detectAndCompute(model_image_crop, None)
-    kp_input, desc_input = detector.detectAndCompute(input_image, None)
-    #print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
-    logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
+    model_scene_features, desc_model = detector.detectAndCompute(model_image_crop, None)
+    input_scene_features, desc_input = detector.detectAndCompute(input_image, None)
+    #print('model - %d features, input - %d features' % (len(model_scene_features), len(input_scene_features)))
+    logging.debug('model - %d features, input - %d features' % (len(model_scene_features), len(input_scene_features)))
 
     ''' --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  ------------------------- '''
-    (mask, p_model_good, p_input_good, H, H2, matching_features) = features.match_and_draw("multipips", matcher, desc_model,
-                                                                        desc_input, kp_model, kp_input,
+    (mask, good_model_scene_features, good_input_scene_features, H, H2, matching_features) = features.find_homography("multipips", matcher, desc_model,
+                                                                        desc_input, model_scene_features, input_scene_features,
                                                                         model_image, input_image, False)
 
 
@@ -49,8 +49,8 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
         logging.debug("!!Valid HOMOGRAPHY!!")
         # else:
         # exit()
-    elif len(p_model_good) < 15:
-        logging.critical("p_model_good too small, %d",len(p_model_good))
+    elif len(good_model_scene_features) < 15:
+        logging.critical("good_model_scene_features too small, %d",len(good_model_scene_features))
         return np.inf
     else:
         logging.info("!!!UNVALID HOMOGRAPHY!!!")
@@ -81,28 +81,28 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
     '''--------- STEP 3.1 Rescale FEATURE OF CROPPED IMAGE TO ORIGINAL IMAGE----------------------------------'''
     if dataset.crop == True:
-        p_model_good = (np.array(p_model_good)+ [Xmin,Ymin])
+        good_model_scene_features = (np.array(good_model_scene_features)+ [Xmin,Ymin])
 
     '''--------- STEP 3.2 APPEND HUMAN POSE FEATURES ----------------------------------'''
     # append pose features   => GEBEURT NU IN FUNCTIES ZELF
-    p_input_good_incl_pose = np.vstack((p_input_good, input_pose_features))
-    p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
+    good_input_scene_features_incl_pose = np.vstack((good_input_scene_features, input_pose_features))
+    good_model_scene_features_incl_pose = np.vstack((good_model_scene_features, model_pose_features))
 
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
     if dataset.correction == True:
-        (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
-                                                                                                               p_model_good_incl_pose,
-                                                                                                               p_input_good_incl_pose,
+        (good_input_scene_features_incl_pose_pers_cor, input_pose_features_pers_cor, input_image_pers_cor) = transformation.perspective_correction(H2,
+                                                                                                               good_model_scene_features_incl_pose,
+                                                                                                               good_input_scene_features_incl_pose,
                                                                                                                model_pose_features,
                                                                                                                input_pose_features,
                                                                                                                model_image,
                                                                                                                input_image,
                                                                                                                False)
     else:
-        p_persp_trans_input = p_input_good_incl_pose
-        input_pose_trans = input_pose_features
-        persp_trans_input_img = input_image
+        good_input_scene_features_incl_pose_pers_cor = good_input_scene_features_incl_pose
+        input_pose_features_pers_cor = input_pose_features
+        input_image_pers_cor = input_image
 
 
     '''--------- STEP 5: INTERACTION BETWEEN HUMAN AND URBAN SCENE Without perspective correction------------------ '''
@@ -113,32 +113,23 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     # Third option would be to take all the building feature points,
     # but that would probably limit transformation in aspect of the mutual spatial
     # relation between the person and the building
-    # feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
+    # feat_ops.affine_trans_interaction_both(good_model_scene_features, good_input_scene_features, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
     logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
-    p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
+    #subtract pose
+    good_input_scene_features_pers_cor = good_input_scene_features_incl_pose_pers_cor[0:len(good_input_scene_features_incl_pose_pers_cor) - len(input_pose_features)]
 
-    model_image_height = model_image.shape[0]
-    model_image_width = model_image.shape[1]
 
-    input_image_h = persp_trans_input_img.shape[0]
-    input_image_w = persp_trans_input_img.shape[1]
 
     #
     # logging.debug("input pose: ", input_pose_features)
-    # logging.debug("input  TRANS pose: ", input_pose_trans)
+    # logging.debug("input  TRANS pose: ", input_pose_features_pers_cor)
     # logging.debug("model pose: ", model_pose_features)
 
     sum_err = 0
     its = 1
     for i in range(0,its):
-        (err) = transformation.affine_multi(p_model_good, p_input_persp_only_buildings,
-                                            model_pose_features, input_pose_trans,
-                                            model_image_height, model_image_width,
-                                            input_image_h, input_image_w,
-                                            "test",
-                                            model_image, persp_trans_input_img, input_pose_features,
-                                            False)
+        (err) = transformation.affine_multi(good_model_scene_features, good_input_scene_features_pers_cor,model_pose_features, input_pose_features_pers_cor,"test",model_image, input_image_pers_cor, input_pose_features,False)
 
         if sum_err < err:
             sum_err = err
@@ -148,14 +139,14 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 def match_scene_single_person(detector, matcher, model_image, input_image,model_pose_features, input_pose_features):
     assert model_pose_features.shape == input_pose_features.shape
     ''' ---------- STEP 1: FEATURE DETECTION AND DESCRIPTION (ORB, SIFT, SURF, BRIEF, ASIFT -------------------- '''
-    kp_model, desc_model = detector.detectAndCompute(model_image, None)
-    kp_input, desc_input = detector.detectAndCompute(input_image, None)
-    #print('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
-    logging.debug('model - %d features, input - %d features' % (len(kp_model), len(kp_input)))
+    model_scene_features, desc_model = detector.detectAndCompute(model_image, None)
+    input_scene_features, desc_input = detector.detectAndCompute(input_image, None)
+    #print('model - %d features, input - %d features' % (len(model_scene_features), len(input_scene_features)))
+    logging.debug('model - %d features, input - %d features' % (len(model_scene_features), len(input_scene_features)))
 
     ''' --------- STEP 2: FEATURE MATCHING (FLANN OR BRUTE FORCE) AND HOMOGRAPHY  ------------------------- '''
 
-    logging.critical("p_model_good is %d",p_model_good)
+    logging.critical("good_model_scene_features is %d",good_model_scene_features)
     cv2.waitKey()
     cv2.destroyAllWindows()
 
@@ -193,13 +184,13 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
 
     '''--------- STEP 3.1 APPEND HUMAN POSE FEATURES ----------------------------------'''
     # append pose features   => GEBEURT NU IN FUNCTIES ZELF
-    p_input_good_incl_pose = np.vstack((p_input_good, input_pose_features))
-    p_model_good_incl_pose = np.vstack((p_model_good, model_pose_features))
+    good_input_scene_features_incl_pose = np.vstack((good_input_scene_features, input_pose_features))
+    good_model_scene_features_incl_pose = np.vstack((good_model_scene_features, model_pose_features))
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
-    (p_persp_trans_input, input_pose_trans, persp_trans_input_img) = transformation.perspective_correction(H2,
-                                                                                                           p_model_good_incl_pose,
-                                                                                                           p_input_good_incl_pose,
+    (good_input_scene_features_incl_pose_pers_cor, input_pose_features_pers_cor, input_image_pers_cor) = transformation.perspective_correction(H2,
+                                                                                                           good_model_scene_features_incl_pose,
+                                                                                                           good_input_scene_features_incl_pose,
                                                                                                            model_pose_features,
                                                                                                            input_pose_features,
                                                                                                            model_image,
@@ -214,14 +205,14 @@ def match_scene_single_person(detector, matcher, model_image, input_image,model_
     # Third option would be to take all the building feature points,
     # but that would probably limit transformation in aspect of the mutual spatial
     # relation between the person and the building
-    # feat_ops.affine_trans_interaction_both(p_model_good, p_input_good, model_pose_features, input_pose_features,  model_image, input_image, "both")
+    # feat_ops.affine_trans_interaction_both(good_model_scene_features, good_input_features, model_pose_features, input_pose_features,  model_image, input_image, "both")
 
     logging.debug("\n----------- both WITH COrREctiOnN & SOME RanDOm FeaTuREs-------------")
-    p_input_persp_only_buildings = p_persp_trans_input[0:len(p_persp_trans_input) - len(input_pose_features)]
+    good_input_scene_features_pers_cor = good_input_scene_features_incl_pose_pers_cor[0:len(good_input_scene_features_incl_pose_pers_cor) - len(input_pose_features)]
 
-    (err_torso, err_legs, sum_err_torso, sum_err_legs) = transformation.affine_trans_interaction_pose_rand_scene(p_model_good, p_input_persp_only_buildings, model_pose_features,
-                                                                                                                 input_pose_trans,
-                                                                                                                 model_image, persp_trans_input_img, "pose + random scene", False)
+    (err_torso, err_legs, sum_err_torso, sum_err_legs) = transformation.affine_trans_interaction_pose_rand_scene(good_model_scene_features, good_input_scene_features_pers_cor, model_pose_features,
+                                                                                                                 input_pose_features_pers_cor,
+                                                                                                                 model_image, input_image_pers_cor, "pose + random scene", False)
 
 
 
