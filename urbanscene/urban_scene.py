@@ -1,4 +1,4 @@
-import logging
+pimport logging
 import cv2
 import numpy as np
 from dataset import Multipose_dataset_actions as dataset
@@ -11,12 +11,15 @@ FLANN_INDEX_KDTREE  = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH     = 6
 MIN_MATCH_COUNT     = 4
 
+crop = False
+correction = True
+
 def match_scene_multi(detector, matcher, model_image, input_image, model_pose_features, input_pose_features, plot=False):
     assert model_pose_features.shape == input_pose_features.shape
 
     ''' ---------- STEP 0: Crop Image to important region -------------------- '''
     model_image_crop = model_image
-    if dataset.crop == True:
+    if crop == True:
         zone = [0,720,100,530]
         Xmin = zone[0]
         Xmax = zone[1]
@@ -80,7 +83,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
     '''
 
     '''--------- STEP 3.1 Rescale FEATURE OF CROPPED IMAGE TO ORIGINAL IMAGE----------------------------------'''
-    if dataset.crop == True:
+    if crop == True:
         good_model_scene_features = (np.array(good_model_scene_features)+ [Xmin,Ymin])
 
     '''--------- STEP 3.2 APPEND HUMAN POSE FEATURES ----------------------------------'''
@@ -90,7 +93,7 @@ def match_scene_multi(detector, matcher, model_image, input_image, model_pose_fe
 
 
     '''--------- STEP 4: PERSPECTIVE CORRECTION  (eliminate perspective distortion) ------------- '''
-    if dataset.correction == True:
+    if correction == True:
         (good_input_scene_features_incl_pose_pers_cor, input_pose_features_pers_cor, input_image_pers_cor) = transformation.perspective_correction(H2,
                                                                                                                good_model_scene_features_incl_pose,
                                                                                                                good_input_scene_features_incl_pose,
