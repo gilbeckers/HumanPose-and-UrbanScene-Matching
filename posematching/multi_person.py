@@ -50,6 +50,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         result_single = []
         result_single_per = {
             "score": match_result_single.error_score,
+            "single_pose_scores" : match_result_single.error_score,
             "permutation" : (0,0),
             "model": model_poses[0],
             # "model":updated_models_combined_nonorm,
@@ -146,6 +147,7 @@ def match(model_poses, input_poses, plot=False, superimp = False, input_image = 
         # if tot_error<=thresholds.MP_DISCTANCE:
         result_permuations.append( {
             "score" : tot_error ,
+            "single_pose_scores" : error_scores[index],
             "permutation" : permutation,
             "model" : unchanged_model,
             #"model":updated_models_combined_nonorm,

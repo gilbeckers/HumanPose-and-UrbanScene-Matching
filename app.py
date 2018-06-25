@@ -10,6 +10,10 @@ import matching
 import glob
 import base64
 
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
 UPLOAD_FOLDER = '/home/jochen/server/processing'
 DOWNLOAD_FOLDER = '/home/jochen/server/json/'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
@@ -67,12 +71,12 @@ def add_new_pose():
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
-            return "no file sended"
+            return jsonify({"id":-1})
         file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
-            return "no filename"
+            return jsonify({"id":-1})
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
 
@@ -90,8 +94,8 @@ def add_new_pose():
             os.system("cd /openpose-master/")
             os.system("./build/examples/openpose/openpose.bin -write_keypoint_json "+filepath+"/json -image_dir "+filepath+"/fotos -write_images "+filepath+"/Processedfotos -no_display")
             os.system("mv "+filepath+"/json/0_keypoints.json " +filepath+"/json/0.json ")
-            return "pose added at id : " +str(id)
-    return
+            return jsonify({"id":id})
+    return jsonify({"id":-1})
 
 @app.route('/getPoses', methods=['GET'])
 def return_html_poses():
@@ -105,9 +109,10 @@ def get_all_poses():
         with open(picture, "rb") as image_file:
             dummy ={}
             dummy['naam'] = picture.rsplit('/fotos')[0].rsplit('/poses/')[1]
-            encoded_string = base64.b64encode(image_file.read())
-            dummy['foto']=encoded_string
+
+            dummy['foto']= base64.b64encode(image_file.read()).decode('utf-8')
             data.append(dummy)
+    #print(data)
     return json.dumps(data)
 
 
@@ -123,20 +128,24 @@ def processfile (filename):
 
 def findmatch(filename, id):
     os.system("./build/examples/openpose/openpose.bin -write_keypoint_json /home/jochen/server/json -image_dir /home/jochen/server/processing -write_images /home/jochen/server/calculated_poses/ -no_display")
-    os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/fotos")
+    os.system("mv -v /home/jochen/server/processing/* /home/jochen/server/fotos/")
 
     input_json = "/home/jochen/server/json/"+filename.rsplit('.')[0] +'_keypoints.json'
     model_json = "/home/jochen/poses/pose"+id+"/json/0.json"
-    input_image_path = "/home/jochen/server/poses/"+filename
-    model_image_path = "/home/jochen/poses/pose"+id+"/fotos/0.*"
+    input_image_path = "/home/jochen/server/fotos/"+filename
+    model_image_path = "/home/jochen/poses/pose"+id+"/fotos/0.jpg"
     #find matched
-    result = matching.match(model_json, input_json, model_image_path, input_image_path)
-
-    print("Match or not: ", result)
+    result,US,MP,SP = matching.match(model_json, input_json, model_image_path, input_image_path)
+    ismatch = False
+    if result>70 and result <= 100:
+        ismatch = True
     with open(input_json) as json_file:
         json_decoded = json.load(json_file)
-        json_decoded['match'] = (result>70 and result <= 100)
+        json_decoded['match'] = ismatch
         json_decoded['score'] = result
+        json_decoded['US'] = US
+        json_decoded['MP'] = MP
+        json_decoded['SP'] = SP
         return jsonify(json_decoded)
     return json_data#jsonify(json_data)
 

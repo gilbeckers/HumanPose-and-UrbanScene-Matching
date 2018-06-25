@@ -40,7 +40,7 @@ def perspective_correction(H2, good_model_scene_features, good_input_scene_featu
     model_features_norm = scaling.feature_scaling(good_model_scene_features)
     input_features_trans_norm = scaling.feature_scaling(good_input_scene_features_persp_trans)
 
-    max_euclidean_error = max_euclidean_distance(model_features_norm, input_features_trans_norm)
+    max_euclidean_error = compare.max_euclidean_distance(model_features_norm, input_features_trans_norm)
     logging.debug('PERSSPECTIVE NORM 1: max error: %f', max_euclidean_error)
 
     # -- 2E MANIERRR: normaliseren enkel de pose

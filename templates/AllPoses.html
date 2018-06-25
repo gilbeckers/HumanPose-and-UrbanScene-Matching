@@ -7,7 +7,7 @@ and open the template in the editor.
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>bajart</title>
+        <title>pose matching</title>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
@@ -17,8 +17,6 @@ and open the template in the editor.
               $.ajax({
                   dataType: "json",
                   url: "http://1dr8.be/getAllPoses",
-                  //url: "http://bajart.mariekerke.be/index.php/get",
-                  //url: "http://localhost:8000/index.php/get",
                   success: function (response) {
                       console.log(response);
                       var html = ""
